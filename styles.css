@@ -366,6 +366,8 @@ canvas {
   font-weight: bold;
   letter-spacing: 2px;
   box-shadow: 0 0 20px rgba(77, 242, 194, 0.3);
+  pointer-events: auto;
+  z-index: 100;
 }
 
 .btn-3d:hover {
@@ -957,6 +959,8 @@ canvas {
   .game-area {
     padding: 0;
     height: calc(100vh - 80px);
+    flex: 1;
+    overflow: hidden;
   }
   
   canvas {
@@ -969,31 +973,62 @@ canvas {
   }
 
   .overlay {
-    padding: 40px 20px;
-    justify-content: flex-start;
+    padding: 20px 10px;
+    justify-content: center;
+    gap: 12px;
   }
 
   .overlay h2 {
-    font-size: 1.5rem;
-    margin-top: 10px;
+    font-size: 1.2rem;
+    margin: 0;
+  }
+
+  .overlay p {
+    font-size: 0.8rem;
+    margin: 0;
+  }
+
+  .ship-selection {
+    margin: 5px 0;
   }
 
   .ships-container {
-    gap: 8px;
+    gap: 4px;
   }
 
   .ship-card {
-    min-width: 90px;
-    padding: 10px;
+    min-width: 70px;
+    padding: 6px;
+    border-radius: 8px;
   }
 
   .ship-icon {
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
+    margin-bottom: 2px;
+  }
+
+  .ship-name {
+    font-size: 0.7rem;
+  }
+
+  .ship-stats {
+    display: none;
   }
 
   .btn-3d-front {
-    padding: 12px 30px;
-    font-size: 1rem;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+
+  .control-group {
+    margin: 5px 0;
+    font-size: 0.8rem;
+  }
+
+  .wave-input {
+    padding: 4px;
+    font-size: 0.9rem;
+    width: 60px;
   }
 }

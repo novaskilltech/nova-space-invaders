@@ -1730,19 +1730,27 @@ function runSelfChecks() {
 }
 
 function handleStartClick() {
+  console.log("Start button clicked, running:", state.running, "paused:", state.paused);
+  
+  // Reprendre l'AudioContext sur mobile
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+
   if (state.paused && !state.running && state.wave > 1) {
     levelCompleteContinue();
     return;
   }
   
   if (!state.running) {
-    // S'assurer de lire la valeur actuelle de l'input avant de démarrer
-    selectedStartWave = parseInt(document.getElementById("startWaveInput").value) || 1;
+    try {
+      const input = document.getElementById("startWaveInput");
+      selectedStartWave = input ? (parseInt(input.value) || 1) : 1;
+    } catch (e) {
+      selectedStartWave = 1;
+    }
     startGame();
-    return;
-  }
-
-  if (state.paused) {
+  } else if (state.paused) {
     togglePause();
   }
 }
@@ -1763,10 +1771,15 @@ window.addEventListener("keyup", handleKeyup);
 
 const shipCards = document.querySelectorAll(".ship-card");
 shipCards.forEach(card => {
-  card.addEventListener("click", () => {
+  const selectShip = () => {
     shipCards.forEach(c => c.classList.remove("active"));
     card.classList.add("active");
     selectedShipId = card.getAttribute("data-ship");
+  };
+  card.addEventListener("click", selectShip);
+  card.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    selectShip();
   });
 });
 
