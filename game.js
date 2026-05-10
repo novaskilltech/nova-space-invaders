@@ -101,8 +101,8 @@ const imagePaths = {
 const keys = new Set();
 const STAR_COUNT = 90;
 const SHIPS = {
-  nova: { id: "nova", color: "#4df2c2", speed: 420, invul: 1200, width: 78, height: 78, weapon: "normal" },
-  viper: { id: "viper", color: "#ff6474", speed: 540, invul: 1000, width: 68, height: 84, weapon: "rapid" },
+  nova: { id: "nova", color: "#00f2ff", speed: 420, invul: 1200, width: 78, height: 78, weapon: "normal" },
+  viper: { id: "viper", color: "#ff00ff", speed: 540, invul: 1000, width: 68, height: 84, weapon: "rapid" },
   goliath: { id: "goliath", color: "#ffb84d", speed: 320, invul: 1800, width: 90, height: 70, weapon: "spread" },
   phantom: { id: "phantom", color: "#c264ff", speed: 480, invul: 1400, width: 72, height: 72, weapon: "plasma" },
   orion: { id: "orion", color: "#7af2ff", speed: 380, invul: 1600, width: 84, height: 80, weapon: "triple" }
@@ -204,18 +204,17 @@ function loadImage(src) {
 
 async function bootstrapAssets() {
   const v = "?v=2";
-  state.images.nova = await loadImage("ship_vanguard.png" + v);
-  state.images.viper = await loadImage("ship_swift.png" + v);
-  state.images.goliath = await loadImage("ship_titan.png" + v);
-  state.images.phantom = await loadImage("ship_ghost.png" + v);
-  state.images.orion = await loadImage("ship_orion.png" + v);
+  state.images.nova = await loadImage("ship_nova.png" + v);
+  state.images.viper = await loadImage("ship_nova.png" + v); // Fallback pour les variantes
+  state.images.goliath = await loadImage("ship_nova.png" + v);
+  state.images.phantom = await loadImage("ship_nova.png" + v);
+  state.images.orion = await loadImage("ship_nova.png" + v);
 
-  state.images.squid = await loadImage("enemy_squid.png" + v);
-  state.images.crab = await loadImage("enemy_crab.png" + v);
-  state.images.octopus = await loadImage("enemy_octopus.png" + v);
-  state.images.boss = await loadImage("boss_ship.png" + v);
-  state.images.kamikaze = await loadImage("enemy_squid.png" + v); // Fallback pour l'instant
-  state.images.interceptor = await loadImage("enemy_crab.png" + v); // Fallback pour l'instant
+  state.images.squid = await loadImage("enemy_nova.png" + v);
+  state.images.crab = await loadImage("enemy_nova.png" + v);
+  state.images.octopus = await loadImage("enemy_nova.png" + v);
+  state.images.kamikaze = await loadImage("enemy_nova.png" + v);
+  state.images.interceptor = await loadImage("enemy_nova.png" + v);
 }
 
 function resetPlayer() {
@@ -1376,12 +1375,16 @@ function drawBackground() {
   });
 }
 
-const waveColors = ["#7af2ff", "#b8ff5e", "#ffb84d", "#ff6474", "#c264ff", "#ffa500"];
-const waveBossColors = ["#ffb84d", "#ff6474", "#c264ff", "#ffa500", "#7af2ff", "#b8ff5e"];
+const waveColors = ["#00f2ff", "#ff00ff", "#ffb84d", "#ff4d4d", "#c264ff", "#7af2ff"];
+const waveBossColors = ["#ff00ff", "#00f2ff", "#ffb84d", "#ff4d4d", "#c264ff", "#7af2ff"];
 
 function drawSprite(img, entity, fallbackColor, type) {
   if (img) {
+    // Add glow effect for ships/enemies
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = fallbackColor;
     ctx.drawImage(img, entity.x, entity.y, entity.width, entity.height);
+    ctx.shadowBlur = 0;
     return;
   }
 
