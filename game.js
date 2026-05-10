@@ -4,6 +4,17 @@ const ctx = canvas.getContext("2d");
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 const audioCtx = new AudioContext();
 
+window.onerror = function(msg, url, line, col, error) {
+  console.error("Global Error:", msg, "at", line, ":", col);
+  const overlay = document.getElementById("overlay");
+  const msgEl = document.getElementById("overlayMessage");
+  if (overlay && msgEl) {
+    overlay.style.display = "flex";
+    msgEl.innerText = "ERREUR SYSTÈME :\n" + msg + "\nLigne: " + line;
+    msgEl.style.color = "#ff6474";
+  }
+};
+
 function playSound(type) {
   if (audioCtx.state === 'suspended') {
     audioCtx.resume();
@@ -403,15 +414,25 @@ function syncUi() {
 }
 
 function startGame() {
-  applyShipSelection();
-  initGame();
-  state.running = true;
-  state.paused = false;
-  state.lastFrame = performance.now();
-  state.lastShotAt = 0;
-  hideOverlay();
-  syncUi();
-  requestAnimationFrame(loop);
+  console.log("startGame() called");
+  try {
+    if (!selectedShipId || !SHIPS[selectedShipId]) {
+      selectedShipId = "nova";
+    }
+    applyShipSelection();
+    initGame();
+    state.running = true;
+    state.paused = false;
+    state.lastFrame = performance.now();
+    state.lastShotAt = 0;
+    hideOverlay();
+    syncUi();
+    requestAnimationFrame(loop);
+    console.log("Game loop started");
+  } catch (err) {
+    console.error("Error in startGame:", err);
+    throw err; // Will be caught by window.onerror
+  }
 }
 
 function endGame(title, message) {
