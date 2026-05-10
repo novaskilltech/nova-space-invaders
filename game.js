@@ -1795,17 +1795,23 @@ document.body.addEventListener('click', () => {
   if (!runSelfChecks()) {
     return;
   }
-  const introDiv = document.getElementById("introCinematic");
-  setTimeout(() => {
-    introDiv.classList.add("hidden");
-    setTimeout(() => {
-      introDiv.style.display = "none";
-      showOverlay(
-        "Prêt ?",
-        "Protège la station Nova !",
-        "Démarrer"
-      );
-      syncUi();
-    }, 1000);
-  }, 6500);
+  const introCrawl = document.getElementById("introCrawl");
+  const skipBtn = document.getElementById("skipIntro");
+  const gameContainer = document.getElementById("main-ui");
+
+  const startMainGame = () => {
+    introCrawl.style.display = "none";
+    gameContainer.classList.remove("hidden");
+    showOverlay(
+      "PRÊT À COMBATTRE ?",
+      "Protège la station Nova !",
+      "DÉMARRER LA MISSION"
+    );
+    syncUi();
+  };
+
+  skipBtn.addEventListener("click", startMainGame);
+  
+  // Auto-skip après 45 secondes si l'utilisateur ne clique pas
+  setTimeout(startMainGame, 45000);
 })();

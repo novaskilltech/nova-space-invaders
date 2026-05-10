@@ -7,144 +7,136 @@
   <link rel="stylesheet" href="styles.css?v=13">
 </head>
 <body>
-  <aside class="sidebar">
-    <h1>NOVA Squad</h1>
-    
-    <div class="stat-box">
-      <div class="label">Score</div>
-      <div class="value score" id="score">0</div>
+  <!-- Star Wars Intro Crawl -->
+  <div id="introCrawl" class="intro-crawl">
+    <div class="crawl-content">
+      <div class="crawl-title">ÉPISODE I</div>
+      <div class="crawl-subtitle">LE RÉVEIL DE NOVA</div>
+      <p>L'humanité est au bord du gouffre. La station spatiale NOVA, dernier bastion de la résistance, subit l'assaut d'une armada extraterrestre sans précédent.</p>
+      <p>Les secteurs périphériques sont tombés. L'ennemi, mené par les redoutables Titans Galactiques, progresse inexorablement vers le cœur de notre système.</p>
+      <p>Dans un ultime espoir, le Haut Commandement a ordonné le déploiement du dernier prototype de chasseur stellaire.</p>
+      <p>Pilote, votre mission est simple mais désespérée : repoussez l'envahisseur, traversez les nébuleuses de Saturne et détruisez les amiraux ennemis.</p>
+      <p>Le destin de millions de vies repose sur votre courage et votre adresse. La bataille pour la survie commence maintenant...</p>
     </div>
-    
-    <div class="stat-box">
-      <div class="label">Record</div>
-      <div class="value highscore" id="highScore">0</div>
-    </div>
-    
-    <div class="stat-box">
-      <div class="label">Vies</div>
-      <div class="value lives" id="lives">3</div>
-    </div>
-    
-    <div class="stat-box">
-      <div class="label">Vague</div>
-      <div class="value wave" id="wave">1</div>
-    </div>
-    
-    <div class="stat-box">
-      <div class="label">Arme</div>
-      <div class="value weapon" id="weapon">—</div>
-      <div class="weapon-timer">
-        <div class="weapon-timer-bar" id="weaponTimer"></div>
-      </div>
-    </div>
-    
-    <div class="stat-box" style="flex: 1;">
-      <div class="label">Historique</div>
-      <div class="powerups-list" id="powerupLog"></div>
-    </div>
-    
-    <div class="controls-info">
-      <div><kbd>←</kbd> <kbd>→</kbd> Déplacer</div>
-      <div><kbd>Espace</kbd> Tir</div>
-      <div><kbd>P</kbd> Pause</div>
-    </div>
-  </aside>
-  
-  <main class="game-area">
-    <canvas id="gameCanvas" width="960" height="600"></canvas>
-    <button id="pauseButton" class="pause-btn" title="Pause (P)">II</button>
-    
-    <!-- Intro Cinematic -->
-    <div id="introCinematic" class="intro-cinematic">
-      <div class="letterbox top"></div>
-      <div class="intro-scene">
-        <img src="ship_titan.png" class="intro-ship ship-1" alt="Ship">
-        <img src="ship_vanguard.png" class="intro-ship ship-2" alt="Ship">
-        <img src="ship_swift.png" class="intro-ship ship-3" alt="Ship">
-        <img src="boss_ship.png" class="intro-boss" alt="Boss">
-      </div>
-      <h1 class="intro-title">NOVA<br><span class="intro-subtitle">SPACE INVADERS</span></h1>
-      <div class="intro-flash"></div>
-      <div class="letterbox bottom"></div>
-    </div>
+    <button id="skipIntro" class="btn-skip">COMMENCER LA MISSION</button>
+  </div>
 
-    <div class="overlay" id="overlay">
-      <h2 id="overlayTitle">Prêt ?</h2>
-      <p id="overlayMessage">Défends la station Nova !</p>
+  <div id="main-ui" class="hidden">
+    <aside class="sidebar">
+      <h1>NOVA Squad</h1>
       
-      <div id="bossTaunt" class="boss-taunt-overlay" style="display: none;">
-        <img src="boss_ship.png" class="taunt-portrait" alt="Alien">
-        <div class="taunt-dialogue">
-          <h3 class="taunt-name">Commandant Alien</h3>
-          <p id="tauntText"></p>
+      <div class="stat-box">
+        <div class="label">Score</div>
+        <div class="value score" id="score">0</div>
+      </div>
+      
+      <div class="stat-box">
+        <div class="label">Record</div>
+        <div class="value highscore" id="highScore">0</div>
+      </div>
+      
+      <div class="stat-box">
+        <div class="label">Vies</div>
+        <div class="value lives" id="lives">3</div>
+      </div>
+      
+      <div class="stat-box">
+        <div class="label">Vague</div>
+        <div class="value wave" id="wave">1</div>
+      </div>
+      
+      <div class="stat-box">
+        <div class="label">Arme</div>
+        <div class="value weapon" id="weapon">—</div>
+        <div class="weapon-timer">
+          <div class="weapon-timer-bar" id="weaponTimer"></div>
         </div>
       </div>
       
-      <div id="shipSelection" class="ship-selection">
-        <h3 class="ship-sel-title">Choisis ton vaisseau</h3>
-        <div class="ships-container">
-          <div class="ship-card active" data-ship="nova">
-            <img src="ship_vanguard.png" alt="Nova" class="ship-icon">
-            <div class="ship-name">Nova</div>
-            <div class="ship-stats">Équilibré</div>
-          </div>
-          <div class="ship-card" data-ship="viper">
-            <img src="ship_swift.png" alt="Viper" class="ship-icon">
-            <div class="ship-name">Viper</div>
-            <div class="ship-stats">Rapide</div>
-          </div>
-          <div class="ship-card" data-ship="goliath">
-            <img src="ship_titan.png" alt="Goliath" class="ship-icon">
-            <div class="ship-name">Goliath</div>
-            <div class="ship-stats">Résistant</div>
-          </div>
-          <div class="ship-card" data-ship="phantom">
-            <img src="ship_ghost.png" alt="Phantom" class="ship-icon">
-            <div class="ship-name">Phantom</div>
-            <div class="ship-stats">Furtif</div>
-          </div>
-          <div class="ship-card" data-ship="orion">
-            <img src="ship_orion.png" alt="Orion" class="ship-icon">
-            <div class="ship-name">Orion</div>
-            <div class="ship-stats">Lourd</div>
+      <div class="stat-box" style="flex: 1;">
+        <div class="label">Historique</div>
+        <div class="powerups-list" id="powerupLog"></div>
+      </div>
+      
+      <div class="controls-info">
+        <div><kbd>←</kbd> <kbd>→</kbd> Déplacer</div>
+        <div><kbd>Espace</kbd> Tir</div>
+        <div><kbd>P</kbd> Pause</div>
+      </div>
+    </aside>
+    
+    <main class="game-area">
+      <canvas id="gameCanvas" width="960" height="600"></canvas>
+      <button id="pauseButton" class="pause-btn" title="Pause (P)">II</button>
+      
+      <div class="overlay" id="overlay">
+        <h2 id="overlayTitle">VAGUE TERMINÉE</h2>
+        <p id="overlayMessage">Défends la station Nova !</p>
+        
+        <div id="bossTaunt" class="boss-taunt-overlay" style="display: none;">
+          <img src="boss_ship.png" class="taunt-portrait" alt="Alien">
+          <div class="taunt-dialogue">
+            <h3 class="taunt-name">Commandant Alien</h3>
+            <p id="tauntText"></p>
           </div>
         </div>
-      </div>
-
-      <div id="difficultySelection" class="difficulty-selection">
-        <h3 class="ship-sel-title">Difficulté : <span id="diffValueDisplay">5</span>/10</h3>
-        <input type="range" id="difficultySlider" min="1" max="10" value="5" class="diff-slider">
-      </div>
-
-      <div id="waveSelection" class="wave-selection">
-        <h3 class="ship-sel-title">Secteur & Vague</h3>
-        <div class="wave-control-group">
-          <input type="number" id="startWaveInput" min="1" max="50" value="1" class="wave-input">
-          <div class="wave-info-hint">Secteur 1 : Vagues 1-5 | Secteur 2 : Vagues 6-15</div>
+        
+        <div id="shipSelection" class="ship-selection">
+          <h3 class="ship-sel-title">Choisis ton vaisseau</h3>
+          <div class="ships-container">
+            <div class="ship-card active" data-ship="nova">
+              <img src="ship_vanguard.png" alt="Nova" class="ship-icon">
+              <div class="ship-name">Nova</div>
+              <div class="ship-stats">Équilibré</div>
+            </div>
+            <div class="ship-card" data-ship="viper">
+              <img src="ship_swift.png" alt="Viper" class="ship-icon">
+              <div class="ship-name">Viper</div>
+              <div class="ship-stats">Rapide</div>
+            </div>
+            <div class="ship-card" data-ship="goliath">
+              <img src="ship_titan.png" alt="Goliath" class="ship-icon">
+              <div class="ship-name">Goliath</div>
+              <div class="ship-stats">Résistant</div>
+            </div>
+            <div class="ship-card" data-ship="phantom">
+              <img src="ship_ghost.png" alt="Phantom" class="ship-icon">
+              <div class="ship-name">Phantom</div>
+              <div class="ship-stats">Furtif</div>
+            </div>
+            <div class="ship-card" data-ship="orion">
+              <img src="ship_orion.png" alt="Orion" class="ship-icon">
+              <div class="ship-name">Orion</div>
+              <div class="ship-stats">Tactique</div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="button-3d-wrapper">
-        <button id="startButton" class="btn-3d">
-          <span class="btn-3d-front">Démarrer</span>
-        </button>
-      </div>
-    </div>
-
-    <div id="cutsceneOverlay" class="cutscene-overlay hidden">
-      <div class="letterbox top"></div>
-      <div class="cinematic-content">
-        <div class="galaxy-bg"></div>
-        <div class="planet-saturn">
-          <div class="ring"></div>
+        <div id="difficultySelection" class="control-group">
+          <label>Difficulté : <span id="diffValueDisplay">Moyen</span></label>
+          <input type="range" id="difficultySlider" min="1" max="10" value="5" class="diff-slider">
         </div>
-        <div id="cinematicShip" class="cinematic-ship"></div>
-      </div>
-      <div class="letterbox bottom"></div>
-      <div id="cinematicText" class="cinematic-text"></div>
-    </div>
-  </main>
 
-  <script src="game.js?v=26"></script>
+        <div id="waveSelection" class="control-group">
+          <label>Vague de départ (1-50) :</label>
+          <div class="wave-input-container">
+            <input type="number" id="startWaveInput" min="1" max="50" value="1" class="wave-input">
+            <span class="sector-hint" id="sectorHint">Secteur 1 : Nova Base</span>
+          </div>
+        </div>
+
+        <button id="startButton" class="btn-primary">DÉMARRER LA MISSION</button>
+      </div>
+
+      <!-- Cutscene Overlay for Transitions -->
+      <div id="cutsceneOverlay" class="cutscene-overlay hidden">
+        <div class="hyper-jump-stars"></div>
+        <img src="ship_vanguard.png" id="cinematicShip" class="cinematic-ship" alt="Ship">
+        <div id="cinematicText" class="cinematic-text">Saut en cours...</div>
+      </div>
+    </main>
+  </div>
+
+  <script src="game.js?v=13"></script>
 </body>
 </html>
