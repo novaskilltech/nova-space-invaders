@@ -875,8 +875,15 @@ canvas {
 
 .move-btns {
   display: flex;
-  gap: 15px;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
   pointer-events: auto;
+}
+
+.horizontal-btns {
+  display: flex;
+  gap: 30px;
 }
 
 .ctrl-btn {

@@ -1854,6 +1854,16 @@ if (btnRight) {
   btnRight.addEventListener("touchstart", (e) => { e.preventDefault(); keys.add("ArrowRight"); });
   btnRight.addEventListener("touchend", (e) => { e.preventDefault(); keys.delete("ArrowRight"); });
 }
+const btnUp = document.getElementById("btnUp");
+const btnDown = document.getElementById("btnDown");
+if (btnUp) {
+  btnUp.addEventListener("touchstart", (e) => { e.preventDefault(); keys.add("ArrowUp"); });
+  btnUp.addEventListener("touchend", (e) => { e.preventDefault(); keys.delete("ArrowUp"); });
+}
+if (btnDown) {
+  btnDown.addEventListener("touchstart", (e) => { e.preventDefault(); keys.add("ArrowDown"); });
+  btnDown.addEventListener("touchend", (e) => { e.preventDefault(); keys.delete("ArrowDown"); });
+}
 if (btnFire) {
   btnFire.addEventListener("touchstart", (e) => { e.preventDefault(); keys.add(" "); });
   btnFire.addEventListener("touchend", (e) => { e.preventDefault(); keys.delete(" "); });
