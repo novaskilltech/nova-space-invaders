@@ -275,6 +275,10 @@ function createEnemyWave(wave) {
   return enemyList;
 }
 
+function spawnBoss() {
+  const wave = state.wave;
+  let name, hp, speed, fireChance, w, h;
+
   if (wave === 5) {
     name = "Crabe Titan";
     hp = 50;
