@@ -203,16 +203,17 @@ function loadImage(src) {
 }
 
 async function bootstrapAssets() {
-  const v = "?v=2";
+  const v = "?v=3";
   state.images.nova = await loadImage("ship_nova.png" + v);
-  state.images.viper = await loadImage("ship_nova.png" + v); // Fallback pour les variantes
-  state.images.goliath = await loadImage("ship_nova.png" + v);
-  state.images.phantom = await loadImage("ship_nova.png" + v);
-  state.images.orion = await loadImage("ship_nova.png" + v);
+  state.images.viper = await loadImage("ship_swift.png" + v);
+  state.images.goliath = await loadImage("ship_titan.png" + v);
+  state.images.phantom = await loadImage("ship_ghost.png" + v);
+  state.images.orion = await loadImage("ship_orion.png" + v);
 
-  state.images.squid = await loadImage("enemy_nova.png" + v);
-  state.images.crab = await loadImage("enemy_nova.png" + v);
-  state.images.octopus = await loadImage("enemy_nova.png" + v);
+  state.images.squid = await loadImage("enemy_squid.png" + v);
+  state.images.crab = await loadImage("enemy_crab.png" + v);
+  state.images.octopus = await loadImage("enemy_octopus.png" + v);
+  state.images.boss = await loadImage("boss_ship.png" + v);
   state.images.kamikaze = await loadImage("enemy_nova.png" + v);
   state.images.interceptor = await loadImage("enemy_nova.png" + v);
 }
@@ -1380,11 +1381,7 @@ const waveBossColors = ["#ff00ff", "#00f2ff", "#ffb84d", "#ff4d4d", "#c264ff", "
 
 function drawSprite(img, entity, fallbackColor, type) {
   if (img) {
-    // Add glow effect for ships/enemies
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = fallbackColor;
     ctx.drawImage(img, entity.x, entity.y, entity.width, entity.height);
-    ctx.shadowBlur = 0;
     return;
   }
 
