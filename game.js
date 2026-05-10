@@ -264,17 +264,24 @@ function createEnemyWave(wave) {
   return enemyList;
 }
 
-function spawnBoss() {
-  const wave = state.wave;
-  let hp = 40;
-  let speed = 100;
-  let name = "Juggernaut";
-  let fireChance = 0.02;
-  let w = 200, h = 140;
+  if (wave === 5) {
+    name = "Crabe Titan";
+    hp = 50;
+    speed = 80;
+    fireChance = 0.025;
+    w = 240; h = 180;
+    state.boss = {
+      name, type: "crab", x: canvas.width / 2 - w / 2, y: 70, width: w, height: h,
+      health: hp, maxHealth: hp, speed, direction: 1, fireChance, phase: 1, attackTimer: 0,
+      lives: 2
+    };
+    return;
+  }
 
   if (wave === 10) { 
     state.boss = {
       name: "Escadron Éclipse",
+      type: "boss",
       isSquad: true,
       entities: [],
       speed: 180,
@@ -300,15 +307,42 @@ function spawnBoss() {
     return;
   }
 
-  if (wave === 15) { name = "Centurion"; hp = 90; speed = 140; fireChance = 0.045; w = 220; }
-  if (wave === 20) { name = "Cerveau Ruche"; hp = 140; speed = 200; fireChance = 0.06; w = 180; }
+  if (wave === 15) { 
+    name = "Kraken Spectral";
+    hp = 100;
+    speed = 160;
+    fireChance = 0.05;
+    w = 220; h = 220;
+    state.boss = {
+      name, type: "octopus", x: canvas.width / 2 - w / 2, y: 70, width: w, height: h,
+      health: hp, maxHealth: hp, speed, direction: 1, fireChance, phase: 1, attackTimer: 0,
+      lives: 2, multiShot: true
+    };
+    return;
+  }
 
+  if (wave === 20) { 
+    name = "Calamar du Vide";
+    hp = 150;
+    speed = 220;
+    fireChance = 0.06;
+    w = 180; h = 260;
+    state.boss = {
+      name, type: "squid", x: canvas.width / 2 - w / 2, y: 70, width: w, height: h,
+      health: hp, maxHealth: hp, speed, direction: 1, fireChance, phase: 1, attackTimer: 0,
+      lives: 3, dash: true
+    };
+    return;
+  }
+
+  // Fallback
   state.boss = {
-    name,
-    x: canvas.width / 2 - w / 2,
+    name: "Dreadnought X",
+    type: "boss",
+    x: canvas.width / 2 - 200 / 2,
     y: 70,
-    width: w,
-    height: h,
+    width: 200,
+    height: 140,
     health: hp,
     maxHealth: hp,
     speed,
@@ -316,7 +350,7 @@ function spawnBoss() {
     fireChance,
     phase: 1,
     attackTimer: 0,
-    sideAttack: wave >= 15,
+    lives: 2
   };
 }
 
@@ -544,8 +578,17 @@ function levelCompleteContinue() {
     if(document.getElementById("waveSelection")) document.getElementById("waveSelection").style.display = "none";
     if(document.getElementById("startButton")) document.getElementById("startButton").style.display = "none";
     
-    document.getElementById("bossTaunt").style.display = "flex";
+    const bossType = (state.wave / 5) === 1 ? "crab" : (state.wave / 5) === 2 ? "boss" : (state.wave / 5) === 3 ? "octopus" : "squid";
+    const imgEl = document.querySelector(".taunt-portrait");
+    const nameEl = document.querySelector(".taunt-name");
     
+    if (bossType === "crab") nameEl.innerText = "Crabe Titan";
+    else if (bossType === "octopus") nameEl.innerText = "Kraken Spectral";
+    else if (bossType === "squid") nameEl.innerText = "Calamar du Vide";
+    else nameEl.innerText = "Commandant Alien";
+
+    imgEl.src = state.images[bossType] ? state.images[bossType].src : "boss_ship.png";
+
     const msg = TAUNT_MESSAGES[Math.floor(Math.random() * TAUNT_MESSAGES.length)];
     const textEl = document.getElementById("tauntText");
     textEl.innerHTML = "";
@@ -760,14 +803,36 @@ function updateBoss(delta) {
   boss.x += boss.speed * boss.direction * dt;
   if (boss.x <= 50 || boss.x + boss.width >= canvas.width - 50) {
     boss.direction *= -1;
+    if (boss.dash) {
+      boss.x += boss.direction * 50; // Petit bond
+      boss.speed = 300; // Accélération après le mur
+      setTimeout(() => { if(state.boss) state.boss.speed = 220; }, 500);
+    }
   }
 
   const fireMult = 0.4 + (selectedDifficulty / 12);
   if (Math.random() < boss.fireChance * fireMult) {
-    if (boss.phase === 1) {
-      fireEnemyShot(boss.x + boss.width / 2, boss.y + boss.height - 10, 320, true);
+    if (boss.type === "crab") {
+      // Tir des pinces
+      fireEnemyShot(boss.x + 20, boss.y + boss.height * 0.7, 300, true);
+      fireEnemyShot(boss.x + boss.width - 20, boss.y + boss.height * 0.7, 300, true);
+    } else if (boss.type === "octopus") {
+      // Tir en éventail
+      for(let i = -1; i <= 1; i++) {
+        state.enemyShots.push({
+          x: boss.x + boss.width / 2,
+          y: boss.y + boss.height - 20,
+          width: 6, height: 18, speed: 280, vx: i * 80
+        });
+      }
+    } else if (boss.type === "squid") {
+      // Tir focalisé rapide
+      fireEnemyShot(boss.x + boss.width / 2, boss.y + boss.height - 10, 450, true);
     } else {
-      fireEnemyShot(boss.x + boss.width / 2, boss.y + boss.height - 10, 360, true);
+      fireEnemyShot(boss.x + boss.width / 2, boss.y + boss.height - 10, 320, true);
+    }
+    
+    if (boss.phase === 2 && Math.random() < 0.3) {
       const spreadChance = 0.2 + (selectedDifficulty / 15);
       if (Math.random() < spreadChance) {
         const vxSpread = 70 + (selectedDifficulty * 12);
@@ -971,7 +1036,9 @@ function showBossDefeatedDialog(customMsg) {
       clearInterval(typeInterval);
       setTimeout(async () => {
         nameEl.innerText = "Commandant Alien";
-        imgEl.src = "boss_ship.png";
+        const bossType = (state.wave / 5) === 1 ? "crab" : (state.wave / 5) === 2 ? "boss" : (state.wave / 5) === 3 ? "octopus" : "squid";
+        imgEl.src = state.images[bossType] ? state.images[bossType].src : "boss_ship.png";
+        
         textEl.style.color = "#ffcccc";
         document.getElementById("overlay").style.display = "none";
         document.getElementById("bossTaunt").style.display = "none";
@@ -1599,7 +1666,7 @@ function draw() {
         }
       });
     } else {
-      drawSprite(state.images.boss, state.boss, "#ff6474", "boss");
+      drawSprite(state.images[state.boss.type || "boss"], state.boss, "#ff6474", "boss");
     }
     drawBossHealth();
   }
