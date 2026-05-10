@@ -1742,6 +1742,10 @@ function handleStartClick() {
 }
 
 ui.startButton.addEventListener("click", handleStartClick);
+ui.startButton.addEventListener("touchstart", (e) => {
+  e.preventDefault();
+  handleStartClick();
+});
 ui.pauseButton.addEventListener("click", () => {
   if (state.running) {
     togglePause();
