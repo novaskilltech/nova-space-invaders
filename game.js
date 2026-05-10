@@ -1779,11 +1779,35 @@ if (startWaveInput) {
 }
 
 // Start Audio Context on first interaction
+document.body.addEventListener('touchstart', () => {
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}, { once: true });
+
 document.body.addEventListener('click', () => {
   if (audioCtx.state === 'suspended') {
     audioCtx.resume();
   }
 }, { once: true });
+
+// Mobile Touch Controls
+const btnLeft = document.getElementById("btnLeft");
+const btnRight = document.getElementById("btnRight");
+const btnFire = document.getElementById("btnFire");
+
+if (btnLeft) {
+  btnLeft.addEventListener("touchstart", (e) => { e.preventDefault(); keys.add("ArrowLeft"); });
+  btnLeft.addEventListener("touchend", (e) => { e.preventDefault(); keys.delete("ArrowLeft"); });
+}
+if (btnRight) {
+  btnRight.addEventListener("touchstart", (e) => { e.preventDefault(); keys.add("ArrowRight"); });
+  btnRight.addEventListener("touchend", (e) => { e.preventDefault(); keys.delete("ArrowRight"); });
+}
+if (btnFire) {
+  btnFire.addEventListener("touchstart", (e) => { e.preventDefault(); keys.add(" "); });
+  btnFire.addEventListener("touchend", (e) => { e.preventDefault(); keys.delete(" "); });
+}
 
 (function init() {
   ctx.imageSmoothingEnabled = true;
