@@ -127,6 +127,8 @@ const state = {
   showingQuestion: false,
   currentQuestion: null,
   currentWaveBonus: 0,
+  flawless: true,
+  isCinematic: false,
 };
 
 const WEAPONS = {
@@ -201,6 +203,8 @@ async function bootstrapAssets() {
   state.images.crab = await loadImage("enemy_crab.png" + v);
   state.images.octopus = await loadImage("enemy_octopus.png" + v);
   state.images.boss = await loadImage("boss_ship.png" + v);
+  state.images.kamikaze = await loadImage("enemy_squid.png" + v); // Fallback pour l'instant
+  state.images.interceptor = await loadImage("enemy_crab.png" + v); // Fallback pour l'instant
 }
 
 function resetPlayer() {
@@ -221,26 +225,34 @@ function createEnemyWave(wave) {
   const padding = 12;
   const totalWidth = cols * width + (cols - 1) * padding;
   const startX = (canvas.width - totalWidth) / 2;
-  const startY = 60 + (wave * 15); // Descend plus bas à chaque niveau
+  const startY = Math.min(180, 60 + (wave * 12)); // Cap la descente pour éviter le game over immédiat
 
   for (let row = 0; row < rows; row += 1) {
-    let type = "squid"; // 30 pts approx
-    let hp = 1;
-    if (row === 1 || row === 2) type = "crab"; // 20 pts
-    if (row >= 3) type = "octopus"; // 10 pts
+    let type = "squid"; 
+    if (row === 1 || row === 2) type = "crab";
+    if (row >= 3) type = "octopus";
 
     for (let col = 0; col < cols; col += 1) {
+      // De vagues 6 à 10, on introduit des kamikazes et intercepteurs
+      let finalType = type;
+      if (wave >= 6) {
+        const rand = Math.random();
+        if (rand < 0.1) finalType = "kamikaze";
+        else if (rand < 0.2) finalType = "interceptor";
+      }
+
       enemyList.push({
         x: startX + col * (width + padding),
         y: startY + row * (height + padding),
-        width: type === "squid" ? 36 : type === "crab" ? 44 : 48,
-        height: type === "squid" ? 36 : type === "crab" ? 32 : 32,
-        type,
-        hp: 1,
+        width: finalType === "squid" ? 36 : finalType === "crab" ? 44 : finalType === "kamikaze" ? 32 : 48,
+        height: finalType === "squid" ? 36 : finalType === "crab" ? 32 : finalType === "kamikaze" ? 40 : 32,
+        type: finalType,
+        hp: finalType === "interceptor" ? 3 : 1,
         dead: false,
-        freeRoaming: Math.random() < 0.05,
+        freeRoaming: finalType === "kamikaze" ? true : Math.random() < 0.05,
         vx: (Math.random() - 0.5) * 100,
-        vy: 20 + Math.random() * 30
+        vy: 20 + Math.random() * 30,
+        charging: false // Spécifique au kamikaze
       });
     }
   }
@@ -260,7 +272,34 @@ function spawnBoss() {
   let fireChance = 0.02;
   let w = 200, h = 140;
 
-  if (wave === 10) { name = "L'Eclipse"; hp = 60; speed = 160; fireChance = 0.035; w = 160; }
+  if (wave === 10) { 
+    state.boss = {
+      name: "Escadron Éclipse",
+      isSquad: true,
+      entities: [],
+      speed: 180,
+      fireChance: 0.03,
+      invulnerable: false,
+      maxTotalHP: 100
+    };
+    for (let i = 0; i < 5; i++) {
+      state.boss.entities.push({
+        x: 100 + i * (canvas.width - 200) / 4,
+        y: 80,
+        width: 60,
+        height: 60,
+        health: 20,
+        maxHealth: 20,
+        dead: false,
+        phase: 1,
+        stealth: false,
+        stealthTimer: 0,
+        direction: 1
+      });
+    }
+    return;
+  }
+
   if (wave === 15) { name = "Centurion"; hp = 90; speed = 140; fireChance = 0.045; w = 220; }
   if (wave === 20) { name = "Cerveau Ruche"; hp = 140; speed = 200; fireChance = 0.06; w = 180; }
 
@@ -296,7 +335,13 @@ function initGame() {
   player.weapon = player.baseWeapon || "normal";
   player.weaponTime = 0;
   resetPlayer();
-  enemies = createEnemyWave(state.wave);
+  
+  if (state.wave % 5 === 0) {
+    spawnBoss();
+    enemies = [];
+  } else {
+    enemies = createEnemyWave(state.wave);
+  }
   makeStars();
   syncUi();
 }
@@ -346,10 +391,12 @@ function showOverlay(title, message, buttonLabel) {
   ui.overlayTitle.textContent = title;
   ui.overlayMessage.textContent = message;
   ui.startButton.textContent = buttonLabel;
+  ui.overlay.style.display = "flex"; // Force l'affichage via inline style
   ui.overlay.classList.remove("hidden");
 }
 
 function hideOverlay() {
+  ui.overlay.style.display = "none";
   ui.overlay.classList.add("hidden");
 }
 
@@ -453,15 +500,24 @@ function advanceWave() {
 }
 
 function showWaveComplete(wave) {
-  const bonus = wave * 100;
+  let bonus = wave * 100;
+  let subMsg = "";
+  
+  if (state.flawless) {
+    const flawlessBonus = Math.floor(bonus * 0.5);
+    bonus += flawlessBonus;
+    subMsg = `\n⭐ BONUS FLAWLESS : +${flawlessBonus} pts (x1.5) ⭐`;
+  }
+  
   state.score += bonus;
+  state.flawless = true; // Reset for next wave
   
   if (state.highScore === undefined || state.score > state.highScore) {
     state.highScore = state.score;
   }
   
   const nextWave = wave + 1;
-  let msg = `Score: ${state.score}\nRecord: ${state.highScore}\n\n`;
+  let msg = `Score: ${state.score}\nRecord: ${state.highScore}${subMsg}\n\n`;
   msg += `Vague ${nextWave} : En approche...\nFormat Classique 11x5`;
   
   state.paused = true;
@@ -530,20 +586,8 @@ function startBossLevel() {
   
   state.teaseBoss = null;
   enemies = [];
-  state.boss = {
-    name: "Dreadnought Alien",
-    x: canvas.width / 2 - 80,
-    y: 40,
-    width: 160,
-    height: 120,
-    health: 80 + (state.wave * 10),
-    maxHealth: 80 + (state.wave * 10),
-    lives: 2,
-    speed: 120 + (state.wave * 5),
-    direction: 1,
-    phase: 1,
-    fireChance: 0.02 + (state.wave * 0.002)
-  };
+  
+  spawnBoss(); // Utilise la logique dynamique définie précédemment
   
   resetPlayer();
   syncUi();
@@ -581,6 +625,7 @@ function startNormalLevel() {
 
 function handlePlayerHit() {
   state.lives -= 1;
+  state.flawless = false;
   addExplosion(player.x + player.width / 2, player.y + player.height / 2, "#ff6474");
   if (state.lives <= 0) {
     endGame(
@@ -593,6 +638,7 @@ function handlePlayerHit() {
   resetPlayer();
   state.enemyShots = [];
   state.playerInvulnerableUntil = performance.now() + player.invul;
+  keys.clear(); // Évite les touches bloquées après un choc
   syncUi();
 }
 
@@ -643,7 +689,8 @@ function updateProjectiles(delta) {
     if (shot.vx) {
       shot.x += shot.vx * dt;
     }
-    return shot.y + shot.height > 0 && shot.x > 0 && shot.x < canvas.width;
+    const sh = shot.height || 18;
+    return shot.y + sh > 0 && shot.x > -50 && shot.x < canvas.width + 50;
   });
 
   state.enemyShots = state.enemyShots.filter((shot) => {
@@ -651,42 +698,67 @@ function updateProjectiles(delta) {
     if (shot.vx) {
       shot.x += shot.vx * dt;
     }
-    return shot.y < canvas.height + shot.height && shot.x > 0 && shot.x < canvas.width;
+    const sh = shot.height || 18;
+    return shot.y < canvas.height + sh && shot.x > -50 && shot.x < canvas.width + 50;
   });
 }
 
 function updateBoss(delta) {
   const dt = delta / 1000;
   const boss = state.boss;
+  if (!boss) return;
 
-  if (boss.invulnerable) {
-    const now = performance.now();
-    const elapsed = now - boss.transitionStart;
-    const duration = 3000;
-    
-    if (elapsed > duration) {
-      boss.invulnerable = false;
-      boss.y = 40;
-    } else {
-      const progress = elapsed / duration;
-      const angle = progress * Math.PI * 2 - Math.PI / 2;
-      const centerX = canvas.width / 2;
-      const centerY = 150;
-      const radiusX = 200;
-      const radiusY = 100;
+  if (boss.isSquad) {
+    boss.entities.forEach(ent => {
+      if (ent.dead) return;
       
-      boss.x = centerX + Math.cos(angle) * radiusX - boss.width / 2;
-      boss.y = centerY + Math.sin(angle) * radiusY - boss.height / 2;
+      // Mouvement sinusoïdal individuel + direction globale
+      ent.x += boss.speed * ent.direction * dt;
+      ent.y = 80 + Math.sin(performance.now() * 0.002 + ent.x * 0.01) * 30;
+      
+      if (ent.x <= 50 || ent.x + ent.width >= canvas.width - 50) {
+        ent.direction *= -1;
+      }
+      
+      // Furtivité aléatoire
+      if (performance.now() > ent.stealthTimer) {
+        ent.stealth = !ent.stealth;
+        ent.stealthTimer = performance.now() + (ent.stealth ? 2000 : 4000);
+      }
+      
+      // Tir (Fréquence réduite pour équilibrage)
+      const squadFireMult = 0.3 + (selectedDifficulty / 15);
+      if (Math.random() < boss.fireChance * dt * 30 * squadFireMult) {
+        fireEnemyShot(ent.x + ent.width / 2, ent.y + ent.height, 300, true);
+      }
+    });
+    
+    // Nettoyage et fin du boss
+    boss.entities = boss.entities.filter(e => !e.dead);
+    if (boss.entities.length === 0) {
+      state.boss = null;
+      if (!state.bossDefeatedDialog) {
+        showBossDefeatedDialog("Escadron éliminé. Passage en hyper-espace imminent.");
+      }
     }
     return;
   }
 
-  if (boss.phase >= 2) {
-    boss.y += Math.sin(performance.now() * 0.003) * 30 * dt;
+  // Comportement Boss Standard (Juggernaut, etc.)
+  if (boss.invulnerable) {
+    const elapsed = performance.now() - boss.transitionStart;
+    const angle = (elapsed / 1000) * Math.PI * 2;
+    boss.x = canvas.width / 2 - boss.width / 2 + Math.cos(angle) * 150;
+    boss.y = 120 + Math.sin(angle * 2) * 50;
+    
+    if (elapsed > 3000) {
+      boss.invulnerable = false;
+    }
+    return;
   }
 
-  boss.x += boss.direction * boss.speed * dt;
-  if (boss.x <= 40 || boss.x + boss.width >= canvas.width - 40) {
+  boss.x += boss.speed * boss.direction * dt;
+  if (boss.x <= 50 || boss.x + boss.width >= canvas.width - 50) {
     boss.direction *= -1;
   }
 
@@ -695,13 +767,10 @@ function updateBoss(delta) {
     if (boss.phase === 1) {
       fireEnemyShot(boss.x + boss.width / 2, boss.y + boss.height - 10, 320, true);
     } else {
-      // Phase 2: Central shot always fired if firing
       fireEnemyShot(boss.x + boss.width / 2, boss.y + boss.height - 10, 360, true);
-      
-      // Side shots chance and spread depend on difficulty
       const spreadChance = 0.2 + (selectedDifficulty / 15);
       if (Math.random() < spreadChance) {
-        const vxSpread = 70 + (selectedDifficulty * 12); // Tighter spread in lower difficulty
+        const vxSpread = 70 + (selectedDifficulty * 12);
         state.enemyShots.push({ x: boss.x + 15, y: boss.y + boss.height * 0.6, width: 6, height: 20, speed: 280, vx: -vxSpread });
         state.enemyShots.push({ x: boss.x + boss.width - 15, y: boss.y + boss.height * 0.6, width: 6, height: 20, speed: 280, vx: vxSpread });
       }
@@ -727,7 +796,27 @@ function updateEnemies(delta) {
   let lowestEnemyY = 0;
 
   enemies.forEach((enemy) => {
-    if (enemy.freeRoaming) {
+    if (enemy.type === "interceptor") {
+      const targetX = player.x + (player.width / 2) - (enemy.width / 2);
+      const lerpSpeed = 1.8;
+      enemy.x += (targetX - enemy.x) * lerpSpeed * dt;
+      // Interceptor doesn't drop, stays at fixed height
+    } else if (enemy.type === "kamikaze") {
+      const dx = (player.x + player.width/2) - (enemy.x + enemy.width/2);
+      const dy = (player.y + player.height/2) - (enemy.y + enemy.height/2);
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      
+      if (dist < 350 || enemy.charging) {
+        if (!enemy.charging) {
+          enemy.charging = true;
+          enemy.chargeAngle = Math.atan2(dy, dx);
+        }
+        enemy.x += Math.cos(enemy.chargeAngle) * (state.enemySpeed * 3) * dt;
+        enemy.y += Math.sin(enemy.chargeAngle) * (state.enemySpeed * 3) * dt;
+      } else {
+        enemy.x += state.enemyDirection * state.enemySpeed * dt;
+      }
+    } else if (enemy.freeRoaming) {
       enemy.x += enemy.vx * dt;
       enemy.y += enemy.vy * dt;
       if (enemy.x <= 0 || enemy.x + enemy.width >= canvas.width) {
@@ -736,8 +825,10 @@ function updateEnemies(delta) {
     } else {
       enemy.x += state.enemyDirection * state.enemySpeed * dt;
     }
+    
     lowestEnemyY = Math.max(lowestEnemyY, enemy.y + enemy.height);
-    if (!enemy.freeRoaming && (enemy.x <= 20 || enemy.x + enemy.width >= canvas.width - 20)) {
+    
+    if (enemy.type !== "interceptor" && !enemy.freeRoaming && (enemy.x <= 20 || enemy.x + enemy.width >= canvas.width - 20)) {
       shouldDrop = true;
     }
 
@@ -842,10 +933,12 @@ function drawPowerups() {
   });
 }
 
-function killBoss() {
+function showBossDefeatedDialog(customMsg) {
   state.score += 1500;
   state.lives += 1;
-  addExplosion(state.boss.x + state.boss.width / 2, state.boss.y + state.boss.height / 2, "#4df2c2");
+  if (state.boss && !state.boss.isSquad) {
+    addExplosion(state.boss.x + state.boss.width / 2, state.boss.y + state.boss.height / 2, "#4df2c2");
+  }
   state.boss = null;
   state.bossDefeatedDialog = true;
   
@@ -859,7 +952,7 @@ function killBoss() {
   
   document.getElementById("bossTaunt").style.display = "flex";
   
-  const msg = "Notre monde est libre. La galaxie ne vous appartient pas !";
+  const msg = customMsg || "Notre monde est libre. La galaxie ne vous appartient pas !";
   const textEl = document.getElementById("tauntText");
   const nameEl = document.querySelector(".taunt-name");
   const imgEl = document.querySelector(".taunt-portrait");
@@ -876,7 +969,7 @@ function killBoss() {
     i++;
     if (i >= msg.length) {
       clearInterval(typeInterval);
-      setTimeout(() => {
+      setTimeout(async () => {
         nameEl.innerText = "Commandant Alien";
         imgEl.src = "boss_ship.png";
         textEl.style.color = "#ffcccc";
@@ -891,10 +984,35 @@ function killBoss() {
         if(document.getElementById("startButton")) document.getElementById("startButton").style.display = "block";
         
         state.bossDefeatedDialog = false;
+        
+        // Nouvelle cinématique de saut galactique
+        await playGalaxyCinematic();
+        
         advanceWave();
       }, 3000);
     }
   }, 50);
+}
+
+async function playGalaxyCinematic() {
+  state.isCinematic = true;
+  const overlay = document.getElementById("cutsceneOverlay");
+  const ship = document.getElementById("cinematicShip");
+  const text = document.getElementById("cinematicText");
+  
+  overlay.classList.remove("hidden");
+  text.innerText = "Calcul du saut intergalactique...";
+  
+  await new Promise(r => setTimeout(r, 2000));
+  
+  text.innerText = "Saut vers le Secteur Saturne lancé !";
+  ship.classList.add("ship-jump");
+  
+  await new Promise(r => setTimeout(r, 2500));
+  
+  overlay.classList.add("hidden");
+  ship.classList.remove("ship-jump");
+  state.isCinematic = false;
 }
 
 function damageBoss(amount, hitX, hitY, hitColor) {
@@ -918,16 +1036,31 @@ function damageBoss(amount, hitX, hitY, hitColor) {
         addExplosion(state.boss.x + Math.random() * state.boss.width, state.boss.y + Math.random() * state.boss.height, "#ff6474");
       }
     } else {
-      killBoss();
+      showBossDefeatedDialog();
     }
   }
 }
 
 function resolveShotCollisions() {
   state.shots.forEach((shot) => {
-    if (state.boss && rectsOverlap(shot, state.boss)) {
-      shot.hit = true;
-      damageBoss(1, shot.x, shot.y, "#ffb84d");
+    if (state.boss) {
+      if (state.boss.isSquad) {
+        state.boss.entities.forEach(ent => {
+          if (!shot.hit && !ent.dead && rectsOverlap(shot, ent)) {
+            shot.hit = true;
+            ent.health -= 1;
+            addExplosion(shot.x, shot.y, "#ffb84d");
+            if (ent.health <= 0) {
+              ent.dead = true;
+              state.score += 500;
+              for(let i=0; i<10; i++) addExplosion(ent.x + Math.random()*ent.width, ent.y + Math.random()*ent.height, "#ff6474");
+            }
+          }
+        });
+      } else if (rectsOverlap(shot, state.boss)) {
+        shot.hit = true;
+        damageBoss(1, shot.x, shot.y, "#ffb84d");
+      }
     }
 
     enemies.forEach((enemy) => {
@@ -1069,7 +1202,7 @@ function resolvePlayerCollisions(timestamp) {
 }
 
 function update(delta, timestamp) {
-  if (!state.running || state.paused) {
+  if (!state.running || state.paused || state.isCinematic) {
     return;
   }
 
@@ -1077,7 +1210,8 @@ function update(delta, timestamp) {
     const elapsed = timestamp - state.levelCompleteStartTime;
     const dt = delta / 1000;
     
-    player.y -= (200 + elapsed * 1.5) * dt;
+    player.y -= (250 + elapsed * 2) * dt; // Un peu plus rapide
+    keys.clear(); // Verrouille les contrôles pendant l'animation
     
     for (let i = 0; i < 2; i++) {
       state.particles.push({
@@ -1394,6 +1528,24 @@ function drawBossHealth() {
   const y = 30;
   const barHeight = 8;
   const gap = 4;
+
+  if (boss.isSquad) {
+    const totalHP = boss.entities.reduce((acc, e) => acc + e.health, 0);
+    const maxTotalHP = boss.maxTotalHP || 100; 
+    
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 10px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(`${boss.name.toUpperCase()} - UNITÉS : ${boss.entities.length}`, x + width / 2, y - 8);
+    
+    ctx.fillStyle = "rgba(255,255,255,0.16)";
+    ctx.fillRect(x, y, width, 10);
+    ctx.fillStyle = "#ff6474";
+    ctx.fillRect(x, y, width * (Math.max(0, totalHP) / maxTotalHP), 10);
+    ctx.strokeStyle = "rgba(255,255,255,0.32)";
+    ctx.strokeRect(x, y, width, 10);
+    return;
+  }
   
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 10px sans-serif";
@@ -1438,17 +1590,27 @@ function draw() {
     drawSprite(state.images[enemy.type], enemy, col, "enemy");
   });
   if (state.boss) {
-    drawSprite(state.images.boss, state.boss, "#ffb84d", "boss");
+    if (state.boss.isSquad) {
+      state.boss.entities.forEach(ent => {
+        if (!ent.dead) {
+          ctx.globalAlpha = ent.stealth ? 0.2 : 1;
+          drawSprite(state.images.boss, ent, "#ff6474", "boss");
+          ctx.globalAlpha = 1;
+        }
+      });
+    } else {
+      drawSprite(state.images.boss, state.boss, "#ff6474", "boss");
+    }
+    drawBossHealth();
   }
-  drawPowerups();
   drawShots();
+  drawPowerups();
 
   if (state.teaseBoss) {
     drawSprite(state.images.boss, state.teaseBoss, "#ffb84d", "boss");
   }
 
   drawParticles();
-  drawBossHealth();
 }
 
 function loop(timestamp) {
@@ -1457,7 +1619,7 @@ function loop(timestamp) {
   }
 
   let delta = timestamp - state.lastFrame;
-  if (delta > 100) {
+  if (delta > 100 || state.isCinematic) {
     delta = 16;
   }
   state.lastFrame = timestamp;
@@ -1501,6 +1663,8 @@ function handleStartClick() {
   }
   
   if (!state.running) {
+    // S'assurer de lire la valeur actuelle de l'input avant de démarrer
+    selectedStartWave = parseInt(document.getElementById("startWaveInput").value) || 1;
     startGame();
     return;
   }
@@ -1536,7 +1700,8 @@ const startWaveInput = document.getElementById("startWaveInput");
 if (difficultySlider) {
   difficultySlider.addEventListener("input", () => {
     selectedDifficulty = parseInt(difficultySlider.value);
-    if (diffValueDisplay) diffValueDisplay.textContent = selectedDifficulty;
+    const labels = ["Facile", "Débutant", "Soldat", "Moyen", "Vétéran", "Difficile", "Élite", "Maître", "Légende", "NOVA"];
+    if (diffValueDisplay) diffValueDisplay.textContent = labels[selectedDifficulty - 1] || selectedDifficulty;
   });
 }
 

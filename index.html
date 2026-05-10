@@ -56,6 +56,7 @@
     
     <!-- Intro Cinematic -->
     <div id="introCinematic" class="intro-cinematic">
+      <div class="letterbox top"></div>
       <div class="intro-scene">
         <img src="ship_titan.png" class="intro-ship ship-1" alt="Ship">
         <img src="ship_vanguard.png" class="intro-ship ship-2" alt="Ship">
@@ -64,6 +65,7 @@
       </div>
       <h1 class="intro-title">NOVA<br><span class="intro-subtitle">SPACE INVADERS</span></h1>
       <div class="intro-flash"></div>
+      <div class="letterbox bottom"></div>
     </div>
 
     <div class="overlay" id="overlay">
@@ -115,8 +117,11 @@
       </div>
 
       <div id="waveSelection" class="wave-selection">
-        <h3 class="ship-sel-title">Vague de départ</h3>
-        <input type="number" id="startWaveInput" min="1" max="50" value="1" class="wave-input">
+        <h3 class="ship-sel-title">Secteur & Vague</h3>
+        <div class="wave-control-group">
+          <input type="number" id="startWaveInput" min="1" max="50" value="1" class="wave-input">
+          <div class="wave-info-hint">Secteur 1 : Vagues 1-5 | Secteur 2 : Vagues 6-15</div>
+        </div>
       </div>
 
       <div class="button-3d-wrapper">
@@ -124,6 +129,19 @@
           <span class="btn-3d-front">Démarrer</span>
         </button>
       </div>
+    </div>
+
+    <div id="cutsceneOverlay" class="cutscene-overlay hidden">
+      <div class="letterbox top"></div>
+      <div class="cinematic-content">
+        <div class="galaxy-bg"></div>
+        <div class="planet-saturn">
+          <div class="ring"></div>
+        </div>
+        <div id="cinematicShip" class="cinematic-ship"></div>
+      </div>
+      <div class="letterbox bottom"></div>
+      <div id="cinematicText" class="cinematic-text"></div>
     </div>
   </main>
 
