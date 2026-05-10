@@ -427,11 +427,17 @@ function showOverlay(title, message, buttonLabel) {
   ui.startButton.textContent = buttonLabel;
   ui.overlay.style.display = "flex"; // Force l'affichage via inline style
   ui.overlay.classList.remove("hidden");
+  
+  const mob = document.getElementById("mobileControls");
+  if (mob) mob.style.display = "none";
 }
 
 function hideOverlay() {
   ui.overlay.style.display = "none";
   ui.overlay.classList.add("hidden");
+  
+  const mob = document.getElementById("mobileControls");
+  if (mob && window.innerWidth <= 900) mob.style.display = "flex";
 }
 
 function togglePause() {
