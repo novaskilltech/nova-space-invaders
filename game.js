@@ -1247,7 +1247,7 @@ function resolveShotCollisions() {
           }
         }
 
-        if (enemy.dead && Math.random() < 0.05) {
+        if (enemy.dead && Math.random() < 0.18) {
           const type = powerupTypes[Math.floor(Math.random() * powerupTypes.length)];
           state.powerups.push({
             x: enemy.x + enemy.width / 2 - 12,
