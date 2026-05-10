@@ -1795,23 +1795,10 @@ document.body.addEventListener('click', () => {
   if (!runSelfChecks()) {
     return;
   }
-  const introCrawl = document.getElementById("introCrawl");
-  const skipBtn = document.getElementById("skipIntro");
-  const gameContainer = document.getElementById("main-ui");
-
-  const startMainGame = () => {
-    introCrawl.style.display = "none";
-    gameContainer.classList.remove("hidden");
-    showOverlay(
-      "PRÊT À COMBATTRE ?",
-      "Protège la station Nova !",
-      "DÉMARRER LA MISSION"
-    );
-    syncUi();
-  };
-
-  skipBtn.addEventListener("click", startMainGame);
-  
-  // Auto-skip après 45 secondes si l'utilisateur ne clique pas
-  setTimeout(startMainGame, 45000);
+  showOverlay(
+    "PRÊT À COMBATTRE ?",
+    "Protège la station Nova !",
+    "DÉMARRER LA MISSION"
+  );
+  syncUi();
 })();
