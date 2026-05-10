@@ -67,8 +67,8 @@ function resizeCanvas() {
   const area = canvas.parentElement;
   const w = area.clientWidth;
   const h = area.clientHeight;
-  canvas.width = w;
-  canvas.height = h;
+  canvas.width = Math.max(320, w);
+  canvas.height = Math.max(480, h);
   
   if (player) {
     player.x = canvas.width / 2 - player.width / 2;
@@ -228,22 +228,23 @@ function isPlayerInvulnerable(timestamp) {
 }
 
 function createEnemyWave(wave) {
-  const rows = 5;
-  const cols = 11;
   const enemyList = [];
   const width = 36;
   const height = 36;
   const padding = 12;
-  const totalWidth = cols * width + (cols - 1) * padding;
+  const enemiesPerRow = Math.max(1, Math.floor((canvas.width - 100) / 70));
+  const numRows = Math.max(1, Math.min(6, 2 + Math.floor(wave / 3)));
+  
+  const totalWidth = enemiesPerRow * width + (enemiesPerRow - 1) * padding;
   const startX = (canvas.width - totalWidth) / 2;
-  const startY = Math.min(180, 60 + (wave * 12)); // Cap la descente pour éviter le game over immédiat
+  const startY = Math.min(180, 60 + (wave * 12));
 
-  for (let row = 0; row < rows; row += 1) {
+  for (let row = 0; row < numRows; row += 1) {
     let type = "squid"; 
     if (row === 1 || row === 2) type = "crab";
     if (row >= 3) type = "octopus";
 
-    for (let col = 0; col < cols; col += 1) {
+    for (let col = 0; col < enemiesPerRow; col += 1) {
       // De vagues 6 à 10, on introduit des kamikazes et intercepteurs
       let finalType = type;
       if (wave >= 6) {
@@ -431,6 +432,7 @@ function startGame() {
     state.lastShotAt = 0;
     hideOverlay();
     syncUi();
+    console.log("Starting game with", enemies.length, "enemies");
     requestAnimationFrame(loop);
     console.log("Game loop started");
   } catch (err) {
