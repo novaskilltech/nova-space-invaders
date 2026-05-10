@@ -3,7 +3,8 @@ import os
 
 files = [
     "ship_vanguard.png", "ship_swift.png", "ship_titan.png", "ship_ghost.png", "ship_orion.png",
-    "enemy_squid.png", "enemy_crab.png", "enemy_octopus.png", "boss_ship.png"
+    "enemy_squid.png", "enemy_crab.png", "enemy_octopus.png", "boss_ship.png",
+    "ship_nova.png", "enemy_nova.png"
 ]
 
 for f in files:
