@@ -240,6 +240,10 @@ const state = {
   flawless: true,
   isCinematic: false,
   lastCommAt: 0,
+  mouseActive: false,
+  mouseTargetX: 0,
+  mouseTargetY: 0,
+  mouseDown: false,
 };
 
 const WEAPONS = {
@@ -348,6 +352,7 @@ function resetPlayer() {
   player.x = canvas.width / 2 - player.width / 2;
   player.y = canvas.height - 108;
   player.vxTilt = 0;
+  state.mouseActive = false;
 }
 
 function isPlayerInvulnerable(timestamp) {
@@ -949,32 +954,55 @@ function updateStars(delta) {
 
 function updatePlayer(delta, timestamp) {
   const dt = delta / 1000;
-  const movingLeft = keys.has("ArrowLeft") || keys.has("a") || keys.has("A");
+  const movingLeft = keys.has("ArrowLeft") || keys.has("a") || keys.has("A") || keys.has("q") || keys.has("Q");
   const movingRight = keys.has("ArrowRight") || keys.has("d") || keys.has("D");
-  const movingUp = keys.has("ArrowUp") || keys.has("w") || keys.has("W");
+  const movingUp = keys.has("ArrowUp") || keys.has("w") || keys.has("W") || keys.has("z") || keys.has("Z");
   const movingDown = keys.has("ArrowDown") || keys.has("s") || keys.has("S");
 
+  const anyDirectionKey = movingLeft || movingRight || movingUp || movingDown;
+  if (anyDirectionKey) {
+    // Dès qu'une touche de direction est pressée, le clavier reprend la main sur le mouvement
+    state.mouseActive = false;
+  }
+
   let targetTilt = 0;
-  if (movingLeft) {
-    player.x -= player.speed * dt;
-    targetTilt = -0.22;
+
+  if (state.mouseActive) {
+    // Déplacement fluide vers le curseur de la souris + inclinaison 3D automatique
+    const desiredX = state.mouseTargetX - player.width / 2;
+    const desiredY = state.mouseTargetY - player.height / 2;
+    const dx = desiredX - player.x;
+    const dy = desiredY - player.y;
+
+    const followFactor = Math.min(1, dt * 16);
+    player.x += dx * followFactor;
+    player.y += dy * followFactor;
+
+    targetTilt = Math.max(-0.28, Math.min(0.28, dx * 0.0045));
+  } else {
+    if (movingLeft) {
+      player.x -= player.speed * dt;
+      targetTilt = -0.22;
+    }
+    if (movingRight) {
+      player.x += player.speed * dt;
+      targetTilt = 0.22;
+    }
+    if (movingUp) {
+      player.y -= player.speed * dt;
+    }
+    if (movingDown) {
+      player.y += player.speed * dt;
+    }
   }
-  if (movingRight) {
-    player.x += player.speed * dt;
-    targetTilt = 0.22;
-  }
+
   player.vxTilt = (player.vxTilt || 0) + (targetTilt - (player.vxTilt || 0)) * Math.min(1, dt * 12);
 
-  if (movingUp) {
-    player.y -= player.speed * dt;
-  }
-  if (movingDown) {
-    player.y += player.speed * dt;
-  }
   player.x = Math.max(16, Math.min(canvas.width - player.width - 16, player.x));
   player.y = Math.max(68, Math.min(canvas.height - player.height - 16, player.y));
 
-  if (keys.has(" ") || keys.has("Spacebar")) {
+  // Tir hybride : Barre Espace OU Clic gauche de la souris maintenu/cliqué
+  if (keys.has(" ") || keys.has("Spacebar") || state.mouseDown) {
     firePlayerShot(timestamp);
   }
 }
@@ -2413,6 +2441,66 @@ document.body.addEventListener('click', () => {
 const btnLeft = document.getElementById("btnLeft");
 const btnRight = document.getElementById("btnRight");
 const btnFire = document.getElementById("btnFire");
+
+// Contrôles Hybrides Souris (Déplacement + Tir + Molette d'Armes)
+function updateMouseCoords(e) {
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return;
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  state.mouseTargetX = (e.clientX - rect.left) * scaleX;
+  state.mouseTargetY = (e.clientY - rect.top) * scaleY;
+  state.mouseActive = true;
+}
+
+canvas.addEventListener("mousemove", (e) => {
+  if (!state.running || state.paused) return;
+  updateMouseCoords(e);
+});
+
+canvas.addEventListener("mousedown", (e) => {
+  if (e.button === 0) {
+    if (audioCtx && audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+    if (state.running && !state.paused) {
+      updateMouseCoords(e);
+      state.mouseDown = true;
+      firePlayerShot(performance.now());
+    }
+  }
+});
+
+window.addEventListener("mouseup", (e) => {
+  if (e.button === 0) {
+    state.mouseDown = false;
+  }
+});
+
+canvas.addEventListener("mouseleave", () => {
+  state.mouseDown = false;
+});
+
+canvas.addEventListener("contextmenu", (e) => {
+  e.preventDefault();
+});
+
+// Molette de la souris pour faire défiler les 8 armes principales à une main
+const weaponOrder = ["normal", "rapid", "triple", "spread", "plasma", "railgun", "deflagration", "fragbomb"];
+canvas.addEventListener("wheel", (e) => {
+  if (!state.running || state.paused) return;
+  e.preventDefault();
+  const currentIdx = Math.max(0, weaponOrder.indexOf(player.weapon));
+  const dir = e.deltaY > 0 ? 1 : -1;
+  const nextIdx = (currentIdx + dir + weaponOrder.length) % weaponOrder.length;
+  selectedWeaponId = weaponOrder[nextIdx];
+  player.baseWeapon = selectedWeaponId;
+  player.weapon = selectedWeaponId;
+  player.weaponTime = 0;
+  document.querySelectorAll(".weapon-card").forEach(c => c.classList.toggle("active", c.getAttribute("data-weapon") === selectedWeaponId));
+  playSound("powerup");
+  syncUi();
+}, { passive: false });
 
 if (btnLeft) {
   btnLeft.addEventListener("touchstart", (e) => { e.preventDefault(); keys.add("ArrowLeft"); });
