@@ -18,13 +18,13 @@
   <meta name="twitter:description" content="Défendez la Terre en 3D (Campagne, Montagne, Océan) : choisissez votre vaisseau, votre armement et affrontez les Seigneurs Aliens !">
   <meta name="twitter:image" content="https://nova-space-invaders.vercel.app/og-image.png">
 
-  <link rel="stylesheet" href="styles.css?v=16">
+  <link rel="stylesheet" href="styles.css?v=17">
 </head>
 <body data-biome="campagne">
   <aside class="sidebar">
     <h1>NOVA Squad <span class="v-badge">3D</span></h1>
     
-    <div class="stat-box">
+    <div class="stat-box stat-biome">
       <div class="label">Secteur 3D</div>
       <div class="value biome-badge" id="biomeDisplay">🌾 Campagne</div>
     </div>
@@ -34,7 +34,7 @@
       <div class="value score" id="score">0</div>
     </div>
     
-    <div class="stat-box">
+    <div class="stat-box stat-record">
       <div class="label">Record</div>
       <div class="value highscore" id="highScore">0</div>
     </div>
@@ -49,7 +49,7 @@
       <div class="value wave" id="wave">1</div>
     </div>
     
-    <div class="stat-box">
+    <div class="stat-box stat-weapon">
       <div class="label">Arme Active</div>
       <div class="value weapon" id="weapon">Laser Simple</div>
       <div class="weapon-timer">
@@ -68,7 +68,7 @@
       </div>
     </div>
     
-    <div class="stat-box" style="flex: 1; min-height: 70px;">
+    <div class="stat-box stat-radar" style="flex: 1; min-height: 70px;">
       <div class="label">Radar & Télémétrie</div>
       <div class="powerups-list" id="powerupLog">Systèmes 3D nominaux</div>
     </div>
@@ -249,7 +249,7 @@
       <img src="ship_nova.png" id="cinematicShip" class="cinematic-ship" alt="Ship">
       <div id="cinematicText" class="cinematic-text">Transition vers le nouveau biome 3D...</div>
     </div>
-    <!-- Mobile Controls -->
+    <!-- Mobile Controls : Dock Bas Dédié (Ne cache jamais le vaisseau) + Glisser l'écran aussi actif -->
     <div id="mobileControls" class="mobile-controls">
       <div class="move-btns">
         <button id="btnUp" class="ctrl-btn up-btn">↑</button>
@@ -259,10 +259,11 @@
         </div>
         <button id="btnDown" class="ctrl-btn down-btn">↓</button>
       </div>
+      <div class="mobile-hint">Glisse sur l'écran ou utilise le pad</div>
       <button id="btnFire" class="ctrl-btn fire-btn">FIRE</button>
     </div>
   </main>
 
-  <script src="game.js?v=28"></script>
+  <script src="game.js?v=29"></script>
 </body>
 </html>

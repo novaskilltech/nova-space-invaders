@@ -898,60 +898,80 @@ canvas {
 .mobile-controls {
   display: none;
   position: absolute;
-  bottom: 20px;
-  left: 20px;
-  right: 20px;
+  bottom: 8px;
+  left: 8px;
+  right: 8px;
+  height: 112px;
+  padding: 6px 14px;
+  background: rgba(5, 10, 20, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 242, 255, 0.25);
+  border-top: 2px solid rgba(0, 242, 255, 0.45);
+  border-radius: 16px;
   justify-content: space-between;
-  align-items: flex-end;
-  pointer-events: none;
+  align-items: center;
+  pointer-events: auto;
   z-index: 2000;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.65);
+}
+
+.mobile-hint {
+  font-size: 0.62rem;
+  color: var(--muted);
+  text-align: center;
+  max-width: 110px;
+  line-height: 1.25;
+  pointer-events: none;
+  opacity: 0.85;
 }
 
 .move-btns {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: 2px;
   pointer-events: auto;
 }
 
 .horizontal-btns {
   display: flex;
-  gap: 30px;
+  gap: 20px;
 }
 
 .ctrl-btn {
-  width: 70px;
-  height: 70px;
-  background: rgba(16, 35, 62, 0.8);
-  border: 2px solid #4df2c2;
+  width: 36px;
+  height: 36px;
+  background: rgba(16, 35, 62, 0.88);
+  border: 1.5px solid #4df2c2;
   border-radius: 50%;
   color: #4df2c2;
-  font-size: 24px;
+  font-size: 15px;
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  box-shadow: 0 0 15px rgba(77, 242, 194, 0.3);
+  box-shadow: 0 0 10px rgba(77, 242, 194, 0.28);
   pointer-events: auto;
 }
 
 .ctrl-btn:active {
   background: #4df2c2;
   color: #07111f;
-  transform: scale(0.95);
+  transform: scale(0.93);
 }
 
 .fire-btn {
-  width: 90px;
-  height: 90px;
-  background: rgba(255, 100, 116, 0.2);
-  border-color: #ff6474;
+  width: 66px;
+  height: 66px;
+  background: rgba(255, 100, 116, 0.24);
+  border: 2px solid #ff6474;
   color: #ff6474;
-  font-size: 16px;
-  box-shadow: 0 0 20px rgba(255, 100, 116, 0.4);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  box-shadow: 0 0 16px rgba(255, 100, 116, 0.45);
 }
 
 .fire-btn:active {
@@ -962,51 +982,87 @@ canvas {
 @media (max-width: 900px) {
   body {
     flex-direction: column;
+    height: 100dvh;
+    width: 100vw;
+    overflow: hidden;
+    margin: 0;
   }
   
   .sidebar {
     width: 100%;
-    height: auto;
+    height: 46px;
+    min-height: 46px;
     min-width: 0;
     flex-direction: row;
-    padding: 10px;
-    flex-wrap: wrap;
-    justify-content: space-around;
+    padding: 4px 6px;
+    flex-wrap: nowrap;
+    gap: 4px;
+    justify-content: space-between;
+    align-items: center;
     border-right: none;
-    border-bottom: 1px solid rgba(77, 242, 194, 0.2);
-    overflow-y: visible;
+    border-bottom: 1px solid rgba(77, 242, 194, 0.25);
+    overflow: hidden;
     position: relative;
     z-index: 10;
   }
   
-  .sidebar h1 {
-    display: none;
+  .sidebar h1,
+  .stat-record,
+  .stat-radar,
+  .controls-info {
+    display: none !important;
   }
   
   .stat-box {
-    padding: 5px 10px;
-    min-width: 70px;
-    flex: 0 1 auto;
+    padding: 2px 6px;
+    min-width: 0;
+    flex: 1 1 0;
+    height: 36px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-radius: 6px;
+  }
+
+  .stat-biome,
+  .stat-weapon {
+    flex: 1.45 1 0;
+  }
+
+  .stat-box .label {
+    font-size: 0.5rem;
+    letter-spacing: 0.04em;
+    margin-bottom: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   
-  .stat-box .value {
-    font-size: 1rem;
-  }
-  
-  .controls-info {
-    display: none;
+  .stat-box .value,
+  .biome-badge {
+    font-size: 0.76rem !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.1;
   }
   
   .game-area {
     padding: 0;
-    height: calc(100vh - 80px);
+    width: 100vw;
+    height: calc(100dvh - 46px);
     flex: 1;
     overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
   }
   
   canvas {
+    width: 100% !important;
+    height: 100% !important;
     max-width: 100%;
-    height: auto !important;
+    display: block;
   }
   
   .mobile-controls {
@@ -1014,23 +1070,24 @@ canvas {
   }
 
   .overlay {
-    padding: 20px 10px;
-    justify-content: center;
-    gap: 12px;
+    padding: 12px 10px;
+    justify-content: flex-start;
+    overflow-y: auto;
+    gap: 8px;
   }
 
   .overlay h2 {
-    font-size: 1.2rem;
+    font-size: 1.05rem;
     margin: 0;
   }
 
   .overlay p {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     margin: 0;
   }
 
   .ship-selection {
-    margin: 5px 0;
+    margin: 2px 0;
   }
 
   .ships-container {
@@ -1038,19 +1095,19 @@ canvas {
   }
 
   .ship-card {
-    min-width: 70px;
-    padding: 6px;
+    min-width: 60px;
+    padding: 5px 4px;
     border-radius: 8px;
   }
 
   .ship-icon {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     margin-bottom: 2px;
   }
 
   .ship-name {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
   }
 
   .ship-stats {
@@ -1058,19 +1115,19 @@ canvas {
   }
 
   .btn-3d-front {
-    padding: 10px 20px;
-    font-size: 0.9rem;
+    padding: 10px 18px;
+    font-size: 0.85rem;
   }
 
   .control-group {
-    margin: 5px 0;
-    font-size: 0.8rem;
+    margin: 2px 0;
+    font-size: 0.75rem;
   }
 
   .wave-input {
-    padding: 4px;
-    font-size: 0.9rem;
-    width: 60px;
+    padding: 3px;
+    font-size: 0.85rem;
+    width: 54px;
   }
 }
 

@@ -63,16 +63,21 @@ function playSound(type) {
   }
 }
 
+function getBottomSafeMargin() {
+  return window.innerWidth <= 900 ? 128 : 16;
+}
+
 function resizeCanvas() {
   const area = canvas.parentElement;
   const w = area.clientWidth;
   const h = area.clientHeight;
   canvas.width = Math.max(320, w);
-  canvas.height = Math.max(480, h);
+  canvas.height = Math.max(360, h);
   
   if (player) {
-    player.x = canvas.width / 2 - player.width / 2;
-    player.y = canvas.height - 108;
+    const safeBottom = getBottomSafeMargin();
+    player.x = Math.max(16, Math.min(canvas.width - player.width - 16, canvas.width / 2 - player.width / 2));
+    player.y = canvas.height - player.height - safeBottom - 10;
   }
 }
 
@@ -349,8 +354,9 @@ async function bootstrapAssets() {
 }
 
 function resetPlayer() {
+  const safeBottom = getBottomSafeMargin();
   player.x = canvas.width / 2 - player.width / 2;
-  player.y = canvas.height - 108;
+  player.y = canvas.height - player.height - safeBottom - 10;
   player.vxTilt = 0;
   state.mouseActive = false;
 }
@@ -998,10 +1004,11 @@ function updatePlayer(delta, timestamp) {
 
   player.vxTilt = (player.vxTilt || 0) + (targetTilt - (player.vxTilt || 0)) * Math.min(1, dt * 12);
 
-  player.x = Math.max(16, Math.min(canvas.width - player.width - 16, player.x));
-  player.y = Math.max(68, Math.min(canvas.height - player.height - 16, player.y));
+  const safeBottom = getBottomSafeMargin();
+  player.x = Math.max(12, Math.min(canvas.width - player.width - 12, player.x));
+  player.y = Math.max(58, Math.min(canvas.height - player.height - safeBottom, player.y));
 
-  // Tir hybride : Barre Espace OU Clic gauche de la souris maintenu/cliqué
+  // Tir hybride : Barre Espace OU Clic gauche de la souris / Tactile maintenu
   if (keys.has(" ") || keys.has("Spacebar") || state.mouseDown) {
     firePlayerShot(timestamp);
   }
@@ -1196,7 +1203,8 @@ function updateEnemies(delta) {
     });
   }
 
-  if (lowestEnemyY >= canvas.height - 20 && enemies.length > 0) {
+  const defenseLineY = canvas.height - getBottomSafeMargin();
+  if (lowestEnemyY >= defenseLineY && enemies.length > 0) {
     endGame("Base submergée", "Les envahisseurs ont franchi la ligne de défense. Relance la mission.");
     return false;
   }
@@ -2485,6 +2493,48 @@ canvas.addEventListener("contextmenu", (e) => {
   e.preventDefault();
 });
 
+// Pilotage Tactile Direct sur l'écran (Glisser le doigt = Déplacement + Tir auto au-dessus du doigt)
+function updateTouchCoords(touch) {
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return;
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  state.mouseTargetX = (touch.clientX - rect.left) * scaleX;
+  // Décalage de -55px au-dessus du doigt pour que le doigt ne cache jamais le vaisseau
+  state.mouseTargetY = (touch.clientY - rect.top) * scaleY - 55;
+  state.mouseActive = true;
+}
+
+canvas.addEventListener("touchstart", (e) => {
+  if (!state.running || state.paused) return;
+  if (e.touches.length > 0) {
+    e.preventDefault();
+    if (audioCtx && audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+    updateTouchCoords(e.touches[0]);
+    state.mouseDown = true;
+    firePlayerShot(performance.now());
+  }
+}, { passive: false });
+
+canvas.addEventListener("touchmove", (e) => {
+  if (!state.running || state.paused) return;
+  if (e.touches.length > 0) {
+    e.preventDefault();
+    updateTouchCoords(e.touches[0]);
+    state.mouseDown = true;
+  }
+}, { passive: false });
+
+canvas.addEventListener("touchend", () => {
+  state.mouseDown = false;
+});
+
+canvas.addEventListener("touchcancel", () => {
+  state.mouseDown = false;
+});
+
 // Molette de la souris pour faire défiler les 8 armes principales à une main
 const weaponOrder = ["normal", "rapid", "triple", "spread", "plasma", "railgun", "deflagration", "fragbomb"];
 canvas.addEventListener("wheel", (e) => {
@@ -2503,21 +2553,21 @@ canvas.addEventListener("wheel", (e) => {
 }, { passive: false });
 
 if (btnLeft) {
-  btnLeft.addEventListener("touchstart", (e) => { e.preventDefault(); keys.add("ArrowLeft"); });
+  btnLeft.addEventListener("touchstart", (e) => { e.preventDefault(); state.mouseActive = false; keys.add("ArrowLeft"); });
   btnLeft.addEventListener("touchend", (e) => { e.preventDefault(); keys.delete("ArrowLeft"); });
 }
 if (btnRight) {
-  btnRight.addEventListener("touchstart", (e) => { e.preventDefault(); keys.add("ArrowRight"); });
+  btnRight.addEventListener("touchstart", (e) => { e.preventDefault(); state.mouseActive = false; keys.add("ArrowRight"); });
   btnRight.addEventListener("touchend", (e) => { e.preventDefault(); keys.delete("ArrowRight"); });
 }
 const btnUp = document.getElementById("btnUp");
 const btnDown = document.getElementById("btnDown");
 if (btnUp) {
-  btnUp.addEventListener("touchstart", (e) => { e.preventDefault(); keys.add("ArrowUp"); });
+  btnUp.addEventListener("touchstart", (e) => { e.preventDefault(); state.mouseActive = false; keys.add("ArrowUp"); });
   btnUp.addEventListener("touchend", (e) => { e.preventDefault(); keys.delete("ArrowUp"); });
 }
 if (btnDown) {
-  btnDown.addEventListener("touchstart", (e) => { e.preventDefault(); keys.add("ArrowDown"); });
+  btnDown.addEventListener("touchstart", (e) => { e.preventDefault(); state.mouseActive = false; keys.add("ArrowDown"); });
   btnDown.addEventListener("touchend", (e) => { e.preventDefault(); keys.delete("ArrowDown"); });
 }
 if (btnFire) {
