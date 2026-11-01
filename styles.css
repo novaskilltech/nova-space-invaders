@@ -1,30 +1,44 @@
 :root {
-  --bg-deep: #050a14;
-  --bg-mid: #0a1428;
-  --panel: rgba(10, 20, 40, 0.7); /* Glassmorphism */
-  --line: rgba(0, 242, 255, 0.15);
+  --bg-deep: #090d12;
+  --bg-mid: #141c28;
+  --panel: rgba(12, 18, 30, 0.72);
+  --line: rgba(245, 158, 11, 0.28);
   --text: #ebf7ff;
-  --muted: #6b8aa6;
-  --accent: #00f2ff; /* Cyan Nova */
-  --secondary: #ff00ff; /* Magenta Nova */
-  --accent-strong: #ffb84d;
-  --danger: #ff4d4d;
+  --muted: #8ea4bc;
+  --accent: #f59e0b; /* Harvest Gold par défaut (Campagne) */
+  --secondary: #10b981; /* Meadow Green */
+  --accent-strong: #06b6d4;
+  --danger: #ec4899;
 }
 
-.intro-cin.overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(5, 10, 20, 0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: none;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  padding: 40px;
-  text-align: center;
-  border: 1px solid rgba(0, 242, 255, 0.1);
+body[data-biome="campagne"] {
+  --bg-deep: #090d12;
+  --bg-mid: #1c1917;
+  --panel: rgba(20, 18, 15, 0.72);
+  --line: rgba(245, 158, 11, 0.35);
+  --accent: #f59e0b;
+  --secondary: #10b981;
+  --accent-strong: #06b6d4;
+}
+
+body[data-biome="montagne"] {
+  --bg-deep: #050b14;
+  --bg-mid: #0f172a;
+  --panel: rgba(10, 22, 42, 0.72);
+  --line: rgba(56, 189, 248, 0.35);
+  --accent: #38bdf8;
+  --secondary: #f59e0b;
+  --accent-strong: #e0f2fe;
+}
+
+body[data-biome="ocean"] {
+  --bg-deep: #020813;
+  --bg-mid: #041d2e;
+  --panel: rgba(4, 24, 40, 0.75);
+  --line: rgba(0, 242, 255, 0.35);
+  --accent: #00f2ff;
+  --secondary: #a855f7;
+  --accent-strong: #ffb84d;
 }
 
 .intro-cinematic {
@@ -1057,5 +1071,336 @@ canvas {
     padding: 4px;
     font-size: 0.9rem;
     width: 60px;
+  }
+}
+
+
+/* =========================================
+   NOVA V3 : 3D BIOMES, WEAPON DOCK & COMM-LINK
+   ========================================= */
+.v-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: #050a14;
+  vertical-align: middle;
+  margin-left: 4px;
+  font-weight: 800;
+}
+
+.biome-badge {
+  font-size: 1rem !important;
+  color: var(--accent) !important;
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+}
+
+/* HUD Weapon Dock in Sidebar */
+.hud-weapon-dock {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.hud-wpn-btn {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 5px 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-wpn-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.hud-wpn-btn.active {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 8px rgba(0, 242, 255, 0.25);
+}
+
+/* Biome Selection Cards in Overlay */
+.biome-selection,
+.weapon-selection {
+  margin: 6px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 820px;
+}
+
+.biomes-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+}
+
+.biome-card {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.biome-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+.biome-card.active {
+  background: rgba(245, 158, 11, 0.16);
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 18px rgba(245, 158, 11, 0.35);
+}
+
+.biome-emoji {
+  font-size: 1.5rem;
+}
+
+.biome-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.biome-desc {
+  font-size: 0.7rem;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+/* Weapon Selection Grid in Overlay */
+.weapons-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+
+.weapon-card {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  padding: 8px 6px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.weapon-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-strong);
+}
+
+.weapon-card.active {
+  background: rgba(6, 182, 212, 0.2);
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 14px rgba(6, 182, 212, 0.35);
+}
+
+.wpn-icon {
+  font-size: 1.2rem;
+}
+
+.wpn-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.wpn-stats {
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+.settings-row {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Live Tactical Comm-Link Dialogue Box */
+.comm-link-box {
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  right: 72px;
+  background: rgba(9, 13, 20, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--danger);
+  border-right: 3px solid var(--accent);
+  border-radius: 10px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  z-index: 40;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65);
+  pointer-events: auto;
+}
+
+.comm-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1.2;
+  min-width: 0;
+}
+
+.pilot-side {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.comm-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 2px solid var(--danger);
+  flex-shrink: 0;
+  box-shadow: 0 0 12px rgba(236, 72, 153, 0.4);
+}
+
+.pilot-avatar {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+}
+
+.comm-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.comm-speaker {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--danger);
+}
+
+.pilot-speaker {
+  color: var(--accent);
+}
+
+.comm-text {
+  font-size: 0.78rem;
+  color: #f8fafc;
+  line-height: 1.25;
+  font-style: italic;
+}
+
+.pilot-text {
+  color: #cbd5e1;
+}
+
+.comm-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1.1;
+}
+
+.comm-freq {
+  font-size: 0.62rem;
+  font-family: monospace;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+}
+
+.comm-replies {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.comm-reply-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text);
+  font-size: 0.68rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.comm-reply-btn:hover {
+  background: var(--accent);
+  color: #050a14;
+  border-color: var(--accent);
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .biomes-container {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .biome-desc {
+    display: none;
+  }
+  .weapons-container {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+  }
+  .wpn-stats {
+    display: none;
+  }
+  .hud-weapon-dock {
+    display: none;
+  }
+  .comm-link-box {
+    top: 6px;
+    left: 6px;
+    right: 58px;
+    padding: 4px 8px;
+  }
+  .comm-center,
+  .pilot-side {
+    display: none;
+  }
+  .comm-avatar {
+    width: 34px;
+    height: 34px;
+  }
+  .comm-text {
+    font-size: 0.7rem;
   }
 }

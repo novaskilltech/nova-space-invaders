@@ -3,27 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NOVA Space Invaders</title>
+  <title>NOVA Space Invaders V3 — 3D Tactical Biomes</title>
   
   <!-- Open Graph / Social Media -->
-  <meta property="og:title" content="NOVA Space Invaders">
-  <meta property="og:description" content="Défendez la station Nova dans ce jeu de tir spatial frénétique !">
+  <meta property="og:title" content="NOVA Space Invaders V3 — 3D Biomes & Arsenal">
+  <meta property="og:description" content="Défendez la Terre en 3D (Campagne, Montagne, Océan) : choisissez votre vaisseau, votre armement et affrontez les Seigneurs Aliens !">
   <meta property="og:image" content="https://nova-space-invaders.vercel.app/og-image.png">
   <meta property="og:url" content="https://nova-space-invaders.vercel.app">
   <meta property="og:type" content="website">
   
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="NOVA Space Invaders">
-  <meta name="twitter:description" content="Défendez la station Nova dans ce jeu de tir spatial frénétique !">
+  <meta name="twitter:title" content="NOVA Space Invaders V3 — 3D Biomes & Arsenal">
+  <meta name="twitter:description" content="Défendez la Terre en 3D (Campagne, Montagne, Océan) : choisissez votre vaisseau, votre armement et affrontez les Seigneurs Aliens !">
   <meta name="twitter:image" content="https://nova-space-invaders.vercel.app/og-image.png">
 
-  <link rel="stylesheet" href="styles.css?v=14">
+  <link rel="stylesheet" href="styles.css?v=16">
 </head>
-<body>
+<body data-biome="campagne">
   <aside class="sidebar">
-    <h1>NOVA Squad</h1>
+    <h1>NOVA Squad <span class="v-badge">3D</span></h1>
     
+    <div class="stat-box">
+      <div class="label">Secteur 3D</div>
+      <div class="value biome-badge" id="biomeDisplay">🌾 Campagne</div>
+    </div>
+
     <div class="stat-box">
       <div class="label">Score</div>
       <div class="value score" id="score">0</div>
@@ -45,32 +50,71 @@
     </div>
     
     <div class="stat-box">
-      <div class="label">Arme</div>
-      <div class="value weapon" id="weapon">—</div>
+      <div class="label">Arme Active</div>
+      <div class="value weapon" id="weapon">Laser Simple</div>
       <div class="weapon-timer">
         <div class="weapon-timer-bar" id="weaponTimer"></div>
       </div>
+      <!-- Sélecteur rapide d'armement en direct -->
+      <div class="hud-weapon-dock" id="hudWeaponDock" title="Changer d'arme principale (Touches 1-8)">
+        <button class="hud-wpn-btn active" data-weapon="normal">1:Laser</button>
+        <button class="hud-wpn-btn" data-weapon="rapid">2:Gatling</button>
+        <button class="hud-wpn-btn" data-weapon="triple">3:Triple</button>
+        <button class="hud-wpn-btn" data-weapon="spread">4:Cryo/Arc</button>
+        <button class="hud-wpn-btn" data-weapon="plasma">5:Plasma</button>
+        <button class="hud-wpn-btn" data-weapon="railgun">6:Railgun</button>
+        <button class="hud-wpn-btn" data-weapon="deflagration">7:Torpille</button>
+        <button class="hud-wpn-btn" data-weapon="fragbomb">8:Cluster</button>
+      </div>
     </div>
     
-    <div class="stat-box" style="flex: 1;">
-      <div class="label">Historique</div>
-      <div class="powerups-list" id="powerupLog"></div>
+    <div class="stat-box" style="flex: 1; min-height: 70px;">
+      <div class="label">Radar & Télémétrie</div>
+      <div class="powerups-list" id="powerupLog">Systèmes 3D nominaux</div>
     </div>
     
     <div class="controls-info">
-      <div><kbd>←</kbd> <kbd>→</kbd> Déplacer</div>
-      <div><kbd>Espace</kbd> Tir</div>
+      <div><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> Vol 3D</div>
+      <div><kbd>Espace</kbd> Tir • <kbd>1-8</kbd> Armes</div>
       <div><kbd>P</kbd> Pause</div>
     </div>
   </aside>
   
-  <main class="game-area">
+  <main class="game-area" id="gameArea">
     <canvas id="gameCanvas" width="960" height="600"></canvas>
     <button id="pauseButton" class="pause-btn" title="Pause (P)">II</button>
+
+    <!-- BOÎTE DE DIALOGUE TACTIQUE INTERACTIVE (COMM-LINK ENNEMI <-> PERSONNAGE) -->
+    <div id="commLinkBox" class="comm-link-box">
+      <div class="comm-side enemy-side">
+        <img src="warlord_kaelen.png" id="commEnemyAvatar" class="comm-avatar enemy-avatar" alt="Commandant Ennemi">
+        <div class="comm-meta">
+          <div class="comm-speaker enemy-speaker" id="commEnemyName">QUEEN-VESPA-IX // ESSAIM</div>
+          <div class="comm-text" id="commEnemyText">"Vos pâturages alimenteront nos moteurs, humain ! Rendez-vous !"</div>
+        </div>
+      </div>
+
+      <div class="comm-center">
+        <div class="comm-freq" id="commFreq">FREQ: 142.80 MHz // TAC-LINK 3D</div>
+        <div class="comm-replies" id="commReplies">
+          <button class="comm-reply-btn" data-reply="0">⚡ "Mangez du plasma, envahisseurs !"</button>
+          <button class="comm-reply-btn" data-reply="1">🎯 "Verrouillage du vaisseau-mère en cours."</button>
+          <button class="comm-reply-btn" data-reply="2">🛡️ "Jamais nous ne céderons ce secteur !"</button>
+        </div>
+      </div>
+
+      <div class="comm-side pilot-side">
+        <div class="comm-meta pilot-meta">
+          <div class="comm-speaker pilot-speaker" id="commPilotName">LT. VALENTIN // NOVA</div>
+          <div class="comm-text pilot-text" id="commPilotText">"Boucliers à 100%. Armement paré au feu !"</div>
+        </div>
+        <img src="pilot_valentin.png" id="commPilotAvatar" class="comm-avatar pilot-avatar" alt="Pilote Nova">
+      </div>
+    </div>
     
     <div class="overlay" id="overlay">
-      <h2 id="overlayTitle">VAGUE TERMINÉE</h2>
-      <p id="overlayMessage">Défends la station Nova !</p>
+      <h2 id="overlayTitle">CHAMP DE TIR 3D // MISSION NOVA</h2>
+      <p id="overlayMessage">Choisis ton environnement 3D, ton vaisseau et ton armement tactique !</p>
       
       <div id="bossTaunt" class="boss-taunt-overlay" style="display: none;">
         <img src="boss_ship.png" class="taunt-portrait" alt="Alien">
@@ -79,12 +123,35 @@
           <p id="tauntText"></p>
         </div>
       </div>
+
+      <!-- 1. SÉLECTEUR DE THÈME / BIOME 3D (Stitch Designs) -->
+      <div id="biomeSelection" class="biome-selection">
+        <h3 class="ship-sel-title">1. Choisis ton Thème 3D (Biome)</h3>
+        <div class="biomes-container">
+          <div class="biome-card active" data-biome="campagne">
+            <div class="biome-emoji">🌾</div>
+            <div class="biome-title">Campagne 3D</div>
+            <div class="biome-desc">Beauce Golden Hour • Collines, Moulins & Essaim Bio-Méca</div>
+          </div>
+          <div class="biome-card" data-biome="montagne">
+            <div class="biome-emoji">🏔️</div>
+            <div class="biome-title">Montagne 3D</div>
+            <div class="biome-desc">Alpes Mont-Blanc • Canyons Glacés, Blizzard & Golems/Wyvernes</div>
+          </div>
+          <div class="biome-card" data-biome="ocean">
+            <div class="biome-emoji">🌊</div>
+            <div class="biome-title">Océan 3D</div>
+            <div class="biome-desc">Fosse des Mariannes • Récifs Bioluminescents, Léviathans & Krakens</div>
+          </div>
+        </div>
+      </div>
       
+      <!-- 2. SÉLECTEUR DE VAISSEAU -->
       <div id="shipSelection" class="ship-selection">
-        <h3 class="ship-sel-title">Choisis ton vaisseau</h3>
+        <h3 class="ship-sel-title">2. Choisis ton Vaisseau 3D</h3>
         <div class="ships-container">
           <div class="ship-card active" data-ship="nova">
-            <img src="ship_vanguard.png" alt="Nova" class="ship-icon">
+            <img src="ship_nova.png" alt="Nova" class="ship-icon">
             <div class="ship-name">Nova</div>
             <div class="ship-stats">Équilibré</div>
           </div>
@@ -96,7 +163,7 @@
           <div class="ship-card" data-ship="goliath">
             <img src="ship_titan.png" alt="Goliath" class="ship-icon">
             <div class="ship-name">Goliath</div>
-            <div class="ship-stats">Résistant</div>
+            <div class="ship-stats">Blindé</div>
           </div>
           <div class="ship-card" data-ship="phantom">
             <img src="ship_ghost.png" alt="Phantom" class="ship-icon">
@@ -111,27 +178,76 @@
         </div>
       </div>
 
-      <div id="difficultySelection" class="control-group">
-        <label>Difficulté : <span id="diffValueDisplay">Moyen</span></label>
-        <input type="range" id="difficultySlider" min="1" max="10" value="5" class="diff-slider">
-      </div>
-
-      <div id="waveSelection" class="control-group">
-        <label>Vague de départ (1-50) :</label>
-        <div class="wave-input-container">
-          <input type="number" id="startWaveInput" min="1" max="50" value="1" class="wave-input">
-          <span class="sector-hint" id="sectorHint">Secteur 1 : Nova Base</span>
+      <!-- 3. SÉLECTEUR D'ARMEMENT INDÉPENDANT -->
+      <div id="weaponSelection" class="weapon-selection">
+        <h3 class="ship-sel-title">3. Choisis ton Armement Principal (Indépendant du vaisseau)</h3>
+        <div class="weapons-container">
+          <div class="weapon-card active" data-weapon="normal">
+            <div class="wpn-icon">⚡</div>
+            <div class="wpn-name">Agro-Laser</div>
+            <div class="wpn-stats">Précis & Cadence std</div>
+          </div>
+          <div class="weapon-card" data-weapon="rapid">
+            <div class="wpn-icon">🔥</div>
+            <div class="wpn-name">Twin Gatling</div>
+            <div class="wpn-stats">1 200 TPM Rapide</div>
+          </div>
+          <div class="weapon-card" data-weapon="triple">
+            <div class="wpn-icon">🔱</div>
+            <div class="wpn-name">Triple Harpon</div>
+            <div class="wpn-stats">3 Vecteurs d'attaque</div>
+          </div>
+          <div class="weapon-card" data-weapon="spread">
+            <div class="wpn-icon">❄️</div>
+            <div class="wpn-name">Cryo-Faisceau</div>
+            <div class="wpn-stats">Large éventail</div>
+          </div>
+          <div class="weapon-card" data-weapon="plasma">
+            <div class="wpn-icon">🟣</div>
+            <div class="wpn-name">Canon Plasma</div>
+            <div class="wpn-stats">Lourd & Surpuissant</div>
+          </div>
+          <div class="weapon-card" data-weapon="railgun">
+            <div class="wpn-icon">💠</div>
+            <div class="wpn-name">Railgun / Tesla</div>
+            <div class="wpn-stats">Perforant Hyper-Vitesse</div>
+          </div>
+          <div class="weapon-card" data-weapon="deflagration">
+            <div class="wpn-icon">🚀</div>
+            <div class="wpn-name">Torpille / Avalanche</div>
+            <div class="wpn-stats">Onde de choc AOE</div>
+          </div>
+          <div class="weapon-card" data-weapon="fragbomb">
+            <div class="wpn-icon">💥</div>
+            <div class="wpn-name">Cluster Bomb</div>
+            <div class="wpn-stats">8 Sous-munitions</div>
+          </div>
         </div>
       </div>
 
-      <button id="startButton" class="btn-primary">DÉMARRER LA MISSION</button>
+      <div class="settings-row">
+        <div id="difficultySelection" class="control-group">
+          <label>Difficulté : <span id="diffValueDisplay">Moyen</span></label>
+          <input type="range" id="difficultySlider" min="1" max="10" value="5" class="diff-slider">
+        </div>
+
+        <div id="waveSelection" class="control-group">
+          <label>Vague (1-50) :</label>
+          <div class="wave-input-container">
+            <input type="number" id="startWaveInput" min="1" max="50" value="1" class="wave-input">
+            <span class="sector-hint" id="sectorHint">Secteur 1 : Campagne 3D</span>
+          </div>
+        </div>
+      </div>
+
+      <button id="startButton" class="btn-primary">DÉMARRER LA MISSION 3D</button>
     </div>
 
     <!-- Cutscene Overlay for Transitions -->
     <div id="cutsceneOverlay" class="cutscene-overlay hidden">
       <div class="hyper-jump-stars"></div>
-      <img src="ship_vanguard.png" id="cinematicShip" class="cinematic-ship" alt="Ship">
-      <div id="cinematicText" class="cinematic-text">Saut en cours...</div>
+      <img src="ship_nova.png" id="cinematicShip" class="cinematic-ship" alt="Ship">
+      <div id="cinematicText" class="cinematic-text">Transition vers le nouveau biome 3D...</div>
     </div>
     <!-- Mobile Controls -->
     <div id="mobileControls" class="mobile-controls">
@@ -147,6 +263,6 @@
     </div>
   </main>
 
-  <script src="game.js?v=25"></script>
+  <script src="game.js?v=26"></script>
 </body>
 </html>

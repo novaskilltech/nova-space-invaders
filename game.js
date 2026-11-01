@@ -108,8 +108,107 @@ const SHIPS = {
   orion: { id: "orion", color: "#7af2ff", speed: 380, invul: 1600, width: 84, height: 80, weapon: "triple" }
 };
 let selectedShipId = "nova";
+let selectedWeaponId = "normal";
+let selectedBiomeId = "campagne";
 let selectedDifficulty = 5; // Valeur de 1 à 10
 let selectedStartWave = 1;
+let terrainOffset3D = 0;
+
+const BIOMES = {
+  campagne: {
+    id: "campagne",
+    label: "🌾 Campagne 3D",
+    sectorTitle: "Secteur Beauce // Golden Hour",
+    freq: "FREQ: 142.80 MHz // BIO-SWARM",
+    enemyName: "QUEEN-VESPA-IX // ESSAIM",
+    enemyAvatar: "warlord_kaelen.png",
+    pilotName: "LT. VALENTIN // ALOUETTE",
+    pilotAvatar: "pilot_valentin.png",
+    skyTop: "#120c18",
+    skyBottom: "#45230e",
+    gridColor: "rgba(245, 158, 11, 0.32)",
+    horizonGlow: "rgba(245, 158, 11, 0.55)",
+    enemyTypes: ["wasp_drone", "harvester_mech", "beetle_tank", "locust_swarm"],
+    taunts: [
+      "Vos pâturages bucoliques alimenteront nos moteurs larvaires, humain !",
+      "Les moissonneuses-mécas vont raser vos collines jusqu'au dernier épi !",
+      "L'essaim bio-mécanique couvre le soleil couchant. Rendez-vous !",
+      "Vos moulins ne tourneront plus jamais après notre passage !"
+    ],
+    pilotQuotes: [
+      "Pas sur ma garde, les insectes ! Goûtez au plasma !",
+      "Ciblage du vaisseau-moissonneur verrouillé. Feu à volonté !",
+      "Quittez nos champs immédiatement ou subissez la foudre Nova !"
+    ],
+    enemyReactions: [
+      "Krrrzz ! Vos tirs ne font qu'irriter la ruche mère !",
+      "Alerte essaim ! Ce pilote résiste, déployez les Guêpes Blindées !",
+      "Insolent Terrien ! Nos carapaces absorberont ton énergie !"
+    ]
+  },
+  montagne: {
+    id: "montagne",
+    label: "🏔️ Montagne 3D",
+    sectorTitle: "Secteur Mont-Blanc // 4 810m",
+    freq: "FREQ: 288.40 MHz // CRYO-LINK",
+    enemyName: "WARLORD KAELEN // CRYO",
+    enemyAvatar: "warlord_kaelen.png",
+    pilotName: "LT. VALENTIN // ALPINE",
+    pilotAvatar: "pilot_valentin.png",
+    skyTop: "#030914",
+    skyBottom: "#0c2540",
+    gridColor: "rgba(56, 189, 248, 0.35)",
+    horizonGlow: "rgba(56, 189, 248, 0.5)",
+    enemyTypes: ["frost_wyvern", "rock_golem", "stealth_raptor", "ice_shard"],
+    taunts: [
+      "Les crêtes glacées du Mont-Blanc deviendront le tombeau de votre escadron !",
+      "Nos Golems de roche et Wyvernes de givre règnent sur les sommets !",
+      "La tempête alpine gèlera vos réacteurs avant la vague suivante !",
+      "Abandonnez les cols ou soyez ensevelis sous une avalanche de plasma !"
+    ],
+    pilotQuotes: [
+      "Les Alpes appartiennent à l'humanité, Kaelen ! Voyons si tu résistes à l'acier !",
+      "Propulseurs cryo à pleine puissance ! Verrouillage du croiseur ennemi !",
+      "Repliez-vous au-delà de la stratosphère ou soyez pulvérisés !"
+    ],
+    enemyReactions: [
+      "Impossible ! Comment ton vaisseau résiste-t-il au froid absolu ?!",
+      "Wyvernes de givre, en piqué immédiat sur cet intercepteur !",
+      "La montagne tremble... mais notre flotte de glace est éternelle !"
+    ]
+  },
+  ocean: {
+    id: "ocean",
+    label: "🌊 Océan 3D",
+    sectorTitle: "Fosse des Mariannes // -3 450m",
+    freq: "SONAR: 88.20 kHz // ABYSS-LINK",
+    enemyName: "THALASSOR // KRAKEN",
+    enemyAvatar: "warlord_thalassor.png",
+    pilotName: "CDR. MORGAN // SIREN",
+    pilotAvatar: "pilot_morgan.png",
+    skyTop: "#010710",
+    skyBottom: "#002b3d",
+    gridColor: "rgba(0, 242, 255, 0.32)",
+    horizonGlow: "rgba(0, 242, 255, 0.55)",
+    enemyTypes: ["manta_ray", "leviathan_mech", "kraken_drone", "jelly_mine"],
+    taunts: [
+      "Insolent respirateur d'air ! La pression des abysses écrasera ta coque !",
+      "Nos Léviathans et Raies-Mantas bio-électriques dominent les océans !",
+      "Les courants bioluminescents seront votre dernier spectacle !",
+      "Cédez les sources hydrothermales ou sombrez dans les ténèbres !"
+    ],
+    pilotQuotes: [
+      "Nos coques sont forgées pour les abysses, Thalassor ! Torpilles parées !",
+      "Arcs Tesla chargés à 880V. Ciblage des tentacules du Kraken !",
+      "Retourne dans les fosses tectoniques, monstre des profondeurs !"
+    ],
+    enemyReactions: [
+      "Grrrgl ! Ses armes de cavitation percent nos écailles blindées !",
+      "Lâchez les Mines-Méduses et encerclez ce chasseur amphibie !",
+      "La colère de l'Océan t'engloutira tôt ou tard, Commandant Morgan !"
+    ]
+  }
+};
 
 const PLAYER_FIRE_DELAY = 190;
 const ENEMY_FIRE_BASE = 0.0028;
@@ -140,44 +239,49 @@ const state = {
   currentWaveBonus: 0,
   flawless: true,
   isCinematic: false,
+  lastCommAt: 0,
 };
 
 const WEAPONS = {
-  normal: { name: "Laser Simple", color: "#7af2ff", delay: 190, speed: 560, width: 6 },
-  rapid: { name: "Tir Rapide", color: "#b8ff5e", delay: 100, speed: 640, width: 5 },
-  triple: { name: "Triple Laser", color: "#ffb84d", delay: 220, speed: 520, width: 4 },
-  spread: { name: "Faisceau", color: "#ff6474", delay: 280, speed: 480, width: 8 },
-  plasma: { name: "Plasma", color: "#c264ff", delay: 350, speed: 400, width: 14 },
-  deflagration: { name: "Déflagration", color: "#ff4422", delay: 450, speed: 320, width: 18, explosion: true },
-  bomb: { name: "Bombe", color: "#ffaa00", delay: 600, speed: 280, width: 50, height: 50, explosion: true, explosionHeight: 80 },
-  fragbomb: { name: "Fragmentation", color: "#ffffff", delay: 500, speed: 300, width: 12, frag: true },
+  normal: { name: "Agro-Laser", color: "#00f2ff", delay: 185, speed: 580, width: 6 },
+  rapid: { name: "Twin Gatling", color: "#ffb84d", delay: 95, speed: 680, width: 5 },
+  triple: { name: "Triple Harpon", color: "#10b981", delay: 215, speed: 540, width: 5 },
+  spread: { name: "Cryo-Faisceau", color: "#38bdf8", delay: 260, speed: 500, width: 8 },
+  plasma: { name: "Canon Plasma", color: "#c264ff", delay: 320, speed: 440, width: 14 },
+  railgun: { name: "Railgun Tesla", color: "#00ffcc", delay: 270, speed: 880, width: 10, pierce: true },
+  deflagration: { name: "Torpille / Avalanche", color: "#ff4422", delay: 420, speed: 360, width: 18, explosion: true },
+  bomb: { name: "Méga Bombe", color: "#ffaa00", delay: 580, speed: 300, width: 48, height: 48, explosion: true, explosionHeight: 80 },
+  fragbomb: { name: "Cluster Bomb", color: "#ffffff", delay: 460, speed: 340, width: 12, frag: true },
 };
 
-const powerupTypes = ["rapid", "triple", "spread", "plasma", "deflagration", "bomb", "fragbomb", "invincibility", "clone"];
+const powerupTypes = ["rapid", "triple", "spread", "plasma", "railgun", "deflagration", "bomb", "fragbomb", "invincibility", "clone"];
 
 const player = {
   width: 78,
   height: 78,
   x: canvas.width / 2 - 39,
   y: canvas.height - 108,
+  vxTilt: 0,
   weapon: "normal",
   weaponTime: 0,
   cloneTime: 0,
   speed: 420,
   invul: 1200,
-  color: "#4df2c2"
+  color: "#00f2ff"
 };
 
 function applyShipSelection() {
-  const ship = SHIPS[selectedShipId];
+  const ship = SHIPS[selectedShipId] || SHIPS.nova;
   player.width = ship.width;
   player.height = ship.height;
   player.speed = ship.speed;
   player.invul = ship.invul;
   player.color = ship.color;
   player.id = ship.id;
-  player.baseWeapon = ship.weapon;
-  player.weapon = ship.weapon;
+  // L'utilisateur choisit désormais son armement de façon indépendante !
+  const chosenWpn = selectedWeaponId && WEAPONS[selectedWeaponId] ? selectedWeaponId : ship.weapon;
+  player.baseWeapon = chosenWpn;
+  player.weapon = chosenWpn;
 }
 
 let enemies = [];
@@ -203,7 +307,7 @@ function loadImage(src) {
 }
 
 async function bootstrapAssets() {
-  const v = "?v=3";
+  const v = "?v=4";
   state.images.nova = await loadImage("ship_nova.png" + v);
   state.images.viper = await loadImage("ship_swift.png" + v);
   state.images.goliath = await loadImage("ship_titan.png" + v);
@@ -221,6 +325,7 @@ async function bootstrapAssets() {
 function resetPlayer() {
   player.x = canvas.width / 2 - player.width / 2;
   player.y = canvas.height - 108;
+  player.vxTilt = 0;
 }
 
 function isPlayerInvulnerable(timestamp) {
@@ -229,42 +334,51 @@ function isPlayerInvulnerable(timestamp) {
 
 function createEnemyWave(wave) {
   const enemyList = [];
-  const width = 36;
-  const height = 36;
-  const padding = 12;
-  const enemiesPerRow = Math.max(1, Math.floor((canvas.width - 100) / 70));
+  const width = 40;
+  const height = 38;
+  const padding = 14;
+  const enemiesPerRow = Math.max(1, Math.floor((canvas.width - 120) / 72));
   const numRows = Math.max(1, Math.min(6, 2 + Math.floor(wave / 3)));
   
   const totalWidth = enemiesPerRow * width + (enemiesPerRow - 1) * padding;
   const startX = (canvas.width - totalWidth) / 2;
-  const startY = Math.min(180, 60 + (wave * 12));
+  const startY = Math.min(185, 80 + (wave * 10));
+
+  const biome = BIOMES[selectedBiomeId] || BIOMES.campagne;
+  const bTypes = biome.enemyTypes;
 
   for (let row = 0; row < numRows; row += 1) {
     let type = "squid"; 
     if (row === 1 || row === 2) type = "crab";
     if (row >= 3) type = "octopus";
 
+    const biomeClass = bTypes[row % bTypes.length];
+
     for (let col = 0; col < enemiesPerRow; col += 1) {
-      // De vagues 6 à 10, on introduit des kamikazes et intercepteurs
       let finalType = type;
-      if (wave >= 6) {
+      if (wave >= 3) {
         const rand = Math.random();
-        if (rand < 0.1) finalType = "kamikaze";
-        else if (rand < 0.2) finalType = "interceptor";
+        if (rand < 0.12) finalType = "kamikaze";
+        else if (rand < 0.24) finalType = "interceptor";
       }
+
+      const depth3D = 0.88 + (row / Math.max(1, numRows)) * 0.24;
 
       enemyList.push({
         x: startX + col * (width + padding),
         y: startY + row * (height + padding),
-        width: finalType === "squid" ? 36 : finalType === "crab" ? 44 : finalType === "kamikaze" ? 32 : 48,
-        height: finalType === "squid" ? 36 : finalType === "crab" ? 32 : finalType === "kamikaze" ? 40 : 32,
+        width: Math.round((finalType === "squid" ? 38 : finalType === "crab" ? 46 : finalType === "kamikaze" ? 34 : 48) * depth3D),
+        height: Math.round((finalType === "squid" ? 38 : finalType === "crab" ? 34 : finalType === "kamikaze" ? 40 : 34) * depth3D),
         type: finalType,
-        hp: finalType === "interceptor" ? 3 : 1,
+        biomeClass,
+        depth3D,
+        phaseOffset: (row * 1.3) + (col * 0.7),
+        hp: (finalType === "interceptor" || biomeClass === "harvester_mech" || biomeClass === "rock_golem" || biomeClass === "leviathan_mech") ? 3 : 1,
         dead: false,
-        freeRoaming: finalType === "kamikaze" ? true : Math.random() < 0.05,
-        vx: (Math.random() - 0.5) * 100,
+        freeRoaming: finalType === "kamikaze" ? true : Math.random() < 0.06,
+        vx: (Math.random() - 0.5) * 110,
         vy: 20 + Math.random() * 30,
-        charging: false // Spécifique au kamikaze
+        charging: false
       });
     }
   }
@@ -402,10 +516,16 @@ function syncUi() {
   ui.lives.textContent = String(state.lives);
   ui.wave.textContent = String(state.wave);
   
+  const biomeDisplay = document.getElementById("biomeDisplay");
+  const biome = BIOMES[selectedBiomeId] || BIOMES.campagne;
+  if (biomeDisplay) {
+    biomeDisplay.textContent = biome.label;
+  }
+
   if (ui.weapon) {
-    const weapon = WEAPONS[player.weapon];
-    ui.weapon.textContent = player.weaponTime > 0 ? weapon.name : "—";
-    ui.weapon.style.color = player.weaponTime > 0 ? weapon.color : "#6b8aa6";
+    const weapon = WEAPONS[player.weapon] || WEAPONS.normal;
+    ui.weapon.textContent = weapon.name;
+    ui.weapon.style.color = weapon.color;
     
     if (ui.weaponTimer && player.weaponTime > 0) {
       const remaining = player.weaponTime - performance.now();
@@ -413,9 +533,51 @@ function syncUi() {
       ui.weaponTimer.style.width = percent + "%";
       ui.weaponTimer.style.backgroundColor = weapon.color;
     } else if (ui.weaponTimer) {
-      ui.weaponTimer.style.width = "0%";
+      ui.weaponTimer.style.width = "100%";
+      ui.weaponTimer.style.backgroundColor = weapon.color;
     }
   }
+
+  // Synchroniser les boutons d'armes du HUD
+  document.querySelectorAll(".hud-wpn-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.getAttribute("data-weapon") === player.weapon);
+  });
+}
+
+function updateCommLinkBiome(customEnemyLine, customPilotLine) {
+  const biome = BIOMES[selectedBiomeId] || BIOMES.campagne;
+  document.body.setAttribute("data-biome", biome.id);
+
+  const enemyAvatar = document.getElementById("commEnemyAvatar");
+  const enemyName = document.getElementById("commEnemyName");
+  const enemyText = document.getElementById("commEnemyText");
+  const pilotAvatar = document.getElementById("commPilotAvatar");
+  const pilotName = document.getElementById("commPilotName");
+  const pilotText = document.getElementById("commPilotText");
+  const freqEl = document.getElementById("commFreq");
+  const sectorHint = document.getElementById("sectorHint");
+
+  if (enemyAvatar) enemyAvatar.src = biome.enemyAvatar;
+  if (enemyName) enemyName.textContent = biome.enemyName;
+  if (enemyText) {
+    const line = customEnemyLine || biome.taunts[(state.wave - 1) % biome.taunts.length];
+    enemyText.textContent = `"${line}"`;
+  }
+  if (pilotAvatar) pilotAvatar.src = biome.pilotAvatar;
+  if (pilotName) pilotName.textContent = biome.pilotName;
+  if (pilotText && customPilotLine) {
+    pilotText.textContent = `"${customPilotLine}"`;
+  }
+  if (freqEl) freqEl.textContent = biome.freq;
+  if (sectorHint) sectorHint.textContent = biome.sectorTitle;
+
+  const replyBtns = document.querySelectorAll(".comm-reply-btn");
+  replyBtns.forEach((btn, idx) => {
+    if (biome.pilotQuotes[idx]) {
+      const icon = idx === 0 ? "⚡ " : idx === 1 ? "🎯 " : "🛡️ ";
+      btn.textContent = icon + `"${biome.pilotQuotes[idx].slice(0, 34)}..."`;
+    }
+  });
 }
 
 function startGame() {
@@ -426,6 +588,7 @@ function startGame() {
     }
     applyShipSelection();
     initGame();
+    updateCommLinkBiome();
     state.running = true;
     state.paused = false;
     state.lastFrame = performance.now();
@@ -484,7 +647,7 @@ function togglePause() {
 }
 
 function firePlayerShot(timestamp) {
-  const weapon = WEAPONS[player.weapon];
+  const weapon = WEAPONS[player.weapon] || WEAPONS.normal;
   if (timestamp - state.lastShotAt < weapon.delay) {
     return;
   }
@@ -493,34 +656,41 @@ function firePlayerShot(timestamp) {
 
   const cx = player.x + player.width / 2;
   const baseY = player.y + 6;
+  const wpnKey = player.weapon;
 
-  if (player.weapon === "triple") {
-    state.shots.push({ x: cx - 14, y: baseY, width: weapon.width, height: 16, speed: weapon.speed, vx: -60 });
-    state.shots.push({ x: cx - 2, y: baseY, width: weapon.width, height: 16, speed: weapon.speed, vx: 0 });
-    state.shots.push({ x: cx + 10, y: baseY, width: weapon.width, height: 16, speed: weapon.speed, vx: 60 });
-  } else if (player.weapon === "spread") {
-    state.shots.push({ x: cx - 18, y: baseY + 4, width: weapon.width, height: 12, speed: weapon.speed * 0.85, vx: -100 });
-    state.shots.push({ x: cx - 2, y: baseY, width: weapon.width, height: 16, speed: weapon.speed, vx: 0 });
-    state.shots.push({ x: cx + 10, y: baseY + 4, width: weapon.width, height: 12, speed: weapon.speed * 0.85, vx: 100 });
-  } else if (player.weapon === "plasma") {
-    state.shots.push({ x: cx - 7, y: baseY, width: weapon.width, height: 24, speed: weapon.speed });
-  } else if (player.weapon === "deflagration") {
-    state.shots.push({ x: cx - 9, y: baseY, width: weapon.width, height: 28, speed: weapon.speed, explosion: true, explosionRadius: 60 });
-  } else if (player.weapon === "bomb") {
-    state.shots.push({ x: cx - weapon.width / 2, y: baseY - weapon.height + 10, width: weapon.width, height: weapon.height, speed: weapon.speed, explosion: true, explosionHeight: weapon.explosionHeight });
-  } else if (player.weapon === "fragbomb") {
-    state.shots.push({ x: cx - weapon.width / 2, y: baseY, width: weapon.width, height: 16, speed: weapon.speed, frag: true });
+  if (wpnKey === "triple") {
+    state.shots.push({ x: cx - 14, y: baseY, width: weapon.width, height: 18, speed: weapon.speed, vx: -65, weapon: wpnKey });
+    state.shots.push({ x: cx - 2, y: baseY, width: weapon.width, height: 18, speed: weapon.speed, vx: 0, weapon: wpnKey });
+    state.shots.push({ x: cx + 10, y: baseY, width: weapon.width, height: 18, speed: weapon.speed, vx: 65, weapon: wpnKey });
+  } else if (wpnKey === "spread") {
+    state.shots.push({ x: cx - 20, y: baseY + 4, width: weapon.width, height: 14, speed: weapon.speed * 0.9, vx: -140, weapon: wpnKey });
+    state.shots.push({ x: cx - 10, y: baseY + 2, width: weapon.width, height: 15, speed: weapon.speed * 0.95, vx: -70, weapon: wpnKey });
+    state.shots.push({ x: cx - 2, y: baseY, width: weapon.width, height: 18, speed: weapon.speed, vx: 0, weapon: wpnKey });
+    state.shots.push({ x: cx + 8, y: baseY + 2, width: weapon.width, height: 15, speed: weapon.speed * 0.95, vx: 70, weapon: wpnKey });
+    state.shots.push({ x: cx + 16, y: baseY + 4, width: weapon.width, height: 14, speed: weapon.speed * 0.9, vx: 140, weapon: wpnKey });
+  } else if (wpnKey === "plasma") {
+    state.shots.push({ x: cx - 7, y: baseY, width: weapon.width, height: 26, speed: weapon.speed, weapon: wpnKey });
+  } else if (wpnKey === "railgun") {
+    state.shots.push({ x: cx - 5, y: baseY - 10, width: weapon.width, height: 38, speed: weapon.speed, pierce: true, weapon: wpnKey });
+  } else if (wpnKey === "deflagration") {
+    state.shots.push({ x: cx - 9, y: baseY, width: weapon.width, height: 28, speed: weapon.speed, explosion: true, explosionRadius: 72, weapon: wpnKey });
+  } else if (wpnKey === "bomb") {
+    state.shots.push({ x: cx - weapon.width / 2, y: baseY - weapon.height + 10, width: weapon.width, height: weapon.height, speed: weapon.speed, explosion: true, explosionHeight: weapon.explosionHeight, weapon: wpnKey });
+  } else if (wpnKey === "fragbomb") {
+    state.shots.push({ x: cx - weapon.width / 2, y: baseY, width: weapon.width, height: 16, speed: weapon.speed, frag: true, weapon: wpnKey });
+  } else if (wpnKey === "rapid") {
+    state.shots.push({ x: cx - 14, y: baseY + 4, width: weapon.width, height: 16, speed: weapon.speed, weapon: wpnKey });
+    state.shots.push({ x: cx + 10, y: baseY + 4, width: weapon.width, height: 16, speed: weapon.speed, weapon: wpnKey });
   } else {
-    state.shots.push({ x: cx - 3, y: baseY, width: weapon.width, height: 18, speed: weapon.speed });
+    state.shots.push({ x: cx - 3, y: baseY, width: weapon.width, height: 18, speed: weapon.speed, weapon: wpnKey });
   }
   
   if (player.cloneTime > performance.now()) {
-    state.shots.push({ x: cx - 40, y: baseY + 10, width: weapon.width, height: 16, speed: weapon.speed });
-    state.shots.push({ x: cx + 40, y: baseY + 10, width: weapon.width, height: 16, speed: weapon.speed });
+    state.shots.push({ x: cx - 42, y: baseY + 10, width: weapon.width, height: 16, speed: weapon.speed, weapon: wpnKey });
+    state.shots.push({ x: cx + 42, y: baseY + 10, width: weapon.width, height: 16, speed: weapon.speed, weapon: wpnKey });
   }
 
   state.lastShotAt = timestamp;
-  
 }
 
 function fireEnemyShot(x, y, speed = 280, isBoss = false) {
@@ -584,8 +754,11 @@ function showWaveComplete(wave) {
   }
   
   const nextWave = wave + 1;
+  // Rotation automatique ou enrichissement du dialogue Comm-Link à chaque vague
+  updateCommLinkBiome();
+  const biome = BIOMES[selectedBiomeId] || BIOMES.campagne;
   let msg = `Score: ${state.score}\nRecord: ${state.highScore}${subMsg}\n\n`;
-  msg += `Vague ${nextWave} : En approche...\nFormat Classique 11x5`;
+  msg += `Vague ${nextWave} : En approche dans ${biome.label}...\nTu peux aussi changer de Biome 3D ou d'Arme ci-dessous !`;
   
   state.paused = true;
   state.showingQuestion = false;
@@ -720,12 +893,34 @@ function handlePlayerHit() {
 
 function updateStars(delta) {
   const dt = delta / 1000;
+  terrainOffset3D = (terrainOffset3D + dt * 95) % 80;
 
   state.stars.forEach((star) => {
-    star.y += star.speed * dt;
-    if (star.y > canvas.height) {
-      star.y = -star.size;
-      star.x = Math.random() * canvas.width;
+    if (selectedBiomeId === "ocean") {
+      // Dans l'océan, les bulles bioluminescentes remontent des abysses !
+      star.y -= star.speed * 1.15 * dt;
+      star.x += Math.sin(performance.now() * 0.002 + star.twinkleOffset) * 12 * dt;
+      if (star.y < -10) {
+        star.y = canvas.height + 10;
+        star.x = Math.random() * canvas.width;
+      }
+    } else if (selectedBiomeId === "montagne") {
+      // En montagne, les flocons de blizzard tombent en diagonale
+      star.y += star.speed * 2.2 * dt;
+      star.x -= star.speed * 0.65 * dt;
+      if (star.y > canvas.height) {
+        star.y = -star.size;
+        star.x = Math.random() * canvas.width;
+      }
+      if (star.x < 0) star.x = canvas.width;
+    } else {
+      // Campagne : pollen doré & lucioles au crépuscule
+      star.y += star.speed * 0.9 * dt;
+      star.x += Math.cos(performance.now() * 0.0015 + star.twinkleOffset) * 8 * dt;
+      if (star.y > canvas.height) {
+        star.y = -star.size;
+        star.x = Math.random() * canvas.width;
+      }
     }
   });
 }
@@ -737,12 +932,17 @@ function updatePlayer(delta, timestamp) {
   const movingUp = keys.has("ArrowUp") || keys.has("w") || keys.has("W");
   const movingDown = keys.has("ArrowDown") || keys.has("s") || keys.has("S");
 
+  let targetTilt = 0;
   if (movingLeft) {
     player.x -= player.speed * dt;
+    targetTilt = -0.22;
   }
   if (movingRight) {
     player.x += player.speed * dt;
+    targetTilt = 0.22;
   }
+  player.vxTilt = (player.vxTilt || 0) + (targetTilt - (player.vxTilt || 0)) * Math.min(1, dt * 12);
+
   if (movingUp) {
     player.y -= player.speed * dt;
   }
@@ -750,7 +950,7 @@ function updatePlayer(delta, timestamp) {
     player.y += player.speed * dt;
   }
   player.x = Math.max(16, Math.min(canvas.width - player.width - 16, player.x));
-  player.y = Math.max(0, Math.min(canvas.height - player.height - 16, player.y));
+  player.y = Math.max(68, Math.min(canvas.height - player.height - 16, player.y));
 
   if (keys.has(" ") || keys.has("Spacebar")) {
     firePlayerShot(timestamp);
@@ -1165,7 +1365,9 @@ function resolveShotCollisions() {
 
     enemies.forEach((enemy) => {
       if (!shot.hit && rectsOverlap(shot, enemy)) {
-        shot.hit = true;
+        if (!shot.pierce) {
+          shot.hit = true;
+        }
         
         if (shot.explosion && shot.explosionHeight) {
           const expY = shot.explosionHeight;
@@ -1362,24 +1564,327 @@ function update(delta, timestamp) {
 }
 
 function drawBackground() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const w = canvas.width;
+  const h = canvas.height;
+  const now = performance.now();
+  const biome = BIOMES[selectedBiomeId] || BIOMES.campagne;
 
-  state.stars.forEach((star) => {
-    const twinkle = 0.6 + Math.sin(performance.now() * 0.001 * star.twinkleSpeed + star.twinkleOffset) * 0.4;
-    ctx.shadowColor = "white";
-    ctx.shadowBlur = star.size * 1.5;
-    ctx.fillStyle = `rgba(255, 255, 255, ${twinkle})`;
+  // 1. Ciel & Atmosphère 3D par Biome
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
+  skyGrad.addColorStop(0, biome.skyTop);
+  skyGrad.addColorStop(0.55, biome.skyBottom);
+  skyGrad.addColorStop(1, "#040810");
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, w, h);
+
+  const horizonY = h * 0.44;
+
+  // 2. Éléments d'arrière-plan 3D spécifiques au Biome
+  if (selectedBiomeId === "campagne") {
+    // Soleil Golden Hour
+    const sunGrad = ctx.createRadialGradient(w * 0.5, horizonY - 10, 10, w * 0.5, horizonY - 10, 160);
+    sunGrad.addColorStop(0, "rgba(253, 230, 138, 0.9)");
+    sunGrad.addColorStop(0.4, "rgba(245, 158, 11, 0.45)");
+    sunGrad.addColorStop(1, "rgba(245, 158, 11, 0)");
+    ctx.fillStyle = sunGrad;
     ctx.beginPath();
-    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+    ctx.arc(w * 0.5, horizonY - 10, 160, 0, Math.PI * 2);
     ctx.fill();
-    ctx.shadowBlur = 0;
+
+    // Collines verdoyantes vallonnées en 3D
+    ctx.fillStyle = "#142e1f";
+    ctx.beginPath();
+    ctx.moveTo(0, horizonY + 15);
+    for (let x = 0; x <= w; x += 40) {
+      const hillY = horizonY + Math.sin(x * 0.008 + 1.2) * 22 + Math.cos(x * 0.015) * 10;
+      ctx.lineTo(x, hillY);
+    }
+    ctx.lineTo(w, h);
+    ctx.lineTo(0, h);
+    ctx.closePath();
+    ctx.fill();
+
+    // Moulins à vent 3D avec pales en rotation sur la crête
+    [w * 0.22, w * 0.78].forEach((mx, idx) => {
+      const my = horizonY - 6;
+      ctx.fillStyle = "#292524";
+      ctx.beginPath();
+      ctx.moveTo(mx - 8, my + 24);
+      ctx.lineTo(mx - 4, my - 14);
+      ctx.lineTo(mx + 4, my - 14);
+      ctx.lineTo(mx + 8, my + 24);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.save();
+      ctx.translate(mx, my - 10);
+      ctx.rotate(now * 0.0012 * (idx === 0 ? 1 : -1));
+      ctx.strokeStyle = "#fde68a";
+      ctx.lineWidth = 2;
+      for (let b = 0; b < 4; b++) {
+        ctx.rotate(Math.PI / 2);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, 22);
+        ctx.stroke();
+      }
+      ctx.restore();
+    });
+  } else if (selectedBiomeId === "montagne") {
+    // Pics alpins enneigés escarpés en 3D
+    const peaks = [0, 0.15, 0.3, 0.48, 0.65, 0.82, 1.0];
+    const heights = [30, 95, 45, 125, 50, 105, 35];
+    ctx.fillStyle = "#0f1e36";
+    ctx.beginPath();
+    ctx.moveTo(0, horizonY + 20);
+    peaks.forEach((px, i) => {
+      ctx.lineTo(px * w, horizonY - heights[i]);
+    });
+    ctx.lineTo(w, horizonY + 20);
+    ctx.closePath();
+    ctx.fill();
+
+    // Arêtes de glace wireframe néon
+    ctx.strokeStyle = "rgba(56, 189, 248, 0.45)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  } else if (selectedBiomeId === "ocean") {
+    // Rayons lumineux abyssaux (God rays sous-marins)
+    for (let r = 0; r < 4; r++) {
+      const rayX = (w * 0.2 * (r + 1)) + Math.sin(now * 0.0006 + r) * 40;
+      const rayGrad = ctx.createLinearGradient(rayX, 0, rayX + 60, horizonY + 120);
+      rayGrad.addColorStop(0, "rgba(0, 242, 255, 0.14)");
+      rayGrad.addColorStop(1, "rgba(0, 242, 255, 0)");
+      ctx.fillStyle = rayGrad;
+      ctx.beginPath();
+      ctx.moveTo(rayX - 30, 0);
+      ctx.lineTo(rayX + 30, 0);
+      ctx.lineTo(rayX + 110, horizonY + 140);
+      ctx.lineTo(rayX - 80, horizonY + 140);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  // 3. Grille de Terrain Perspective 3D en défilement continu
+  ctx.save();
+  ctx.strokeStyle = biome.gridColor;
+  ctx.lineWidth = 1;
+  const vanishX = w * 0.5 - (player.x + player.width / 2 - w * 0.5) * 0.18;
+
+  // Lignes longitudinales fuyant vers l'horizon 3D
+  for (let i = -8; i <= 8; i++) {
+    ctx.beginPath();
+    ctx.moveTo(vanishX + i * 18, horizonY);
+    ctx.lineTo(w * 0.5 + i * 135, h);
+    ctx.stroke();
+  }
+
+  // Lignes transversales animées avec perspective exponentielle
+  for (let z = 0; z < 10; z++) {
+    const normZ = ((z * 8 + (terrainOffset3D % 8)) / 80);
+    const perspY = horizonY + Math.pow(normZ, 1.85) * (h - horizonY);
+    ctx.beginPath();
+    for (let x = 0; x <= w; x += 48) {
+      let waveH = 0;
+      if (selectedBiomeId === "ocean") {
+        waveH = Math.sin(x * 0.02 + now * 0.004 + z) * 6 * normZ;
+      } else if (selectedBiomeId === "montagne") {
+        waveH = Math.abs(Math.cos(x * 0.015 + z)) * -10 * normZ;
+      } else {
+        waveH = Math.sin(x * 0.012 + z * 0.5) * 4 * normZ;
+      }
+      if (x === 0) ctx.moveTo(x, perspY + waveH);
+      else ctx.lineTo(x, perspY + waveH);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // 4. Particules météo 3D (Pollen doré, Blizzard alpin ou Bulles bioluminescentes)
+  state.stars.forEach((star) => {
+    const twinkle = 0.55 + Math.sin(now * 0.002 * star.twinkleSpeed + star.twinkleOffset) * 0.4;
+    if (selectedBiomeId === "ocean") {
+      ctx.strokeStyle = `rgba(0, 242, 255, ${twinkle})`;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.size * 1.6, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (selectedBiomeId === "montagne") {
+      ctx.fillStyle = `rgba(224, 242, 254, ${twinkle})`;
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.size * 1.2, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.fillStyle = `rgba(253, 230, 138, ${twinkle})`;
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.size * 1.1, 0, Math.PI * 2);
+      ctx.fill();
+    }
   });
 }
 
 const waveColors = ["#00f2ff", "#ff00ff", "#ffb84d", "#ff4d4d", "#c264ff", "#7af2ff"];
 const waveBossColors = ["#ff00ff", "#00f2ff", "#ffb84d", "#ff4d4d", "#c264ff", "#7af2ff"];
 
+function drawBiomeEnemy3D(entity, now) {
+  const cx = entity.x + entity.width / 2;
+  const cy = entity.y + entity.height / 2;
+  const w = entity.width;
+  const h = entity.height;
+  const bClass = entity.biomeClass || "wasp_drone";
+  const sway = Math.sin(now * 0.005 + (entity.phaseOffset || 0)) * 0.14;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(sway);
+
+  // Ombre portée 3D au sol
+  ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+  ctx.beginPath();
+  ctx.ellipse(0, h * 0.62, w * 0.35, h * 0.14, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (bClass === "wasp_drone" || bClass === "locust_swarm") {
+    // Drone Insectoïde 3D (Campagne) : ailes vibrantes + abdomen ambre/noir
+    const wingFlutter = Math.sin(now * 0.03 + (entity.phaseOffset || 0)) * 6;
+    ctx.fillStyle = "rgba(6, 182, 212, 0.55)";
+    ctx.beginPath();
+    ctx.ellipse(-w * 0.35, -2, w * 0.28, Math.max(3, h * 0.18 + wingFlutter * 0.3), -0.3, 0, Math.PI * 2);
+    ctx.ellipse(w * 0.35, -2, w * 0.28, Math.max(3, h * 0.18 + wingFlutter * 0.3), 0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    const bodyGrad = ctx.createLinearGradient(0, -h / 2, 0, h / 2);
+    bodyGrad.addColorStop(0, "#fbbf24");
+    bodyGrad.addColorStop(0.5, "#d97706");
+    bodyGrad.addColorStop(1, "#451a03");
+    ctx.fillStyle = bodyGrad;
+    ctx.beginPath();
+    ctx.moveTo(0, -h * 0.45);
+    ctx.lineTo(w * 0.26, 0);
+    ctx.lineTo(0, h * 0.5);
+    ctx.lineTo(-w * 0.26, 0);
+    ctx.closePath();
+    ctx.fill();
+  } else if (bClass === "harvester_mech" || bClass === "beetle_tank") {
+    // Moissonneur Méca Blindé 3D (Campagne) avec lames rotatives
+    ctx.fillStyle = "#b45309";
+    ctx.fillRect(-w * 0.38, -h * 0.32, w * 0.76, h * 0.64);
+    ctx.strokeStyle = "#fde68a";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(-w * 0.38, -h * 0.32, w * 0.76, h * 0.64);
+    // Scies circulaires avant
+    ctx.fillStyle = "#ef4444";
+    ctx.beginPath();
+    ctx.arc(-w * 0.28, h * 0.35, 6, 0, Math.PI * 2);
+    ctx.arc(w * 0.28, h * 0.35, 6, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (bClass === "frost_wyvern" || bClass === "stealth_raptor") {
+    // Wyverne de Givre / Raptor 3D (Montagne)
+    const iceGrad = ctx.createLinearGradient(-w / 2, -h / 2, w / 2, h / 2);
+    iceGrad.addColorStop(0, "#e0f2fe");
+    iceGrad.addColorStop(0.5, "#38bdf8");
+    iceGrad.addColorStop(1, "#0369a1");
+    ctx.fillStyle = iceGrad;
+    ctx.beginPath();
+    ctx.moveTo(0, h * 0.48);
+    ctx.lineTo(w * 0.5, -h * 0.2);
+    ctx.lineTo(w * 0.18, -h * 0.45);
+    ctx.lineTo(0, -h * 0.15);
+    ctx.lineTo(-w * 0.18, -h * 0.45);
+    ctx.lineTo(-w * 0.5, -h * 0.2);
+    ctx.closePath();
+    ctx.fill();
+  } else if (bClass === "rock_golem" || bClass === "ice_shard") {
+    // Croiseur Golem de Roche / Cristal 3D (Montagne)
+    ctx.fillStyle = "#475569";
+    ctx.beginPath();
+    ctx.moveTo(0, -h * 0.45);
+    ctx.lineTo(w * 0.45, -h * 0.15);
+    ctx.lineTo(w * 0.35, h * 0.45);
+    ctx.lineTo(-w * 0.35, h * 0.45);
+    ctx.lineTo(-w * 0.45, -h * 0.15);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#38bdf8";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  } else if (bClass === "manta_ray" || bClass === "leviathan_mech") {
+    // Raie-Manta / Léviathan Hydro 3D (Océan)
+    const hydroGrad = ctx.createLinearGradient(0, -h / 2, 0, h / 2);
+    hydroGrad.addColorStop(0, "#00f2ff");
+    hydroGrad.addColorStop(0.6, "#0284c7");
+    hydroGrad.addColorStop(1, "#1e1b4b");
+    ctx.fillStyle = hydroGrad;
+    ctx.beginPath();
+    ctx.moveTo(0, h * 0.46);
+    ctx.quadraticCurveTo(w * 0.55, 0, w * 0.48, -h * 0.35);
+    ctx.lineTo(0, -h * 0.18);
+    ctx.lineTo(-w * 0.48, -h * 0.35);
+    ctx.quadraticCurveTo(-w * 0.55, 0, 0, h * 0.46);
+    ctx.fill();
+  } else {
+    // Drone Kraken / Mine Méduse Bioluminescente 3D (Océan)
+    ctx.fillStyle = "rgba(168, 85, 247, 0.85)";
+    ctx.beginPath();
+    ctx.arc(0, -h * 0.1, w * 0.34, Math.PI, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#00f2ff";
+    ctx.lineWidth = 2;
+    for (let t = -2; t <= 2; t++) {
+      ctx.beginPath();
+      ctx.moveTo(t * 5, -h * 0.1);
+      ctx.lineTo(t * 7 + Math.sin(now * 0.008 + t) * 4, h * 0.42);
+      ctx.stroke();
+    }
+  }
+
+  // Noyau lumineux 3D commun
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
 function drawSprite(img, entity, fallbackColor, type) {
+  const now = performance.now();
+  if (type === "player" && img) {
+    ctx.save();
+    const cx = entity.x + entity.width / 2;
+    const cy = entity.y + entity.height / 2;
+    ctx.translate(cx, cy);
+    // Effet d'inclinaison 3D (banking roll) lors du déplacement !
+    const tilt = player.vxTilt || 0;
+    ctx.rotate(tilt * 0.65);
+    ctx.scale(1 - Math.abs(tilt) * 0.45, 1);
+
+    // Jet de réacteur 3D animé sous le vaisseau
+    const flameH = 14 + Math.sin(now * 0.04) * 6;
+    const flameGrad = ctx.createLinearGradient(0, entity.height * 0.32, 0, entity.height * 0.32 + flameH);
+    flameGrad.addColorStop(0, "#ffffff");
+    flameGrad.addColorStop(0.5, player.color || "#00f2ff");
+    flameGrad.addColorStop(1, "rgba(0, 242, 255, 0)");
+    ctx.fillStyle = flameGrad;
+    ctx.beginPath();
+    ctx.moveTo(-8, entity.height * 0.3);
+    ctx.lineTo(8, entity.height * 0.3);
+    ctx.lineTo(0, entity.height * 0.36 + flameH);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.drawImage(img, -entity.width / 2, -entity.height / 2, entity.width, entity.height);
+    ctx.restore();
+    return;
+  }
+
+  if (type === "enemy") {
+    // Rendu 3D diversifié par biome + superposition subtile du sprite si souhaité
+    drawBiomeEnemy3D(entity, now);
+    return;
+  }
+
   if (img) {
     ctx.drawImage(img, entity.x, entity.y, entity.width, entity.height);
     return;
@@ -1734,6 +2239,25 @@ function loop(timestamp) {
 function handleKeydown(event) {
   keys.add(event.key);
 
+  // Raccourcis clavier 1-8 pour changer d'arme principale à tout moment
+  const wpnKeys = {
+    "1": "normal",
+    "2": "rapid",
+    "3": "triple",
+    "4": "spread",
+    "5": "plasma",
+    "6": "railgun",
+    "7": "deflagration",
+    "8": "fragbomb"
+  };
+  if (wpnKeys[event.key]) {
+    selectedWeaponId = wpnKeys[event.key];
+    player.baseWeapon = selectedWeaponId;
+    player.weapon = selectedWeaponId;
+    player.weaponTime = 0;
+    syncUi();
+  }
+
   if (event.key === "p" || event.key === "P" || event.key === "Escape") {
     togglePause();
   }
@@ -1810,6 +2334,79 @@ shipCards.forEach(card => {
   });
 });
 
+// 1. Sélection du Thème / Biome 3D
+const biomeCards = document.querySelectorAll(".biome-card");
+biomeCards.forEach(card => {
+  const selectBiome = () => {
+    biomeCards.forEach(c => c.classList.remove("active"));
+    card.classList.add("active");
+    selectedBiomeId = card.getAttribute("data-biome") || "campagne";
+    updateCommLinkBiome();
+    syncUi();
+    draw();
+  };
+  card.addEventListener("click", selectBiome);
+  card.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    selectBiome();
+  });
+});
+
+// 2. Sélection de l'Armement Indépendant (Overlay + Dock HUD)
+const weaponCards = document.querySelectorAll(".weapon-card");
+weaponCards.forEach(card => {
+  const selectWeapon = () => {
+    weaponCards.forEach(c => c.classList.remove("active"));
+    card.classList.add("active");
+    selectedWeaponId = card.getAttribute("data-weapon") || "normal";
+    player.baseWeapon = selectedWeaponId;
+    player.weapon = selectedWeaponId;
+    syncUi();
+  };
+  card.addEventListener("click", selectWeapon);
+  card.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    selectWeapon();
+  });
+});
+
+const hudWeaponBtns = document.querySelectorAll(".hud-wpn-btn");
+hudWeaponBtns.forEach(btn => {
+  const switchHudWeapon = () => {
+    const wpn = btn.getAttribute("data-weapon") || "normal";
+    selectedWeaponId = wpn;
+    player.baseWeapon = wpn;
+    player.weapon = wpn;
+    player.weaponTime = 0;
+    weaponCards.forEach(c => c.classList.toggle("active", c.getAttribute("data-weapon") === wpn));
+    playSound("powerup");
+    syncUi();
+  };
+  btn.addEventListener("click", switchHudWeapon);
+  btn.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    switchHudWeapon();
+  });
+});
+
+// 3. Boîte de Dialogue Interactive (Comm-Link Ennemis <-> Personnage)
+const commReplyBtns = document.querySelectorAll(".comm-reply-btn");
+commReplyBtns.forEach(btn => {
+  const handleReply = () => {
+    const idx = parseInt(btn.getAttribute("data-reply") || "0", 10);
+    const biome = BIOMES[selectedBiomeId] || BIOMES.campagne;
+    const pQuote = biome.pilotQuotes[idx] || biome.pilotQuotes[0];
+    const eReact = biome.enemyReactions[idx] || biome.enemyReactions[0];
+    playSound("powerup");
+    updateCommLinkBiome(eReact, pQuote);
+  };
+  btn.addEventListener("click", handleReply);
+  btn.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    handleReply();
+  });
+});
+
 const difficultySlider = document.getElementById("difficultySlider");
 const diffValueDisplay = document.getElementById("diffValueDisplay");
 const startWaveInput = document.getElementById("startWaveInput");
@@ -1874,15 +2471,16 @@ if (btnFire) {
   ctx.imageSmoothingQuality = "high";
   makeStars();
   resizeCanvas();
+  updateCommLinkBiome();
   draw();
   bootstrapAssets();
   if (!runSelfChecks()) {
     return;
   }
   showOverlay(
-    "PRÊT À COMBATTRE ?",
-    "Protège la station Nova !",
-    "DÉMARRER LA MISSION"
+    "CHAMP DE TIR 3D // MISSION NOVA",
+    "Choisis ton Biome 3D (Campagne, Montagne, Océan), ton Vaisseau et ton Armement !",
+    "DÉMARRER LA MISSION 3D"
   );
   syncUi();
 })();
