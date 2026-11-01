@@ -307,12 +307,33 @@ function loadImage(src) {
 }
 
 async function bootstrapAssets() {
-  const v = "?v=4";
+  const v = "?v=5";
   state.images.nova = await loadImage("ship_nova.png" + v);
   state.images.viper = await loadImage("ship_swift.png" + v);
   state.images.goliath = await loadImage("ship_titan.png" + v);
   state.images.phantom = await loadImage("ship_ghost.png" + v);
   state.images.orion = await loadImage("ship_orion.png" + v);
+
+  // Décors 3D 4K par Biome
+  state.images.bg_campagne = await loadImage("bg_campagne_4k.jpg" + v);
+  state.images.bg_montagne = await loadImage("bg_montagne_4k.jpg" + v);
+  state.images.bg_ocean = await loadImage("bg_ocean_4k.jpg" + v);
+
+  // Ennemis 3D 4K détourés par Biome
+  state.images.wasp_drone = await loadImage("enemy_campagne_wasp_4k.png" + v);
+  state.images.locust_swarm = state.images.wasp_drone;
+  state.images.harvester_mech = await loadImage("enemy_campagne_harvester_4k.png" + v);
+  state.images.beetle_tank = state.images.harvester_mech;
+
+  state.images.frost_wyvern = await loadImage("enemy_montagne_wyvern_4k.png" + v);
+  state.images.stealth_raptor = state.images.frost_wyvern;
+  state.images.rock_golem = await loadImage("enemy_montagne_golem_4k.png" + v);
+  state.images.ice_shard = state.images.rock_golem;
+
+  state.images.manta_ray = await loadImage("enemy_ocean_manta_4k.png" + v);
+  state.images.leviathan_mech = state.images.manta_ray;
+  state.images.kraken_drone = await loadImage("enemy_ocean_kraken_4k.png" + v);
+  state.images.jelly_mine = state.images.kraken_drone;
 
   state.images.squid = await loadImage("enemy_squid.png" + v);
   state.images.crab = await loadImage("enemy_crab.png" + v);
@@ -320,6 +341,7 @@ async function bootstrapAssets() {
   state.images.boss = await loadImage("boss_ship.png" + v);
   state.images.kamikaze = await loadImage("enemy_nova.png" + v);
   state.images.interceptor = await loadImage("enemy_nova.png" + v);
+  draw();
 }
 
 function resetPlayer() {
@@ -367,8 +389,8 @@ function createEnemyWave(wave) {
       enemyList.push({
         x: startX + col * (width + padding),
         y: startY + row * (height + padding),
-        width: Math.round((finalType === "squid" ? 38 : finalType === "crab" ? 46 : finalType === "kamikaze" ? 34 : 48) * depth3D),
-        height: Math.round((finalType === "squid" ? 38 : finalType === "crab" ? 34 : finalType === "kamikaze" ? 40 : 34) * depth3D),
+        width: Math.round((finalType === "squid" ? 48 : finalType === "crab" ? 56 : finalType === "kamikaze" ? 44 : 58) * depth3D),
+        height: Math.round((finalType === "squid" ? 48 : finalType === "crab" ? 46 : finalType === "kamikaze" ? 48 : 46) * depth3D),
         type: finalType,
         biomeClass,
         depth3D,
@@ -1569,107 +1591,37 @@ function drawBackground() {
   const now = performance.now();
   const biome = BIOMES[selectedBiomeId] || BIOMES.campagne;
 
-  // 1. Ciel & Atmosphère 3D par Biome
-  const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
-  skyGrad.addColorStop(0, biome.skyTop);
-  skyGrad.addColorStop(0.55, biome.skyBottom);
-  skyGrad.addColorStop(1, "#040810");
-  ctx.fillStyle = skyGrad;
-  ctx.fillRect(0, 0, w, h);
+  // 1. Décor 3D 4K Photoréaliste avec parallaxe 3D fluide
+  const bgImg = state.images["bg_" + selectedBiomeId];
+  if (bgImg) {
+    const panX = ((player.x + player.width / 2 - w / 2) / Math.max(1, w)) * -28;
+    const panY = Math.sin(now * 0.0005) * 8;
+    ctx.drawImage(bgImg, panX - 24, panY - 14, w + 48, h + 28);
 
-  const horizonY = h * 0.44;
-
-  // 2. Éléments d'arrière-plan 3D spécifiques au Biome
-  if (selectedBiomeId === "campagne") {
-    // Soleil Golden Hour
-    const sunGrad = ctx.createRadialGradient(w * 0.5, horizonY - 10, 10, w * 0.5, horizonY - 10, 160);
-    sunGrad.addColorStop(0, "rgba(253, 230, 138, 0.9)");
-    sunGrad.addColorStop(0.4, "rgba(245, 158, 11, 0.45)");
-    sunGrad.addColorStop(1, "rgba(245, 158, 11, 0)");
-    ctx.fillStyle = sunGrad;
-    ctx.beginPath();
-    ctx.arc(w * 0.5, horizonY - 10, 160, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Collines verdoyantes vallonnées en 3D
-    ctx.fillStyle = "#142e1f";
-    ctx.beginPath();
-    ctx.moveTo(0, horizonY + 15);
-    for (let x = 0; x <= w; x += 40) {
-      const hillY = horizonY + Math.sin(x * 0.008 + 1.2) * 22 + Math.cos(x * 0.015) * 10;
-      ctx.lineTo(x, hillY);
-    }
-    ctx.lineTo(w, h);
-    ctx.lineTo(0, h);
-    ctx.closePath();
-    ctx.fill();
-
-    // Moulins à vent 3D avec pales en rotation sur la crête
-    [w * 0.22, w * 0.78].forEach((mx, idx) => {
-      const my = horizonY - 6;
-      ctx.fillStyle = "#292524";
-      ctx.beginPath();
-      ctx.moveTo(mx - 8, my + 24);
-      ctx.lineTo(mx - 4, my - 14);
-      ctx.lineTo(mx + 4, my - 14);
-      ctx.lineTo(mx + 8, my + 24);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.save();
-      ctx.translate(mx, my - 10);
-      ctx.rotate(now * 0.0012 * (idx === 0 ? 1 : -1));
-      ctx.strokeStyle = "#fde68a";
-      ctx.lineWidth = 2;
-      for (let b = 0; b < 4; b++) {
-        ctx.rotate(Math.PI / 2);
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(0, 22);
-        ctx.stroke();
-      }
-      ctx.restore();
-    });
-  } else if (selectedBiomeId === "montagne") {
-    // Pics alpins enneigés escarpés en 3D
-    const peaks = [0, 0.15, 0.3, 0.48, 0.65, 0.82, 1.0];
-    const heights = [30, 95, 45, 125, 50, 105, 35];
-    ctx.fillStyle = "#0f1e36";
-    ctx.beginPath();
-    ctx.moveTo(0, horizonY + 20);
-    peaks.forEach((px, i) => {
-      ctx.lineTo(px * w, horizonY - heights[i]);
-    });
-    ctx.lineTo(w, horizonY + 20);
-    ctx.closePath();
-    ctx.fill();
-
-    // Arêtes de glace wireframe néon
-    ctx.strokeStyle = "rgba(56, 189, 248, 0.45)";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-  } else if (selectedBiomeId === "ocean") {
-    // Rayons lumineux abyssaux (God rays sous-marins)
-    for (let r = 0; r < 4; r++) {
-      const rayX = (w * 0.2 * (r + 1)) + Math.sin(now * 0.0006 + r) * 40;
-      const rayGrad = ctx.createLinearGradient(rayX, 0, rayX + 60, horizonY + 120);
-      rayGrad.addColorStop(0, "rgba(0, 242, 255, 0.14)");
-      rayGrad.addColorStop(1, "rgba(0, 242, 255, 0)");
-      ctx.fillStyle = rayGrad;
-      ctx.beginPath();
-      ctx.moveTo(rayX - 30, 0);
-      ctx.lineTo(rayX + 30, 0);
-      ctx.lineTo(rayX + 110, horizonY + 140);
-      ctx.lineTo(rayX - 80, horizonY + 140);
-      ctx.closePath();
-      ctx.fill();
-    }
+    // Voile atmosphérique subtil pour garantir la lisibilité parfaite des tirs néon
+    const vignette = ctx.createLinearGradient(0, 0, 0, h);
+    vignette.addColorStop(0, "rgba(4, 8, 16, 0.42)");
+    vignette.addColorStop(0.5, "rgba(4, 8, 16, 0.16)");
+    vignette.addColorStop(1, "rgba(4, 8, 16, 0.52)");
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, w, h);
+  } else {
+    // Fallback dégradé pendant le chargement initial
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
+    skyGrad.addColorStop(0, biome.skyTop);
+    skyGrad.addColorStop(0.55, biome.skyBottom);
+    skyGrad.addColorStop(1, "#040810");
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, w, h);
   }
 
-  // 3. Grille de Terrain Perspective 3D en défilement continu
+  const horizonY = h * 0.48;
+
+  // 2. Grille de Terrain Perspective 3D Holographique en défilement continu
   ctx.save();
   ctx.strokeStyle = biome.gridColor;
   ctx.lineWidth = 1;
+  ctx.globalAlpha = bgImg ? 0.42 : 0.85;
   const vanishX = w * 0.5 - (player.x + player.width / 2 - w * 0.5) * 0.18;
 
   // Lignes longitudinales fuyant vers l'horizon 3D
@@ -1681,8 +1633,8 @@ function drawBackground() {
   }
 
   // Lignes transversales animées avec perspective exponentielle
-  for (let z = 0; z < 10; z++) {
-    const normZ = ((z * 8 + (terrainOffset3D % 8)) / 80);
+  for (let z = 0; z < 9; z++) {
+    const normZ = ((z * 8 + (terrainOffset3D % 8)) / 72);
     const perspY = horizonY + Math.pow(normZ, 1.85) * (h - horizonY);
     ctx.beginPath();
     for (let x = 0; x <= w; x += 48) {
@@ -1701,7 +1653,7 @@ function drawBackground() {
   }
   ctx.restore();
 
-  // 4. Particules météo 3D (Pollen doré, Blizzard alpin ou Bulles bioluminescentes)
+  // 3. Particules météo 3D (Pollen doré, Blizzard alpin ou Bulles bioluminescentes)
   state.stars.forEach((star) => {
     const twinkle = 0.55 + Math.sin(now * 0.002 * star.twinkleSpeed + star.twinkleOffset) * 0.4;
     if (selectedBiomeId === "ocean") {
@@ -1733,7 +1685,26 @@ function drawBiomeEnemy3D(entity, now) {
   const w = entity.width;
   const h = entity.height;
   const bClass = entity.biomeClass || "wasp_drone";
-  const sway = Math.sin(now * 0.005 + (entity.phaseOffset || 0)) * 0.14;
+  const sway = Math.sin(now * 0.005 + (entity.phaseOffset || 0)) * 0.11;
+  const bobY = Math.cos(now * 0.006 + (entity.phaseOffset || 0)) * 3;
+
+  // Priorité aux nouveaux sprites 3D 4K ultra-détaillés !
+  const sprite4K = state.images[bClass] || state.images[entity.type];
+  if (sprite4K) {
+    ctx.save();
+    ctx.translate(cx, cy + bobY);
+    ctx.rotate(sway);
+
+    // Ombre portée 3D sous l'ennemi pour l'effet de relief aérien
+    ctx.fillStyle = "rgba(0, 0, 0, 0.42)";
+    ctx.beginPath();
+    ctx.ellipse(0, h * 0.56, w * 0.34, h * 0.13, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.drawImage(sprite4K, -w / 2, -h / 2, w, h);
+    ctx.restore();
+    return;
+  }
 
   ctx.save();
   ctx.translate(cx, cy);
