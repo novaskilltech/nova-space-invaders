@@ -759,6 +759,41 @@ function spawnBoss() {
   };
 }
 
+// Calcule la position X du centre de la route sinueuse à n'importe quelle hauteur d'écran (screenY)
+function getTankRoadCenterX(screenY) {
+  const w = canvas.width;
+  const distAtY = (state.tankDistance || 0) + (canvas.height - screenY);
+  const progress = distAtY / Math.max(1, state.tankTargetDistance || 4800);
+
+  // Au début (départ) et à la toute fin (arène du Boss, >90%), la route se recentre proprement
+  let taper = 1;
+  if (progress < 0.05) taper = progress / 0.05;
+  else if (progress > 0.88) taper = Math.max(0, (0.96 - progress) / 0.08);
+
+  const maxSwing = Math.min(w * 0.24, Math.max(70, (w - 280) * 0.42));
+  const lvlSeed = (state.wave || 1) * 1.35;
+  const curve = Math.sin(distAtY * 0.0023 + lvlSeed) * 0.68 + Math.cos(distAtY * 0.0049 - lvlSeed) * 0.32;
+  return w * 0.5 + curve * maxSwing * taper;
+}
+
+function getTankRoadHalfWidth() {
+  return Math.max(96, Math.min(165, canvas.width * 0.23));
+}
+
+function spawnTankRoadBonus(yPos = -30) {
+  const roadCx = getTankRoadCenterX(yPos);
+  const halfW = getTankRoadHalfWidth() * 0.55;
+  const type = powerupTypes[Math.floor(Math.random() * powerupTypes.length)];
+  state.powerups.push({
+    x: roadCx + (Math.random() * 2 - 1) * halfW - 14,
+    y: yPos,
+    width: 28,
+    height: 28,
+    type,
+    onRoad: true
+  });
+}
+
 function initTankLevel(level) {
   const safeLevel = Math.max(1, Math.min(5, level));
   state.wave = safeLevel;
@@ -766,6 +801,7 @@ function initTankLevel(level) {
   // Exactement 8 écrans de distance !
   state.tankTargetDistance = canvas.height * 8;
   state.tankSpawnCursor = 240;
+  state.tankBonusCursor = 320;
   state.tankProps = [];
   state.tankTracks = [];
   state.bomberRun = null;
@@ -774,17 +810,23 @@ function initTankLevel(level) {
   enemies = [];
   state.boss = null;
 
-  // Pré-remplir les décors latéraux initiaux sur l'écran
+  // Positionner le tank au centre du départ de la route
+  player.x = getTankRoadCenterX(player.y) - player.width / 2;
+
+  // Pré-remplir les décors latéraux initiaux le long des berges de la route sinueuse
   for (let y = 60; y < canvas.height; y += 110) {
     spawnTankSceneryPair(y);
   }
+  // Première caisse bonus directement sur la route devant le tank !
+  spawnTankRoadBonus(canvas.height * 0.42);
   // Premiers ennemis de patrouille
-  spawnTankEncounter(safeLevel, 120);
+  spawnTankEncounter(safeLevel, 110);
 }
 
 function spawnTankSceneryPair(yPos) {
   const w = canvas.width;
-  const roadMargin = Math.max(58, Math.min(130, w * 0.17));
+  const roadCx = getTankRoadCenterX(yPos);
+  const halfRoad = getTankRoadHalfWidth();
   const theme = selectedTankThemeId;
   const typesByTheme = {
     ww2: ["bunker", "trench", "hedgerow", "crater"],
@@ -794,39 +836,46 @@ function spawnTankSceneryPair(yPos) {
   };
   const pool = typesByTheme[theme] || typesByTheme.ww2;
 
-  // Rive gauche
-  state.tankProps.push({
-    side: "left",
-    x: 10 + Math.random() * Math.max(16, roadMargin - 46),
-    y: yPos,
-    w: 36 + Math.random() * 18,
-    h: 36 + Math.random() * 20,
-    type: pool[Math.floor(Math.random() * pool.length)],
-    seed: Math.random()
-  });
+  // Rive gauche (à gauche du virage de la route)
+  const leftEdge = roadCx - halfRoad - 52;
+  if (leftEdge > 12) {
+    state.tankProps.push({
+      side: "left",
+      x: 10 + Math.random() * Math.max(10, leftEdge - 14),
+      y: yPos,
+      w: 38 + Math.random() * 16,
+      h: 38 + Math.random() * 16,
+      type: pool[Math.floor(Math.random() * pool.length)],
+      seed: Math.random()
+    });
+  }
 
-  // Rive droite
-  state.tankProps.push({
-    side: "right",
-    x: w - roadMargin + 8 + Math.random() * Math.max(16, roadMargin - 46),
-    y: yPos + (Math.random() * 30 - 15),
-    w: 36 + Math.random() * 18,
-    h: 36 + Math.random() * 20,
-    type: pool[Math.floor(Math.random() * pool.length)],
-    seed: Math.random()
-  });
+  // Rive droite (à droite du virage de la route)
+  const rightStart = roadCx + halfRoad + 14;
+  if (rightStart < w - 52) {
+    state.tankProps.push({
+      side: "right",
+      x: rightStart + Math.random() * Math.max(10, w - rightStart - 50),
+      y: yPos + (Math.random() * 24 - 12),
+      w: 38 + Math.random() * 16,
+      h: 38 + Math.random() * 16,
+      type: pool[Math.floor(Math.random() * pool.length)],
+      seed: Math.random()
+    });
+  }
 }
 
 function spawnTankEncounter(level, yStart = -50) {
   const w = canvas.width;
-  const roadMargin = Math.max(58, Math.min(130, w * 0.17));
-  const roadLeft = roadMargin + 14;
-  const roadWidth = Math.max(140, w - roadMargin * 2 - 28);
+  const roadCx = getTankRoadCenterX(yStart);
+  const halfRoad = getTankRoadHalfWidth();
 
-  // 1. Tourelles ou embuscades sur les bas-côtés (qui obligent à tourner le canon à gauche/droite !)
+  // 1. Tourelles ou embuscades sur les bas-côtés de la route sinueuse (obligent à tourner le canon à gauche/droite !)
   if (Math.random() < 0.78) {
     const leftSide = Math.random() < 0.5;
-    const sideX = leftSide ? Math.max(10, roadMargin - 48) : Math.min(w - 54, w - roadMargin + 6);
+    const sideX = leftSide
+      ? Math.max(12, roadCx - halfRoad - 48)
+      : Math.min(w - 56, roadCx + halfRoad + 8);
     enemies.push({
       x: sideX,
       y: yStart,
@@ -845,35 +894,38 @@ function spawnTankEncounter(level, yStart = -50) {
     });
   }
 
-  // 2. Escouade sur la route ou les flancs (2 à 4 unités)
-  const count = Math.min(4, 2 + Math.floor(Math.random() * 2) + Math.floor(level / 2));
+  // 2. Escouade blindée qui suit la route sinueuse (2 à 3 unités)
+  const count = Math.min(3, 2 + Math.floor(level / 3));
   for (let i = 0; i < count; i++) {
     const roll = Math.random();
     let role = "trooper";
     let hp = 1 + Math.floor(level / 3);
     let ew = 44;
     let eh = 44;
-    if (roll < 0.32) {
+    if (roll < 0.35) {
       role = "light_vehicle";
       hp = 2 + Math.floor(level / 2);
       ew = 48;
       eh = 52;
-    } else if (roll < 0.58) {
+    } else if (roll < 0.62) {
       role = "heavy_tank";
       hp = 4 + level;
       ew = 56;
       eh = 62;
-    } else if (selectedTankThemeId === "predator" || roll < 0.75) {
+    } else if (selectedTankThemeId === "predator" || roll < 0.8) {
       role = "hunter";
       hp = 3 + Math.floor(level / 2);
       ew = 46;
       eh = 48;
     }
 
-    const ex = roadLeft + (i + 0.5) * (roadWidth / count) - ew / 2 + (Math.random() * 20 - 10);
+    const spawnY = yStart - i * 48;
+    const centerAtSpawn = getTankRoadCenterX(spawnY);
+    const laneOffset = (i - (count - 1) / 2) * 58 + (Math.random() * 16 - 8);
     enemies.push({
-      x: Math.max(roadLeft, Math.min(roadLeft + roadWidth - ew, ex)),
-      y: yStart - i * 38,
+      x: Math.max(24, Math.min(w - ew - 24, centerAtSpawn + laneOffset - ew / 2)),
+      y: spawnY,
+      laneOffset,
       width: ew,
       height: eh,
       type: role === "heavy_tank" ? "crab" : role === "hunter" ? "kamikaze" : "squid",
@@ -881,8 +933,8 @@ function spawnTankEncounter(level, yStart = -50) {
       hp,
       maxHp: hp,
       dead: false,
-      vx: (Math.random() - 0.5) * (role === "light_vehicle" ? 130 : 55),
-      vy: role === "light_vehicle" ? 75 : role === "hunter" ? 95 : 35,
+      vx: (Math.random() - 0.5) * 45,
+      vy: role === "light_vehicle" ? 65 : role === "hunter" ? 80 : 35,
       aimAngle: Math.PI / 2,
       cloaked: selectedTankThemeId === "predator" && role === "hunter",
       phaseOffset: Math.random() * Math.PI * 2
@@ -1549,28 +1601,37 @@ function updatePlayer(delta, timestamp) {
   let targetTilt = 0;
 
   if (selectedGameMode === "tank") {
-    // En mode Tank : le tank roule sur la route centrale (ZQSD / Flèches) OU suit souplement si on glisse
-    const roadMargin = Math.max(58, Math.min(130, canvas.width * 0.17));
+    // En mode Tank : le blindé peut se déplacer librement à gauche/droite pour suivre les virages de la route
+    // et ramasser les caisses de bonus (ZQSD / Flèches OU glisser sur mobile)
+    const roadCenter = getTankRoadCenterX(player.y + player.height / 2);
+    const halfRoad = getTankRoadHalfWidth();
+    const distFromRoad = Math.abs((player.x + player.width / 2) - roadCenter);
+    const offRoadFactor = distFromRoad > halfRoad + 22 ? 0.78 : 1.0;
+
     if (anyDirectionKey) {
       if (movingLeft) {
-        player.x -= player.speed * dt;
-        targetTilt = -0.14;
+        player.x -= player.speed * offRoadFactor * dt;
+        targetTilt = -0.22;
       }
       if (movingRight) {
-        player.x += player.speed * dt;
-        targetTilt = 0.14;
+        player.x += player.speed * offRoadFactor * dt;
+        targetTilt = 0.22;
       }
       if (movingUp) {
-        player.y -= player.speed * dt;
+        player.y -= player.speed * offRoadFactor * dt;
       }
       if (movingDown) {
-        player.y += player.speed * dt;
+        player.y += player.speed * offRoadFactor * dt;
       }
     } else if (state.mouseActive && state.mouseDown && window.innerWidth <= 900) {
-      // Sur mobile en glissant sur l'écran : le tank s'aligne doucement tout en orientant le canon vers le doigt
+      // Sur mobile en glissant sur l'écran : le tank suit le doigt sur la route tout en orientant le canon
       const desiredX = state.mouseTargetX - player.width / 2;
-      player.x += (desiredX - player.x) * Math.min(1, dt * 4.5);
+      const dx = desiredX - player.x;
+      player.x += dx * Math.min(1, dt * 6.0);
+      targetTilt = Math.max(-0.22, Math.min(0.22, dx * 0.005));
     }
+
+    player.vxTilt = (player.vxTilt || 0) + (targetTilt - (player.vxTilt || 0)) * Math.min(1, dt * 10);
 
     // Rotation de la tourelle à 360° (Souris/Doigt OU touches A/E / ⟲/⟳)
     if (turretTurnLeft) {
@@ -1585,8 +1646,8 @@ function updatePlayer(delta, timestamp) {
       player.turretAngle = Math.atan2(state.mouseTargetY - cy, state.mouseTargetX - cx);
     }
 
-    // Traces de chenilles au sol pendant que le tank avance
-    if (Math.random() < 0.45) {
+    // Traces de chenilles au sol pendant que le tank avance sur la route
+    if (Math.random() < 0.5) {
       state.tankTracks.push({
         x: player.x + 10,
         y: player.y + player.height - 8,
@@ -1596,7 +1657,7 @@ function updatePlayer(delta, timestamp) {
     }
 
     const safeBottom = getBottomSafeMargin();
-    player.x = Math.max(roadMargin - 8, Math.min(canvas.width - roadMargin - player.width + 8, player.x));
+    player.x = Math.max(18, Math.min(canvas.width - player.width - 18, player.x));
     player.y = Math.max(78, Math.min(canvas.height - player.height - safeBottom, player.y));
   } else {
     if (anyDirectionKey) {
@@ -1860,6 +1921,11 @@ function updateEnemies(delta) {
         spawnTankEncounter(state.wave, -55);
         state.tankSpawnCursor = state.tankDistance + Math.max(230, 390 - state.wave * 22);
       }
+      // Générer régulièrement des caisses de bonus sur la route sinueuse (faciles à ramasser !)
+      if (state.tankDistance >= (state.tankBonusCursor || 260)) {
+        spawnTankRoadBonus(-35);
+        state.tankBonusCursor = state.tankDistance + 310;
+      }
     }
 
     // Arrivée au bout du 8ème écran (Distance 100%) -> Apparition du Boss de fin de niveau !
@@ -1870,6 +1936,7 @@ function updateEnemies(delta) {
     const fireMult = 0.35 + selectedDifficulty / 7;
     const pCx = player.x + player.width / 2;
     const pCy = player.y + player.height / 2;
+    const halfRoad = getTankRoadHalfWidth();
 
     enemies.forEach((enemy) => {
       const eCx = enemy.x + enemy.width / 2;
@@ -1877,20 +1944,24 @@ function updateEnemies(delta) {
       enemy.aimAngle = Math.atan2(pCy - eCy, pCx - eCx);
 
       if (enemy.tankRole === "flank_turret") {
-        // Tourelle fixe sur les bas-côtés : défile avec le terrain et vise le tank à 360°
+        // Tourelle fixe sur les bas-côtés de la route : défile avec le terrain et vise le tank à 360°
         enemy.y += scrollSpeed * dt;
       } else if (enemy.tankRole === "hunter") {
         // Monstre / Chasseur style Predator : bondit vers le tank
         enemy.y += (scrollSpeed * 0.55 + enemy.vy) * dt;
         enemy.x += Math.cos(enemy.aimAngle) * 85 * dt;
       } else {
-        // Blindé ou buggy ennemi sur la route
+        // Blindé ou buggy ennemi qui suit les virages de la route sinueuse !
         enemy.y += (scrollSpeed * 0.42 + enemy.vy) * dt;
-        enemy.x += enemy.vx * dt;
-        const roadMargin = Math.max(58, Math.min(130, canvas.width * 0.17));
-        if (enemy.x <= roadMargin + 6 || enemy.x + enemy.width >= canvas.width - roadMargin - 6) {
-          enemy.vx *= -1;
+        const rCenter = getTankRoadCenterX(enemy.y);
+        enemy.laneOffset = (enemy.laneOffset || 0) + (enemy.vx || 0) * dt * 0.45;
+        const maxLane = Math.max(30, halfRoad - enemy.width * 0.6);
+        if (enemy.laneOffset < -maxLane || enemy.laneOffset > maxLane) {
+          enemy.vx = -(enemy.vx || 35);
+          enemy.laneOffset = Math.max(-maxLane, Math.min(maxLane, enemy.laneOffset));
         }
+        const desiredEnemyX = rCenter + enemy.laneOffset - enemy.width / 2;
+        enemy.x += (desiredEnemyX - enemy.x) * Math.min(1, dt * 4.5);
       }
 
       // Tir directionnel vers le tank du joueur
@@ -1991,16 +2062,48 @@ function updateParticles(delta) {
 
 function updatePowerups(delta) {
   const dt = delta / 1000;
+  const pCx = player.x + player.width / 2;
+  const pCy = player.y + player.height / 2;
 
   state.powerups = state.powerups.filter((pu) => {
-    pu.y += 60 * dt;
-    return pu.y < canvas.height + pu.height;
+    if (selectedGameMode === "tank") {
+      // Les caisses de bonus sont posées sur la route et défilent vers le tank
+      const roadScroll = state.boss ? 55 : 132;
+      pu.y += roadScroll * dt;
+
+      // Maintenir la caisse accessible sur la route sinueuse
+      if (typeof pu.roadOffset === "number") {
+        const targetRoadX = getTankRoadCenterX(pu.y) + pu.roadOffset - pu.width / 2;
+        pu.x += (targetRoadX - pu.x) * Math.min(1, dt * 4.0);
+      }
+
+      // Attraction magnétique quand le tank s'approche de la caisse de bonus (< 130px)
+      const puCx = pu.x + pu.width / 2;
+      const puCy = pu.y + pu.height / 2;
+      const dist = Math.hypot(pCx - puCx, pCy - puCy);
+      if (dist < 130 && dist > 1) {
+        const pull = (1 - dist / 130) * 260;
+        pu.x += ((pCx - puCx) / dist) * pull * dt;
+        pu.y += ((pCy - puCy) / dist) * pull * dt;
+      }
+    } else {
+      pu.y += 60 * dt;
+    }
+    return pu.y < canvas.height + pu.height + 20;
   });
 }
 
 function resolvePowerupCollisions() {
   state.powerups = state.powerups.filter((pu) => {
-    if (rectsOverlap(pu, player)) {
+    // Zone de ramassage généreuse en mode Tank pour ne jamais rater un bonus sur la route
+    const pad = selectedGameMode === "tank" ? 12 : 0;
+    const hitBox = {
+      x: pu.x - pad,
+      y: pu.y - pad,
+      width: pu.width + pad * 2,
+      height: pu.height + pad * 2
+    };
+    if (rectsOverlap(hitBox, player)) {
       playSound('powerup');
       if (pu.type === "invincibility") {
         state.playerInvulnerableUntil = performance.now() + 8000;
@@ -2014,8 +2117,9 @@ function resolvePowerupCollisions() {
         syncUi();
       } else {
         player.weapon = pu.type;
-        player.weaponTime = performance.now() + 8000;
+        player.weaponTime = performance.now() + 10000;
       }
+      syncUi();
       return false;
     }
     return true;
@@ -2024,13 +2128,13 @@ function resolvePowerupCollisions() {
 
 function drawPowerups() {
   state.powerups.forEach((pu) => {
-    let color = "#ffffff";
+    let color = "#38bdf8";
     let text = pu.type[0].toUpperCase();
     if (WEAPONS[pu.type]) {
       color = WEAPONS[pu.type].color;
     } else if (pu.type === "invincibility") {
-      color = "#ffff00";
-      text = "I";
+      color = "#fde047";
+      text = "🛡️";
     } else if (pu.type === "clone") {
       color = "#00ffff";
       text = "C";
@@ -2038,27 +2142,51 @@ function drawPowerups() {
       color = "#f97316";
       text = "✈️";
     }
-    
+
     const pulse = Math.sin(performance.now() * 0.008) * 4;
+    ctx.save();
     ctx.shadowColor = color;
-    ctx.shadowBlur = 15 + pulse;
+    ctx.shadowBlur = 16 + pulse;
 
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.moveTo(pu.x + pu.width / 2, pu.y);
-    ctx.lineTo(pu.x + pu.width, pu.y + pu.height * 0.7);
-    ctx.lineTo(pu.x + pu.width * 0.7, pu.y + pu.height);
-    ctx.lineTo(pu.x + pu.width * 0.3, pu.y + pu.height);
-    ctx.lineTo(pu.x, pu.y + pu.height * 0.7);
-    ctx.closePath();
-    ctx.fill();
+    if (selectedGameMode === "tank") {
+      // Caisse tactique de ravitaillement haute visibilité posée sur la route !
+      const cx = pu.x + pu.width / 2;
+      const cy = pu.y + pu.height / 2;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, pu.width * 0.72 + pulse * 0.3, 0, Math.PI * 2);
+      ctx.stroke();
 
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 10px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText(text, pu.x + pu.width / 2, pu.y + 16);
+      ctx.fillStyle = "rgba(8, 15, 28, 0.9)";
+      ctx.fillRect(pu.x, pu.y, pu.width, pu.height);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2.2;
+      ctx.strokeRect(pu.x, pu.y, pu.width, pu.height);
 
-    ctx.shadowBlur = 0;
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 12px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, cx, cy + 1);
+    } else {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(pu.x + pu.width / 2, pu.y);
+      ctx.lineTo(pu.x + pu.width, pu.y + pu.height * 0.7);
+      ctx.lineTo(pu.x + pu.width * 0.7, pu.y + pu.height);
+      ctx.lineTo(pu.x + pu.width * 0.3, pu.y + pu.height);
+      ctx.lineTo(pu.x, pu.y + pu.height * 0.7);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 10px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(text, pu.x + pu.width / 2, pu.y + 16);
+    }
+
+    ctx.restore();
   });
 }
 
@@ -2286,14 +2414,21 @@ function resolveShotCollisions() {
           }
         }
 
-        if (enemy.dead && Math.random() < 0.18) {
-          const type = powerupTypes[Math.floor(Math.random() * powerupTypes.length)];
+        if (enemy.dead && Math.random() < (selectedGameMode === "tank" ? 0.32 : 0.18)) {
+          const pool = selectedGameMode === "tank"
+            ? ["rapid", "triple", "spread", "plasma", "railgun", "deflagration", "fragbomb", "invincibility", "airstrike", "airstrike"]
+            : powerupTypes;
+          const type = pool[Math.floor(Math.random() * pool.length)];
+          const dropX = selectedGameMode === "tank"
+            ? Math.max(45, Math.min(canvas.width - 65, getTankRoadCenterX(enemy.y) + (Math.random() * 90 - 45)))
+            : enemy.x + enemy.width / 2 - 12;
           state.powerups.push({
-            x: enemy.x + enemy.width / 2 - 12,
+            x: dropX,
             y: enemy.y + enemy.height / 2,
-            width: 24,
-            height: 24,
+            width: selectedGameMode === "tank" ? 28 : 24,
+            height: selectedGameMode === "tank" ? 28 : 24,
             type,
+            roadOffset: selectedGameMode === "tank" ? (dropX - getTankRoadCenterX(enemy.y)) : undefined
           });
         }
       }
@@ -2406,71 +2541,251 @@ function update(delta, timestamp) {
   syncUi();
 }
 
+function drawSceneryProp(p, now) {
+  ctx.save();
+  ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
+
+  // Ombre portée au sol
+  ctx.fillStyle = "rgba(0, 0, 0, 0.42)";
+  ctx.beginPath();
+  ctx.ellipse(3, 4, p.w * 0.45, p.h * 0.4, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  switch (p.type) {
+    case "bunker":
+      // Bunker fortifié en béton armé
+      ctx.fillStyle = "#334155";
+      ctx.fillRect(-p.w * 0.42, -p.h * 0.42, p.w * 0.84, p.h * 0.84);
+      ctx.strokeStyle = "#1e293b";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-p.w * 0.42, -p.h * 0.42, p.w * 0.84, p.h * 0.84);
+      // Meurtrière de tir
+      ctx.fillStyle = "#020617";
+      ctx.fillRect(-p.w * 0.28, -p.h * 0.12, p.w * 0.56, p.h * 0.24);
+      break;
+
+    case "trench":
+      // Tranchée en zigzag
+      ctx.strokeStyle = "#1c1917";
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(-p.w * 0.4, -p.h * 0.35);
+      ctx.lineTo(0, 0);
+      ctx.lineTo(-p.w * 0.35, p.h * 0.35);
+      ctx.stroke();
+      break;
+
+    case "hedgerow":
+    case "jungle_tree":
+      // Végétation vue du dessus (bocage / canopée dense)
+      const foliageColor = p.type === "jungle_tree" ? "#14532d" : "#166534";
+      ctx.fillStyle = foliageColor;
+      ctx.beginPath();
+      ctx.arc(0, 0, p.w * 0.44, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = p.type === "jungle_tree" ? "#22c55e" : "#4ade80";
+      ctx.beginPath();
+      ctx.arc(-p.w * 0.12, -p.h * 0.12, p.w * 0.24, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+
+    case "crater":
+      // Cratère d'impact d'obus avec terre brûlée
+      ctx.fillStyle = "#0c0a09";
+      ctx.beginPath();
+      ctx.arc(0, 0, p.w * 0.38, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#44403c";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      break;
+
+    case "dune":
+      // Crête de dune de sable
+      ctx.fillStyle = "#d97706";
+      ctx.beginPath();
+      ctx.ellipse(0, 0, p.w * 0.46, p.h * 0.25, 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+
+    case "palm":
+      // Palmier vu d'au-dessus (5 palmes)
+      ctx.strokeStyle = "#15803d";
+      ctx.lineWidth = 3;
+      for (let i = 0; i < 5; i++) {
+        const a = (Math.PI * 2 / 5) * i;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(a) * p.w * 0.44, Math.sin(a) * p.h * 0.44);
+        ctx.stroke();
+      }
+      ctx.fillStyle = "#854d0e";
+      ctx.beginPath();
+      ctx.arc(0, 0, 4, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+
+    case "crystal":
+    case "pylon":
+      // Obélisque extraterrestre ou cristal luminescent
+      const crystalColor = selectedTankThemeId === "alien" ? "#06b6d4" : "#a855f7";
+      ctx.shadowColor = crystalColor;
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = crystalColor;
+      ctx.beginPath();
+      ctx.moveTo(0, -p.h * 0.45);
+      ctx.lineTo(p.w * 0.35, 0);
+      ctx.lineTo(0, p.h * 0.45);
+      ctx.lineTo(-p.w * 0.35, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      break;
+
+    case "acid_pool":
+      // Mare d'acide toxique bouillonnante (thème Predator)
+      const bubble = Math.sin(now * 0.005 + p.seed * 10) * 2;
+      ctx.fillStyle = "rgba(132, 204, 22, 0.85)";
+      ctx.beginPath();
+      ctx.ellipse(0, 0, p.w * 0.42 + bubble, p.h * 0.3 + bubble, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#a3e635";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      break;
+
+    default:
+      ctx.fillStyle = "#475569";
+      ctx.fillRect(-p.w * 0.35, -p.h * 0.35, p.w * 0.7, p.h * 0.7);
+  }
+
+  ctx.restore();
+}
+
 function drawTankBattlefield(w, h, now) {
   const tTheme = TANK_THEMES[selectedTankThemeId] || TANK_THEMES.ww2;
-  const roadMargin = Math.max(58, Math.min(130, w * 0.17));
-  const roadWidth = w - roadMargin * 2;
+  const halfRoad = getTankRoadHalfWidth();
   const bgImg = state.images["bg_tank_" + selectedTankThemeId];
   const scrollY = (state.tankDistance || 0) % h;
 
+  // 1. Défilement vertical continu (8 écrans) du sol 100% vue aérienne 90° (ZÉRO CIEL)
+  const panX = ((player.x + player.width / 2 - w / 2) / Math.max(1, w)) * -24;
   if (bgImg) {
-    // 1. Défilement vertical continu (8 écrans) du décor 3D 4K photoréaliste !
-    const panX = ((player.x + player.width / 2 - w / 2) / Math.max(1, w)) * -22;
     ctx.drawImage(bgImg, panX - 18, scrollY - h, w + 36, h + 2);
     ctx.drawImage(bgImg, panX - 18, scrollY, w + 36, h + 2);
-
-    // Voile de profondeur cinématique pour faire ressortir les tirs et les blindés 3D
-    const vignette = ctx.createLinearGradient(0, 0, w, 0);
-    vignette.addColorStop(0, "rgba(4, 8, 16, 0.45)");
-    vignette.addColorStop(0.2, "rgba(4, 8, 16, 0.12)");
-    vignette.addColorStop(0.5, "rgba(4, 8, 16, 0.05)");
-    vignette.addColorStop(0.8, "rgba(4, 8, 16, 0.12)");
-    vignette.addColorStop(1, "rgba(4, 8, 16, 0.45)");
-    ctx.fillStyle = vignette;
-    ctx.fillRect(0, 0, w, h);
-
-    // Lignes holographiques subtiles délimitant le couloir de roulage central
-    ctx.strokeStyle = tTheme.accentColor;
-    ctx.globalAlpha = 0.28;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(roadMargin, 0);
-    ctx.lineTo(roadMargin, h);
-    ctx.moveTo(w - roadMargin, 0);
-    ctx.lineTo(w - roadMargin, h);
-    ctx.stroke();
-    ctx.globalAlpha = 1;
   } else {
-    // Fallback pendant le chargement initial
-    const scrollOffset = (state.tankDistance || 0) % 80;
-    ctx.fillStyle = tTheme.bankColor;
+    ctx.fillStyle = tTheme.bankColor || "#1e293b";
     ctx.fillRect(0, 0, w, h);
-    const roadGrad = ctx.createLinearGradient(roadMargin, 0, w - roadMargin, 0);
-    roadGrad.addColorStop(0, tTheme.bankColor);
-    roadGrad.addColorStop(0.1, tTheme.roadColor);
-    roadGrad.addColorStop(0.5, tTheme.groundColor);
-    roadGrad.addColorStop(0.9, tTheme.roadColor);
-    roadGrad.addColorStop(1, tTheme.bankColor);
-    ctx.fillStyle = roadGrad;
-    ctx.fillRect(roadMargin, 0, roadWidth, h);
-    ctx.strokeStyle = tTheme.roadBorder;
-    ctx.lineWidth = 2;
-    for (let y = -80 + scrollOffset; y < h + 80; y += 80) {
-      ctx.beginPath();
-      ctx.moveTo(w * 0.5, y);
-      ctx.lineTo(w * 0.5, y + 36);
-      ctx.stroke();
-    }
   }
 
-  // 2. Traces de chenilles 3D laissées par le Tank au sol
+  // 2. Tracé de la Route Sinueuse 3D suivant getTankRoadCenterX(y)
+  const stepY = 16;
+  const roadPoints = [];
+  for (let y = -20; y <= h + 20; y += stepY) {
+    roadPoints.push({ y, cx: getTankRoadCenterX(y) });
+  }
+
+  ctx.save();
+  // A. Épaulière / Bordure extérieure de la route (terre tassée, rochers ou berme)
+  ctx.beginPath();
+  roadPoints.forEach((pt, i) => {
+    const xL = pt.cx - halfRoad - 12;
+    if (i === 0) ctx.moveTo(xL, pt.y);
+    else ctx.lineTo(xL, pt.y);
+  });
+  for (let i = roadPoints.length - 1; i >= 0; i--) {
+    const xR = roadPoints[i].cx + halfRoad + 12;
+    ctx.lineTo(xR, roadPoints[i].y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = tTheme.roadBorder || "rgba(15, 23, 42, 0.75)";
+  ctx.fill();
+
+  // B. Chaussée de la route (Asphalte dégradé, terre battue, sable damé ou plaques alien)
+  ctx.beginPath();
+  roadPoints.forEach((pt, i) => {
+    const xL = pt.cx - halfRoad;
+    if (i === 0) ctx.moveTo(xL, pt.y);
+    else ctx.lineTo(xL, pt.y);
+  });
+  for (let i = roadPoints.length - 1; i >= 0; i--) {
+    const xR = roadPoints[i].cx + halfRoad;
+    ctx.lineTo(xR, roadPoints[i].y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = tTheme.roadColor || "rgba(30, 41, 59, 0.88)";
+  ctx.fill();
+
+  // Lignes de rive latérales (bordures peintes ou guides lumineux)
+  ctx.strokeStyle = tTheme.accentColor || "#f59e0b";
+  ctx.lineWidth = 2.5;
+  ctx.globalAlpha = 0.65;
+  ctx.beginPath();
+  roadPoints.forEach((pt, i) => {
+    const xL = pt.cx - halfRoad + 3;
+    if (i === 0) ctx.moveTo(xL, pt.y);
+    else ctx.lineTo(xL, pt.y);
+  });
+  ctx.stroke();
+
+  ctx.beginPath();
+  roadPoints.forEach((pt, i) => {
+    const xR = pt.cx + halfRoad - 3;
+    if (i === 0) ctx.moveTo(xR, pt.y);
+    else ctx.lineTo(xR, pt.y);
+  });
+  ctx.stroke();
+  ctx.globalAlpha = 1.0;
+
+  // C. Ornières de chenilles / Bandes sombres de passage intensif
+  ctx.strokeStyle = "rgba(10, 15, 22, 0.55)";
+  ctx.lineWidth = 14;
+  ctx.beginPath();
+  roadPoints.forEach((pt, i) => {
+    const xTrackL = pt.cx - halfRoad * 0.48;
+    if (i === 0) ctx.moveTo(xTrackL, pt.y);
+    else ctx.lineTo(xTrackL, pt.y);
+  });
+  ctx.stroke();
+
+  ctx.beginPath();
+  roadPoints.forEach((pt, i) => {
+    const xTrackR = pt.cx + halfRoad * 0.48;
+    if (i === 0) ctx.moveTo(xTrackR, pt.y);
+    else ctx.lineTo(xTrackR, pt.y);
+  });
+  ctx.stroke();
+
+  // D. Ligne médiane discontinue (Pointillés défilant avec l'avancement !)
+  const dashOffset = (state.tankDistance || 0) % 48;
+  ctx.strokeStyle = selectedTankThemeId === "alien" ? "#00f2ff" : selectedTankThemeId === "predator" ? "#84cc16" : "#fef08a";
+  ctx.lineWidth = 3;
+  ctx.globalAlpha = 0.72;
+  ctx.setLineDash([20, 28]);
+  ctx.lineDashOffset = -dashOffset;
+  ctx.beginPath();
+  roadPoints.forEach((pt, i) => {
+    if (i === 0) ctx.moveTo(pt.cx, pt.y);
+    else ctx.lineTo(pt.cx, pt.y);
+  });
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 1.0;
+  ctx.restore();
+
+  // 3. Éléments de décor tactiques (bunkers, cratères, palmiers, cristaux) sur les berges
+  state.tankProps.forEach((prop) => {
+    drawSceneryProp(prop, now);
+  });
+
+  // 4. Traces de chenilles laissées en temps réel par le tank du joueur
   state.tankTracks.forEach((tr) => {
     ctx.fillStyle = `rgba(8, 12, 18, ${Math.max(0, tr.life * 0.52)})`;
     ctx.fillRect(tr.x + 4, tr.y, 12, 7);
     ctx.fillRect(tr.x + tr.w - 16, tr.y, 12, 7);
   });
 
-  // 3. Particules d'ambiance 3D (Braises WW2, Sable du désert, Spores Predator, Énergie Alien)
+  // 5. Particules d'ambiance 3D (Braises WW2, Sable du désert, Spores Predator, Énergie Alien)
   state.stars.forEach((star) => {
     const twinkle = 0.45 + Math.sin(now * 0.003 * star.twinkleSpeed + star.twinkleOffset) * 0.4;
     ctx.fillStyle = selectedTankThemeId === "alien"
@@ -2485,7 +2800,7 @@ function drawTankBattlefield(w, h, now) {
     ctx.fill();
   });
 
-  // 4. Barre de Progression des 8 Écrans (Kilométrage & Niveau)
+  // 6. Barre de Progression des 8 Écrans (Kilométrage & Niveau)
   const progRatio = Math.min(1, (state.tankDistance || 0) / Math.max(1, state.tankTargetDistance || 4800));
   const currentScreen = Math.min(8, Math.floor(progRatio * 8) + 1);
   const barW = Math.min(340, w * 0.62);
@@ -3527,24 +3842,65 @@ tankCards.forEach(card => {
   });
 });
 
-// Bouton "Changer de Jeu" dans le menu Pause / Fin
+// ==============================================================
+// GESTION DU PORTAIL "NOVA GAMES" (Landing Bento & Hub Multi-Jeux)
+// ==============================================================
+const novaGamesPortal = document.getElementById("novaGamesPortal");
+
+function openNovaGamesPortal() {
+  state.running = false;
+  state.paused = false;
+  if (novaGamesPortal) {
+    novaGamesPortal.classList.remove("hidden");
+    novaGamesPortal.scrollTop = 0;
+  }
+}
+
+function launchGameFromPortal(gameMode) {
+  if (novaGamesPortal) {
+    novaGamesPortal.classList.add("hidden");
+  }
+  setGameMode(gameMode);
+  showOverlay(
+    gameMode === "tank" ? "MISSION BLINDÉE // NOVA TANK ASSAULT" : "CHAMP DE TIR 3D // MISSION NOVA",
+    gameMode === "tank" ? "Choisis ton Thème Terrestre, ton Blindé et ton Armement !" : "Choisis ton Biome 3D, ton Vaisseau et ton Armement !",
+    gameMode === "tank" ? "LANCER L'ASSAUT BLINDÉ" : "DÉMARRER LA MISSION 3D"
+  );
+  syncUi();
+  draw();
+}
+
+document.querySelectorAll("[data-launch-game]").forEach((el) => {
+  const handler = (e) => {
+    e.stopPropagation();
+    const mode = el.getAttribute("data-launch-game");
+    if (mode === "space" || mode === "tank") {
+      launchGameFromPortal(mode);
+    }
+  };
+  el.addEventListener("click", handler);
+  el.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    handler(e);
+  });
+});
+
+const backToPortalSidebarBtn = document.getElementById("backToPortalSidebarBtn");
+if (backToPortalSidebarBtn) {
+  backToPortalSidebarBtn.addEventListener("click", openNovaGamesPortal);
+  backToPortalSidebarBtn.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    openNovaGamesPortal();
+  });
+}
+
+// Bouton "Portail Nova Games" dans le menu Pause / Fin
 const switchGameMenuBtn = document.getElementById("switchGameMenuBtn");
 if (switchGameMenuBtn) {
-  const returnToHub = () => {
-    state.running = false;
-    state.paused = false;
-    setGameMode(selectedGameMode === "space" ? "tank" : "space");
-    showOverlay(
-      "NOVA DUAL WARFARE // HUB ARCADE",
-      "Choisis ton Jeu (Space Invaders 3D ou Tank Assault 360°), ton Thème, ton Véhicule et ton Armement !",
-      selectedGameMode === "tank" ? "LANCER L'ASSAUT BLINDÉ" : "DÉMARRER LA MISSION 3D"
-    );
-    syncUi();
-  };
-  switchGameMenuBtn.addEventListener("click", returnToHub);
+  switchGameMenuBtn.addEventListener("click", openNovaGamesPortal);
   switchGameMenuBtn.addEventListener("touchstart", (e) => {
     e.preventDefault();
-    returnToHub();
+    openNovaGamesPortal();
   });
 }
 

@@ -18,11 +18,171 @@
   <meta name="twitter:description" content="2 Jeux en 1 : Défendez l'espace dans NOVA Space Invaders 3D ou prenez les commandes d'un blindé à tourelle 360° dans NOVA Tank Assault !">
   <meta name="twitter:image" content="https://nova-space-invaders.vercel.app/og-image.png">
 
-  <link rel="stylesheet" href="styles.css?v=20">
+  <link rel="stylesheet" href="styles.css?v=24">
 </head>
 <body data-biome="campagne" data-game="space">
+  <!-- =========================================================
+       PORTAIL D'ACCUEIL : NOVA GAMES (BENTO GRID + DESCRIPTIONS)
+       ========================================================= -->
+  <section id="novaGamesPortal" class="nova-portal">
+    <div class="portal-container">
+      <header class="portal-header">
+        <div class="portal-brand">
+          <span class="portal-logo-icon">⚡</span>
+          <span class="portal-logo-text">NOVA <strong>GAMES</strong></span>
+          <span class="portal-tag">STUDIO ARCADE 3D & 4K</span>
+        </div>
+        <nav class="portal-nav">
+          <a href="#bentoCatalog" class="portal-nav-link">Catalogue Bento</a>
+          <a href="#descSpaceInvaders" class="portal-nav-link">Space Invaders 3D</a>
+          <a href="#descTankAssault" class="portal-nav-link">Tank Assault 360°</a>
+        </nav>
+      </header>
+
+      <div class="portal-hero">
+        <div class="portal-hero-badge">PLATEFORME MULTI-JEUX ÉVOLUTIVE</div>
+        <h1 class="portal-hero-title">Choisis ton univers de combat <span>NOVA GAMES</span></h1>
+        <p class="portal-hero-sub">Des jeux d'action arcade en haute définition 4K jouables instantanément au clavier, à la souris ou sur mobile. Clique sur une carte du Bento pour lancer le jeu.</p>
+      </div>
+
+      <!-- SECTION BENTO POUR LES JEUX -->
+      <div id="bentoCatalog" class="bento-grid">
+        <!-- Carte Bento Principale 1 : NOVA SPACE INVADERS 3D -->
+        <article class="bento-card bento-featured bento-space" data-launch-game="space">
+          <img src="bg_campagne_4k.jpg" alt="Nova Space Invaders 3D" class="bento-bg">
+          <div class="bento-overlay"></div>
+          <div class="bento-content">
+            <div class="bento-top-row">
+              <span class="bento-pill">JEU #1 • SHOOT 'EM UP SPATIAL</span>
+              <span class="bento-status">DISPONIBLE EN 4K</span>
+            </div>
+            <div class="bento-main-info">
+              <div class="bento-floating-sprites">
+                <img src="ship_nova.png" alt="Nova Ship" class="bento-sprite">
+                <img src="enemy_campagne_wasp_4k.png" alt="Drone 4K" class="bento-sprite">
+              </div>
+              <h2>🚀 NOVA SPACE INVADERS 3D</h2>
+              <p>Défends la Terre à travers 3 Biomes 3D 4K (Campagne, Montagne, Océan) avec 5 vaisseaux, 8 armes tactiques et des dialogues Comm-Link interactifs.</p>
+              <div class="bento-actions">
+                <button class="bento-play-btn" data-launch-game="space">▶ JOUER À SPACE INVADERS</button>
+                <a href="#descSpaceInvaders" class="bento-info-link" onclick="event.stopPropagation();">Voir la fiche ↓</a>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Carte Bento Principale 2 : NOVA TANK ASSAULT 360° -->
+        <article class="bento-card bento-featured bento-tank" data-launch-game="tank">
+          <img src="bg_tank_ww2_4k.jpg" alt="Nova Tank Assault 360" class="bento-bg">
+          <div class="bento-overlay"></div>
+          <div class="bento-content">
+            <div class="bento-top-row">
+              <span class="bento-pill bento-pill-amber">JEU #2 • BEAT 'EM ALL TERRESTRE</span>
+              <span class="bento-status bento-status-amber">NOUVEAU • VUE DRONE 90°</span>
+            </div>
+            <div class="bento-main-info">
+              <div class="bento-floating-sprites">
+                <img src="tank_chassis_4k.png" alt="Tank 4K" class="bento-sprite">
+                <img src="tank_enemy_predator_4k.png" alt="Predator 4K" class="bento-sprite">
+              </div>
+              <h2>🛡️ NOVA TANK ASSAULT 360°</h2>
+              <p>Pilote un blindé en vue aérienne sur une route sinueuse de 8 écrans : braque à gauche/droite dans les virages, ramasse les caisses bonus, tourne ta tourelle à 360° et appelle les bombardiers !</p>
+              <div class="bento-actions">
+                <button class="bento-play-btn bento-play-amber" data-launch-game="tank">▶ JOUER À TANK ASSAULT</button>
+                <a href="#descTankAssault" class="bento-info-link" onclick="event.stopPropagation();">Voir la fiche ↓</a>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Bento Slot 3 : Arsenal Partagé -->
+        <div class="bento-card bento-small bento-arsenal">
+          <div class="bento-small-icon">⚡</div>
+          <h3>Arsenal Cross-Play (8 Armes)</h3>
+          <p>Twin Gatling, Triple Harpon, Cryo-Faisceau, Canon Plasma, Railgun Tesla, Torpille HE et Cluster Bomb disponibles dans chaque jeu.</p>
+        </div>
+
+        <!-- Bento Slot 4 : Support Aérien & Boss -->
+        <div class="bento-card bento-small bento-airstrike">
+          <div class="bento-small-icon">✈️</div>
+          <h3>Frappe Aérienne & Grands Boss</h3>
+          <p>Appelle une escadrille de bombardiers lourds pour nettoyer la route et affronte un Boss géant à la fin de chaque niveau.</p>
+        </div>
+
+        <!-- Bento Slot 5 : Prochain Jeu Nova Games -->
+        <div class="bento-card bento-small bento-upcoming">
+          <div class="bento-pill-soon">PROCHAINEMENT • JEU #3</div>
+          <h3>🏎️ NOVA MECHA RACER / CYBER STRIKE</h3>
+          <p>Le catalogue Nova Games s'agrandit régulièrement : de nouveaux jeux d'arcade viendront s'ajouter directement dans ce Bento.</p>
+        </div>
+      </div>
+
+      <!-- SECTIONS DESCRIPTIVES DÉTAILLÉES PAR JEU EN BAS DE PAGE -->
+      <div class="portal-descriptions">
+        <div class="portal-section-header">
+          <span>ENCYCLOPÉDIE & PRÉSENTATION DES JEUX</span>
+          <h2>Découvre chaque jeu du catalogue NOVA GAMES en détail</h2>
+        </div>
+
+        <!-- Section Descriptive Jeu 1 -->
+        <section id="descSpaceInvaders" class="game-detail-section">
+          <div class="detail-visual">
+            <img src="bg_montagne_4k.jpg" alt="Space Invaders 3D Montagne" class="detail-bg-img">
+            <div class="detail-Visual-badges">
+              <span>🌾 Campagne 3D</span>
+              <span>🏔️ Montagne 3D</span>
+              <span>🌊 Océan 3D</span>
+            </div>
+          </div>
+          <div class="detail-text">
+            <div class="detail-tag">FICHE OFFICIELLE • JEU #1</div>
+            <h3>🚀 NOVA SPACE INVADERS 3D — Tactical Biomes</h3>
+            <p>Un Shoot 'em Up spatial revisité en profondeur avec de véritables panoramas 3D 4K et une faune ennemie propre à chaque secteur terrestre et sous-marin.</p>
+            <ul class="detail-features">
+              <li><strong>3 Biomes 3D 4K</strong> : Collines dorées de Beauce, sommets glacés du Mont-Blanc et abysses bioluminescents de la Fosse des Mariannes.</li>
+              <li><strong>5 Vaisseaux & 8 Armes au choix</strong> : Personnalise indépendamment ton chasseur (Nova, Viper, Goliath, Phantom, Orion) et ton armement principal.</li>
+              <li><strong>Comm-Link Interactif</strong> : Boîte de dialogue radio en temps réel entre ton pilote et les Seigneurs Ennemis avec réponses tactiques.</li>
+              <li><strong>Contrôles Hybrides</strong> : Jouable à une main à la souris (déplacement + clic + molette d'armes), au clavier ou au tactile sur mobile.</li>
+            </ul>
+            <button class="bento-play-btn" data-launch-game="space">🚀 LANCER NOVA SPACE INVADERS 3D</button>
+          </div>
+        </section>
+
+        <!-- Section Descriptive Jeu 2 -->
+        <section id="descTankAssault" class="game-detail-section detail-reverse">
+          <div class="detail-visual">
+            <img src="bg_tank_desert_4k.jpg" alt="Tank Assault Vue Aérienne" class="detail-bg-img">
+            <div class="detail-Visual-badges">
+              <span>🪖 WW2 1944</span>
+              <span>🏜️ Désert</span>
+              <span>🛸 Alien Xéno</span>
+              <span>🩸 Predator Hunt</span>
+            </div>
+          </div>
+          <div class="detail-text">
+            <div class="detail-tag detail-tag-amber">FICHE OFFICIELLE • JEU #2</div>
+            <h3>🛡️ NOVA TANK ASSAULT 360° — Beat 'em All Terrestre</h3>
+            <p>Prends les commandes d'un char d'assaut suréquipé en <strong>vue aérienne 100 % au sol</strong>. La caméra suit ton blindé le long d'une route sinueuse de 8 écrans jusqu'à la forteresse du Boss.</p>
+            <ul class="detail-features">
+              <li><strong>Route Sinueuse & Pilotage Actif</strong> : La route tourne à gauche et à droite ! Utilise les flèches pour braquer, suivre le tracé du chemin et éviter les sorties de piste.</li>
+              <li><strong>Tourelle Rotative 360° + Canon Frontal</strong> : Pendant que le véhicule avance, oriente ton canon dans toutes les directions pour détruire les tourelles et embuscades sur les bas-côtés.</li>
+              <li><strong>Bonus sur la Route & Bombardiers Alliés</strong> : Roule sur les caisses de ravitaillement posées sur la chaussée et appelle une escadrille de 3 bombardiers lourds (`[B]`) pour larguer un tapis de bombes.</li>
+              <li><strong>4 Thèmes & 5 Niveaux avec Boss</strong> : Seconde Guerre Mondiale, Campagne du Désert, Invasion Extraterrestre et Jungle Predator (avec chasseurs camouflés et viseur tri-laser).</li>
+            </ul>
+            <button class="bento-play-btn bento-play-amber" data-launch-game="tank">🛡️ LANCER NOVA TANK ASSAULT 360°</button>
+          </div>
+        </section>
+      </div>
+
+      <footer class="portal-footer">
+        <div>© 2026 <strong>NOVA GAMES</strong> — Plateforme Arcade Web & Mobile • Zéro installation</div>
+      </footer>
+    </div>
+  </section>
+
   <aside class="sidebar">
-    <h1>NOVA Squad <span class="v-badge" id="gameModeBadge">DUAL V4</span></h1>
+    <h1>NOVA Games <span class="v-badge" id="gameModeBadge">V4</span></h1>
+    <button id="backToPortalSidebarBtn" class="portal-back-sidebar-btn" title="Retourner à l'accueil Nova Games">🏠 Accueil Nova Games</button>
     
     <div class="stat-box stat-biome">
       <div class="label" id="sectorLabel">Secteur 3D</div>
@@ -129,23 +289,6 @@
         <div class="taunt-dialogue">
           <h3 class="taunt-name">Commandant Ennemi</h3>
           <p id="tauntText"></p>
-        </div>
-      </div>
-
-      <!-- 0. SÉLECTEUR DE JEU (2 JEUX EN 1 : SPACE INVADERS 3D vs TANK ASSAULT) -->
-      <div id="gameModeSelection" class="game-mode-selection">
-        <h3 class="ship-sel-title">0. Choisis ton Jeu</h3>
-        <div class="game-modes-container">
-          <div class="game-mode-card active" data-gamemode="space">
-            <div class="gm-badge">JEU 1 • ESCADRON SPATIAL</div>
-            <div class="gm-title">🚀 NOVA SPACE INVADERS 3D</div>
-            <div class="gm-desc">Combat aérien 3D • 3 Biomes 4K (Campagne, Montagne, Océan) • 5 Vaisseaux</div>
-          </div>
-          <div class="game-mode-card" data-gamemode="tank">
-            <div class="gm-badge gm-badge-tank">JEU 2 • NOUVEAU !</div>
-            <div class="gm-title">🛡️ NOVA TANK ASSAULT 360°</div>
-            <div class="gm-desc">Beat 'em All Terrestre • Tourelle 360° • Défilement 8 Écrans • Bombardiers & 5 Boss</div>
-          </div>
         </div>
       </div>
 
@@ -332,7 +475,7 @@
 
       <div class="action-buttons-row">
         <button id="startButton" class="btn-primary">DÉMARRER LA MISSION</button>
-        <button id="switchGameMenuBtn" class="btn-secondary" style="display: none;">🔄 CHANGER DE JEU</button>
+        <button id="switchGameMenuBtn" class="btn-secondary">🏠 PORTAIL NOVA GAMES</button>
       </div>
     </div>
 
@@ -362,6 +505,6 @@
     </div>
   </main>
 
-  <script src="game.js?v=35"></script>
+  <script src="game.js?v=38"></script>
 </body>
 </html>

@@ -1655,3 +1655,510 @@ canvas {
   font-size: 13px;
   box-shadow: 0 0 14px rgba(249, 115, 22, 0.5);
 }
+
+/* =========================================================
+   PORTAIL LANDING PAGE : NOVA GAMES (BENTO GRID + FICHES)
+   ========================================================= */
+.nova-portal {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  background: radial-gradient(circle at 50% 0%, #111c33 0%, #050912 65%, #02050a 100%);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  color: #f8fafc;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.nova-portal.hidden {
+  display: none !important;
+}
+
+.portal-container {
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 24px 24px 64px;
+}
+
+.portal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: rgba(15, 23, 42, 0.78);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  margin-bottom: 34px;
+}
+
+.portal-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.portal-logo-icon {
+  font-size: 1.5rem;
+}
+
+.portal-logo-text {
+  font-size: 1.35rem;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+}
+
+.portal-logo-text strong {
+  color: #00f2ff;
+}
+
+.portal-tag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 99px;
+  background: rgba(0, 242, 255, 0.16);
+  color: #00f2ff;
+  border: 1px solid rgba(0, 242, 255, 0.35);
+}
+
+.portal-nav {
+  display: flex;
+  gap: 18px;
+}
+
+.portal-nav-link {
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: color 0.15s ease;
+}
+
+.portal-nav-link:hover {
+  color: #00f2ff;
+}
+
+.portal-hero {
+  text-align: center;
+  max-width: 780px;
+  margin: 0 auto 36px;
+}
+
+.portal-hero-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  padding: 5px 14px;
+  border-radius: 99px;
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  margin-bottom: 12px;
+}
+
+.portal-hero-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  margin: 0 0 12px;
+  line-height: 1.15;
+}
+
+.portal-hero-title span {
+  background: linear-gradient(90deg, #00f2ff, #fbbf24);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.portal-hero-sub {
+  font-size: 1rem;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* GRILLE BENTO */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: minmax(180px, auto);
+  gap: 18px;
+  margin-bottom: 56px;
+}
+
+.bento-card {
+  position: relative;
+  border-radius: 22px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.bento-featured {
+  grid-column: span 3;
+  min-height: 300px;
+  cursor: pointer;
+  display: flex;
+}
+
+@media (min-width: 960px) {
+  .bento-space {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+  .bento-tank {
+    grid-column: span 1;
+    grid-row: span 2;
+  }
+}
+
+.bento-featured:hover {
+  transform: translateY(-4px);
+  border-color: #00f2ff;
+  box-shadow: 0 16px 40px rgba(0, 242, 255, 0.22);
+}
+
+.bento-tank:hover {
+  border-color: #fbbf24;
+  box-shadow: 0 16px 40px rgba(245, 158, 11, 0.25);
+}
+
+.bento-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.45s ease;
+}
+
+.bento-featured:hover .bento-bg {
+  transform: scale(1.05);
+}
+
+.bento-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(4, 9, 20, 0.4) 0%, rgba(4, 9, 20, 0.92) 85%);
+}
+
+.bento-content {
+  position: relative;
+  z-index: 2;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.bento-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bento-pill {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 4px 12px;
+  border-radius: 99px;
+  background: rgba(0, 242, 255, 0.22);
+  color: #00f2ff;
+  border: 1px solid rgba(0, 242, 255, 0.45);
+}
+
+.bento-pill-amber {
+  background: rgba(245, 158, 11, 0.25);
+  color: #fde68a;
+  border-color: rgba(245, 158, 11, 0.55);
+}
+
+.bento-status {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #4df2c2;
+  background: rgba(5, 15, 25, 0.8);
+  padding: 4px 10px;
+  border-radius: 99px;
+}
+
+.bento-status-amber {
+  color: #fbbf24;
+}
+
+.bento-floating-sprites {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.bento-sprite {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 14px rgba(0, 242, 255, 0.5));
+}
+
+.bento-main-info h2 {
+  font-size: 1.55rem;
+  margin: 0 0 8px;
+  color: #ffffff;
+}
+
+.bento-main-info p {
+  font-size: 0.92rem;
+  color: #cbd5e1;
+  line-height: 1.45;
+  margin: 0 0 18px;
+}
+
+.bento-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.bento-play-btn {
+  background: linear-gradient(135deg, #00f2ff, #0284c7);
+  color: #040b16;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 12px;
+  font-weight: 900;
+  font-size: 0.88rem;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  box-shadow: 0 6px 20px rgba(0, 242, 255, 0.35);
+  transition: transform 0.15s ease;
+}
+
+.bento-play-btn:hover {
+  transform: scale(1.04);
+}
+
+.bento-play-amber {
+  background: linear-gradient(135deg, #fbbf24, #ea580c);
+  color: #090d16;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+}
+
+.bento-info-link {
+  color: #e2e8f0;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.bento-small {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(9, 14, 26, 0.95));
+}
+
+.bento-small-icon {
+  font-size: 1.9rem;
+}
+
+.bento-small h3 {
+  margin: 0;
+  font-size: 1.08rem;
+  color: #ffffff;
+}
+
+.bento-small p {
+  margin: 0;
+  font-size: 0.84rem;
+  color: #94a3b8;
+  line-height: 1.45;
+}
+
+.bento-pill-soon {
+  align-self: flex-start;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 99px;
+  background: rgba(168, 85, 247, 0.22);
+  color: #d8b4fe;
+  border: 1px solid rgba(168, 85, 247, 0.45);
+}
+
+/* SECTIONS DESCRIPTIVES EN BAS DE PAGE */
+.portal-descriptions {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.portal-section-header {
+  text-align: center;
+}
+
+.portal-section-header span {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #00f2ff;
+  letter-spacing: 0.14em;
+}
+
+.portal-section-header h2 {
+  font-size: 1.8rem;
+  margin: 6px 0 0;
+}
+
+.game-detail-section {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 28px;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  padding: 28px;
+}
+
+.detail-reverse {
+  grid-template-columns: 1.15fr 1fr;
+}
+
+.detail-reverse .detail-visual {
+  order: 2;
+}
+
+.detail-visual {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  min-height: 260px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.detail-bg-img {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+  display: block;
+}
+
+.detail-Visual-badges {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.detail-Visual-badges span {
+  background: rgba(5, 10, 20, 0.86);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.detail-tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #00f2ff;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+
+.detail-tag-amber {
+  color: #fbbf24;
+}
+
+.detail-text h3 {
+  font-size: 1.5rem;
+  margin: 0 0 10px;
+}
+
+.detail-text p {
+  color: #cbd5e1;
+  font-size: 0.94rem;
+  line-height: 1.5;
+  margin: 0 0 14px;
+}
+
+.detail-features {
+  margin: 0 0 20px;
+  padding-left: 18px;
+  color: #cbd5e1;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.detail-features li {
+  margin-bottom: 6px;
+}
+
+.portal-footer {
+  margin-top: 48px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.portal-back-sidebar-btn {
+  background: rgba(0, 242, 255, 0.14);
+  border: 1px solid rgba(0, 242, 255, 0.4);
+  color: #00f2ff;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.portal-back-sidebar-btn:hover {
+  background: #00f2ff;
+  color: #040b16;
+}
+
+@media (max-width: 900px) {
+  .portal-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .portal-hero-title {
+    font-size: 1.65rem;
+  }
+  .bento-grid {
+    grid-template-columns: 1fr;
+  }
+  .bento-featured {
+    grid-column: span 1;
+    min-height: 250px;
+  }
+  .game-detail-section,
+  .detail-reverse {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+  .detail-reverse .detail-visual {
+    order: 0;
+  }
+  .portal-back-sidebar-btn {
+    display: none;
+  }
+}
