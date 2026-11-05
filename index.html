@@ -3,29 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NOVA Space Invaders V3 — 3D Tactical Biomes</title>
+  <title>NOVA Dual Warfare V4 — Space Invaders 3D & Tank Assault</title>
   
   <!-- Open Graph / Social Media -->
-  <meta property="og:title" content="NOVA Space Invaders V3 — 3D Biomes & Arsenal">
-  <meta property="og:description" content="Défendez la Terre en 3D (Campagne, Montagne, Océan) : choisissez votre vaisseau, votre armement et affrontez les Seigneurs Aliens !">
+  <meta property="og:title" content="NOVA Dual Warfare V4 — Space Invaders 3D & Tank Assault">
+  <meta property="og:description" content="2 Jeux en 1 : Défendez l'espace dans NOVA Space Invaders 3D ou prenez les commandes d'un blindé à tourelle 360° dans NOVA Tank Assault !">
   <meta property="og:image" content="https://nova-space-invaders.vercel.app/og-image.png">
   <meta property="og:url" content="https://nova-space-invaders.vercel.app">
   <meta property="og:type" content="website">
   
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="NOVA Space Invaders V3 — 3D Biomes & Arsenal">
-  <meta name="twitter:description" content="Défendez la Terre en 3D (Campagne, Montagne, Océan) : choisissez votre vaisseau, votre armement et affrontez les Seigneurs Aliens !">
+  <meta name="twitter:title" content="NOVA Dual Warfare V4 — Space Invaders 3D & Tank Assault">
+  <meta name="twitter:description" content="2 Jeux en 1 : Défendez l'espace dans NOVA Space Invaders 3D ou prenez les commandes d'un blindé à tourelle 360° dans NOVA Tank Assault !">
   <meta name="twitter:image" content="https://nova-space-invaders.vercel.app/og-image.png">
 
-  <link rel="stylesheet" href="styles.css?v=17">
+  <link rel="stylesheet" href="styles.css?v=20">
 </head>
-<body data-biome="campagne">
+<body data-biome="campagne" data-game="space">
   <aside class="sidebar">
-    <h1>NOVA Squad <span class="v-badge">3D</span></h1>
+    <h1>NOVA Squad <span class="v-badge" id="gameModeBadge">DUAL V4</span></h1>
     
     <div class="stat-box stat-biome">
-      <div class="label">Secteur 3D</div>
+      <div class="label" id="sectorLabel">Secteur 3D</div>
       <div class="value biome-badge" id="biomeDisplay">🌾 Campagne</div>
     </div>
 
@@ -40,13 +40,21 @@
     </div>
     
     <div class="stat-box">
-      <div class="label">Vies</div>
+      <div class="label">Blindage</div>
       <div class="value lives" id="lives">3</div>
     </div>
     
     <div class="stat-box">
-      <div class="label">Vague</div>
+      <div class="label" id="waveLabel">Vague</div>
       <div class="value wave" id="wave">1</div>
+    </div>
+
+    <!-- Jauge Support Aérien (Visible en mode Tank Assault) -->
+    <div class="stat-box stat-airstrike" id="airstrikeHudBox" style="display: none;">
+      <div class="label">Support Aérien</div>
+      <button id="hudAirstrikeBtn" class="airstrike-hud-btn" title="Appeler les Bombardiers (Touche B)">
+        ✈️ BOMBARDIER (<span id="airstrikeCount">2</span>)
+      </button>
     </div>
     
     <div class="stat-box stat-weapon">
@@ -73,10 +81,10 @@
       <div class="powerups-list" id="powerupLog">Systèmes 3D nominaux</div>
     </div>
     
-    <div class="controls-info">
-      <div><kbd>Souris</kbd> ou <kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> Vol 3D</div>
-      <div><kbd>Clic Gauche</kbd> ou <kbd>Espace</kbd> Tir</div>
-      <div><kbd>Molette</kbd> ou <kbd>1-8</kbd> Armes • <kbd>P</kbd> Pause</div>
+    <div class="controls-info" id="controlsInfoBox">
+      <div><kbd>Souris</kbd> ou <kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> Pilotage</div>
+      <div><kbd>A</kbd>/<kbd>E</kbd> ou <kbd>Souris</kbd> Tourelle 360°</div>
+      <div><kbd>B</kbd> Bombardiers • <kbd>1-8</kbd> Armes</div>
     </div>
   </aside>
   
@@ -113,78 +121,160 @@
     </div>
     
     <div class="overlay" id="overlay">
-      <h2 id="overlayTitle">CHAMP DE TIR 3D // MISSION NOVA</h2>
-      <p id="overlayMessage">Choisis ton environnement 3D, ton vaisseau et ton armement tactique !</p>
+      <h2 id="overlayTitle">NOVA DUAL WARFARE // HUB ARCADE</h2>
+      <p id="overlayMessage">Choisis ton Jeu, ton Théâtre d'Opérations, ton Véhicule et ton Armement !</p>
       
       <div id="bossTaunt" class="boss-taunt-overlay" style="display: none;">
         <img src="boss_ship.png" class="taunt-portrait" alt="Alien">
         <div class="taunt-dialogue">
-          <h3 class="taunt-name">Commandant Alien</h3>
+          <h3 class="taunt-name">Commandant Ennemi</h3>
           <p id="tauntText"></p>
         </div>
       </div>
 
-      <!-- 1. SÉLECTEUR DE THÈME / BIOME 3D (Stitch Designs) -->
-      <div id="biomeSelection" class="biome-selection">
-        <h3 class="ship-sel-title">1. Choisis ton Thème 3D (Biome)</h3>
-        <div class="biomes-container">
-          <div class="biome-card active" data-biome="campagne">
-            <div class="biome-emoji">🌾</div>
-            <div class="biome-title">Campagne 3D</div>
-            <div class="biome-desc">Beauce Golden Hour • Collines, Moulins & Essaim Bio-Méca</div>
+      <!-- 0. SÉLECTEUR DE JEU (2 JEUX EN 1 : SPACE INVADERS 3D vs TANK ASSAULT) -->
+      <div id="gameModeSelection" class="game-mode-selection">
+        <h3 class="ship-sel-title">0. Choisis ton Jeu</h3>
+        <div class="game-modes-container">
+          <div class="game-mode-card active" data-gamemode="space">
+            <div class="gm-badge">JEU 1 • ESCADRON SPATIAL</div>
+            <div class="gm-title">🚀 NOVA SPACE INVADERS 3D</div>
+            <div class="gm-desc">Combat aérien 3D • 3 Biomes 4K (Campagne, Montagne, Océan) • 5 Vaisseaux</div>
           </div>
-          <div class="biome-card" data-biome="montagne">
-            <div class="biome-emoji">🏔️</div>
-            <div class="biome-title">Montagne 3D</div>
-            <div class="biome-desc">Alpes Mont-Blanc • Canyons Glacés, Blizzard & Golems/Wyvernes</div>
-          </div>
-          <div class="biome-card" data-biome="ocean">
-            <div class="biome-emoji">🌊</div>
-            <div class="biome-title">Océan 3D</div>
-            <div class="biome-desc">Fosse des Mariannes • Récifs Bioluminescents, Léviathans & Krakens</div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- 2. SÉLECTEUR DE VAISSEAU -->
-      <div id="shipSelection" class="ship-selection">
-        <h3 class="ship-sel-title">2. Choisis ton Vaisseau 3D</h3>
-        <div class="ships-container">
-          <div class="ship-card active" data-ship="nova">
-            <img src="ship_nova.png" alt="Nova" class="ship-icon">
-            <div class="ship-name">Nova</div>
-            <div class="ship-stats">Équilibré</div>
-          </div>
-          <div class="ship-card" data-ship="viper">
-            <img src="ship_swift.png" alt="Viper" class="ship-icon">
-            <div class="ship-name">Viper</div>
-            <div class="ship-stats">Rapide</div>
-          </div>
-          <div class="ship-card" data-ship="goliath">
-            <img src="ship_titan.png" alt="Goliath" class="ship-icon">
-            <div class="ship-name">Goliath</div>
-            <div class="ship-stats">Blindé</div>
-          </div>
-          <div class="ship-card" data-ship="phantom">
-            <img src="ship_ghost.png" alt="Phantom" class="ship-icon">
-            <div class="ship-name">Phantom</div>
-            <div class="ship-stats">Furtif</div>
-          </div>
-          <div class="ship-card" data-ship="orion">
-            <img src="ship_orion.png" alt="Orion" class="ship-icon">
-            <div class="ship-name">Orion</div>
-            <div class="ship-stats">Tactique</div>
+          <div class="game-mode-card" data-gamemode="tank">
+            <div class="gm-badge gm-badge-tank">JEU 2 • NOUVEAU !</div>
+            <div class="gm-title">🛡️ NOVA TANK ASSAULT 360°</div>
+            <div class="gm-desc">Beat 'em All Terrestre • Tourelle 360° • Défilement 8 Écrans • Bombardiers & 5 Boss</div>
           </div>
         </div>
       </div>
 
-      <!-- 3. SÉLECTEUR D'ARMEMENT INDÉPENDANT -->
+      <!-- ====== OPTIONS JEU 1 : SPACE INVADERS 3D ====== -->
+      <div id="spaceConfigPanel" class="mode-config-panel">
+        <!-- 1. SÉLECTEUR DE THÈME / BIOME 3D -->
+        <div id="biomeSelection" class="biome-selection">
+          <h3 class="ship-sel-title">1. Choisis ton Thème 3D (Biome Spatial)</h3>
+          <div class="biomes-container">
+            <div class="biome-card active" data-biome="campagne">
+              <div class="biome-emoji">🌾</div>
+              <div class="biome-title">Campagne 3D</div>
+              <div class="biome-desc">Beauce Golden Hour • Collines, Moulins & Essaim Bio-Méca</div>
+            </div>
+            <div class="biome-card" data-biome="montagne">
+              <div class="biome-emoji">🏔️</div>
+              <div class="biome-title">Montagne 3D</div>
+              <div class="biome-desc">Alpes Mont-Blanc • Canyons Glacés, Blizzard & Golems/Wyvernes</div>
+            </div>
+            <div class="biome-card" data-biome="ocean">
+              <div class="biome-emoji">🌊</div>
+              <div class="biome-title">Océan 3D</div>
+              <div class="biome-desc">Fosse des Mariannes • Récifs Bioluminescents, Léviathans & Krakens</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 2. SÉLECTEUR DE VAISSEAU -->
+        <div id="shipSelection" class="ship-selection">
+          <h3 class="ship-sel-title">2. Choisis ton Vaisseau 3D</h3>
+          <div class="ships-container">
+            <div class="ship-card active" data-ship="nova">
+              <img src="ship_nova.png" alt="Nova" class="ship-icon">
+              <div class="ship-name">Nova</div>
+              <div class="ship-stats">Équilibré</div>
+            </div>
+            <div class="ship-card" data-ship="viper">
+              <img src="ship_swift.png" alt="Viper" class="ship-icon">
+              <div class="ship-name">Viper</div>
+              <div class="ship-stats">Rapide</div>
+            </div>
+            <div class="ship-card" data-ship="goliath">
+              <img src="ship_titan.png" alt="Goliath" class="ship-icon">
+              <div class="ship-name">Goliath</div>
+              <div class="ship-stats">Blindé</div>
+            </div>
+            <div class="ship-card" data-ship="phantom">
+              <img src="ship_ghost.png" alt="Phantom" class="ship-icon">
+              <div class="ship-name">Phantom</div>
+              <div class="ship-stats">Furtif</div>
+            </div>
+            <div class="ship-card" data-ship="orion">
+              <img src="ship_orion.png" alt="Orion" class="ship-icon">
+              <div class="ship-name">Orion</div>
+              <div class="ship-stats">Tactique</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== OPTIONS JEU 2 : NOVA TANK ASSAULT ====== -->
+      <div id="tankConfigPanel" class="mode-config-panel" style="display: none;">
+        <!-- 1. SÉLECTEUR DE THÈME TERRESTRE (4 THÈMES) -->
+        <div id="tankThemeSelection" class="biome-selection">
+          <h3 class="ship-sel-title">1. Choisis ton Théâtre d'Opérations (Défilement 8 Écrans)</h3>
+          <div class="tank-themes-container">
+            <div class="tank-theme-card active" data-tanktheme="ww2">
+              <div class="biome-emoji">🪖</div>
+              <div class="biome-title">Seconde Guerre (1944)</div>
+              <div class="biome-desc">Bocage, Tranchées, Bunkers, Canons Pak-40 & Panzers</div>
+            </div>
+            <div class="tank-theme-card" data-tanktheme="desert">
+              <div class="biome-emoji">🏜️</div>
+              <div class="biome-title">Campagne du Désert</div>
+              <div class="biome-desc">Dunes, Oasis Fortifiées, Buggies Lance-Missiles & Hélicos</div>
+            </div>
+            <div class="tank-theme-card" data-tanktheme="alien">
+              <div class="biome-emoji">🛸</div>
+              <div class="biome-title">Invasion Extraterrestre</div>
+              <div class="biome-desc">Cratères Xéno, Pylônes Plasma, Tripodes & Chars Aliens</div>
+            </div>
+            <div class="tank-theme-card" data-tanktheme="predator">
+              <div class="biome-emoji">🩸</div>
+              <div class="biome-title">Monstres Predator</div>
+              <div class="biome-desc">Jungle Bio-Hunt, Chasseurs Furtifs Tri-Laser & Bêtes Alpha</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. SÉLECTEUR DE TANK BLINDÉ -->
+        <div id="tankSelection" class="ship-selection">
+          <h3 class="ship-sel-title">2. Choisis ton Blindé (Tir Frontal + Tourelle Rotative 360°)</h3>
+          <div class="ships-container">
+            <div class="tank-card active" data-tank="grizzly">
+              <div class="tank-emoji">🛡️</div>
+              <div class="ship-name">M4 Grizzly</div>
+              <div class="ship-stats">Tourelle 360° + Frontal</div>
+            </div>
+            <div class="tank-card" data-tank="vulcan">
+              <div class="tank-emoji">🔥</div>
+              <div class="ship-name">Vulcan</div>
+              <div class="ship-stats">Double Gatling 360°</div>
+            </div>
+            <div class="tank-card" data-tank="mammoth">
+              <div class="tank-emoji">🦣</div>
+              <div class="ship-name">Mammoth</div>
+              <div class="ship-stats">Lourd + Double Canon</div>
+            </div>
+            <div class="tank-card" data-tank="tesla">
+              <div class="tank-emoji">⚡</div>
+              <div class="ship-name">Tesla Prism</div>
+              <div class="ship-stats">Railgun & Arc 360°</div>
+            </div>
+            <div class="tank-card" data-tank="cerberus">
+              <div class="tank-emoji">🐉</div>
+              <div class="ship-name">Cerberus</div>
+              <div class="ship-stats">Tri-Canon + Frontal</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. SÉLECTEUR D'ARMEMENT INDÉPENDANT (COMMUN AUX 2 JEUX) -->
       <div id="weaponSelection" class="weapon-selection">
-        <h3 class="ship-sel-title">3. Choisis ton Armement Principal (Indépendant du vaisseau)</h3>
+        <h3 class="ship-sel-title">3. Choisis ton Armement Principal</h3>
         <div class="weapons-container">
           <div class="weapon-card active" data-weapon="normal">
             <div class="wpn-icon">⚡</div>
-            <div class="wpn-name">Agro-Laser</div>
+            <div class="wpn-name">Agro-Laser / Obus</div>
             <div class="wpn-stats">Précis & Cadence std</div>
           </div>
           <div class="weapon-card" data-weapon="rapid">
@@ -214,7 +304,7 @@
           </div>
           <div class="weapon-card" data-weapon="deflagration">
             <div class="wpn-icon">🚀</div>
-            <div class="wpn-name">Torpille / Avalanche</div>
+            <div class="wpn-name">Torpille / Obus HE</div>
             <div class="wpn-stats">Onde de choc AOE</div>
           </div>
           <div class="weapon-card" data-weapon="fragbomb">
@@ -232,7 +322,7 @@
         </div>
 
         <div id="waveSelection" class="control-group">
-          <label>Vague (1-50) :</label>
+          <label id="waveInputLabel">Niveau / Vague :</label>
           <div class="wave-input-container">
             <input type="number" id="startWaveInput" min="1" max="50" value="1" class="wave-input">
             <span class="sector-hint" id="sectorHint">Secteur 1 : Campagne 3D</span>
@@ -240,16 +330,19 @@
         </div>
       </div>
 
-      <button id="startButton" class="btn-primary">DÉMARRER LA MISSION 3D</button>
+      <div class="action-buttons-row">
+        <button id="startButton" class="btn-primary">DÉMARRER LA MISSION</button>
+        <button id="switchGameMenuBtn" class="btn-secondary" style="display: none;">🔄 CHANGER DE JEU</button>
+      </div>
     </div>
 
     <!-- Cutscene Overlay for Transitions -->
     <div id="cutsceneOverlay" class="cutscene-overlay hidden">
       <div class="hyper-jump-stars"></div>
       <img src="ship_nova.png" id="cinematicShip" class="cinematic-ship" alt="Ship">
-      <div id="cinematicText" class="cinematic-text">Transition vers le nouveau biome 3D...</div>
+      <div id="cinematicText" class="cinematic-text">Transition vers le nouveau secteur...</div>
     </div>
-    <!-- Mobile Controls : Dock Bas Dédié (Ne cache jamais le vaisseau) + Glisser l'écran aussi actif -->
+    <!-- Mobile Controls : Dock Bas Dédié + Tourelle 360° & Bombardiers en mode Tank -->
     <div id="mobileControls" class="mobile-controls">
       <div class="move-btns">
         <button id="btnUp" class="ctrl-btn up-btn">↑</button>
@@ -259,11 +352,16 @@
         </div>
         <button id="btnDown" class="ctrl-btn down-btn">↓</button>
       </div>
-      <div class="mobile-hint">Glisse sur l'écran ou utilise le pad</div>
+      <div id="tankMobileTurretControls" class="tank-mobile-turret" style="display: none;">
+        <button id="btnTurretLeft" class="ctrl-btn turret-btn" title="Tourner Canon Gauche">⟲</button>
+        <button id="btnAirstrikeMobile" class="ctrl-btn airstrike-mob-btn" title="Support Aérien Bombardiers">✈️<span id="mobAirCount">2</span></button>
+        <button id="btnTurretRight" class="ctrl-btn turret-btn" title="Tourner Canon Droite">⟳</button>
+      </div>
+      <div class="mobile-hint" id="mobileHintText">Glisse sur l'écran pour viser/tirer à 360°</div>
       <button id="btnFire" class="ctrl-btn fire-btn">FIRE</button>
     </div>
   </main>
 
-  <script src="game.js?v=29"></script>
+  <script src="game.js?v=32"></script>
 </body>
 </html>

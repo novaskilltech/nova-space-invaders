@@ -112,12 +112,213 @@ const SHIPS = {
   phantom: { id: "phantom", color: "#c264ff", speed: 480, invul: 1400, width: 72, height: 72, weapon: "plasma" },
   orion: { id: "orion", color: "#7af2ff", speed: 380, invul: 1600, width: 84, height: 80, weapon: "triple" }
 };
+let selectedGameMode = "space"; // "space" (Nova Space Invaders 3D) ou "tank" (Nova Tank Assault 360°)
 let selectedShipId = "nova";
+let selectedTankId = "grizzly";
+let selectedTankThemeId = "ww2";
 let selectedWeaponId = "normal";
 let selectedBiomeId = "campagne";
 let selectedDifficulty = 5; // Valeur de 1 à 10
 let selectedStartWave = 1;
 let terrainOffset3D = 0;
+
+// ======================================================
+// CONFIGURATION JEU 2 : NOVA TANK ASSAULT (360° & 8 ÉCRANS)
+// ======================================================
+const TANKS = {
+  grizzly: {
+    id: "grizzly",
+    name: "M4 Grizzly",
+    hullColor: "#4d7c0f",
+    trimColor: "#a3e635",
+    speed: 330,
+    livesBonus: 1,
+    width: 68,
+    height: 82,
+    weapon: "normal",
+    forwardGun: true, // Tire aussi droit devant en plus de la tourelle 360°
+    barrels: 1
+  },
+  vulcan: {
+    id: "vulcan",
+    name: "Vulcan Hellfire",
+    hullColor: "#b45309",
+    trimColor: "#fbbf24",
+    speed: 410,
+    livesBonus: 0,
+    width: 64,
+    height: 78,
+    weapon: "rapid",
+    forwardGun: true,
+    barrels: 2
+  },
+  mammoth: {
+    id: "mammoth",
+    name: "Mammoth Titan",
+    hullColor: "#334155",
+    trimColor: "#f97316",
+    speed: 270,
+    livesBonus: 3,
+    width: 80,
+    height: 92,
+    weapon: "plasma",
+    forwardGun: true,
+    barrels: 2
+  },
+  tesla: {
+    id: "tesla",
+    name: "Tesla Prism",
+    hullColor: "#0e7490",
+    trimColor: "#00f2ff",
+    speed: 350,
+    livesBonus: 1,
+    width: 68,
+    height: 82,
+    weapon: "railgun",
+    forwardGun: false,
+    barrels: 1
+  },
+  cerberus: {
+    id: "cerberus",
+    name: "Cerberus Hydra",
+    hullColor: "#581c87",
+    trimColor: "#c084fc",
+    speed: 370,
+    livesBonus: 1,
+    width: 72,
+    height: 84,
+    weapon: "triple",
+    forwardGun: true,
+    barrels: 3
+  }
+};
+
+const TANK_THEMES = {
+  ww2: {
+    id: "ww2",
+    label: "🪖 WW2 1944",
+    sectorTitle: "Front Normandie // Bocage & Bunkers",
+    freq: "RADIO: 42.6 MHz // ALLIED-HQ",
+    enemyName: "GÉNÉRAL IRON-KREUZ // PANZER",
+    enemyAvatar: "warlord_kaelen.png",
+    pilotName: "SGT. MILLER // DIVISION BLINDÉE",
+    pilotAvatar: "pilot_valentin.png",
+    groundColor: "#2d3a24",
+    roadColor: "#4a4336",
+    roadBorder: "#6b604c",
+    bankColor: "#1f2b16",
+    accentColor: "#a3e635",
+    taunts: [
+      "Nos bunkers du Mur de l'Atlantique et nos chars Tigre stopperont votre colonne !",
+      "Les canons antichars Pak-40 sont embusqués dans chaque haie du bocage !",
+      "Votre blindé ne franchira jamais les 8 kilomètres jusqu'à notre QG !",
+      "Alerte générale ! Déployez le train blindé et les divisions Panzer !"
+    ],
+    pilotQuotes: [
+      "Tourelle parée à 360° ! On va percer vos lignes jusqu'au dernier bunker !",
+      "Escadrille de bombardiers B-17 en attente sur canal radio !",
+      "En avant toute ! Les canons latéraux ne nous arrêteront pas !"
+    ],
+    enemyReactions: [
+      "Impossible ! Son canon balaye nos tranchées sur les deux flancs !",
+      "Attention, il appelle un tapis de bombes allié ! À couvert !",
+      "Repliez les Panzers vers la forteresse de fin de secteur !"
+    ]
+  },
+  desert: {
+    id: "desert",
+    label: "🏜️ Désert",
+    sectorTitle: "Opération Tempête de Sable // Dunes",
+    freq: "SAT-COM: 215.0 MHz // DESERT-STORM",
+    enemyName: "WARLORD SCORPION // DUNE-CORPS",
+    enemyAvatar: "warlord_kaelen.png",
+    pilotName: "CAPT. REYES // SCORPION-1",
+    pilotAvatar: "pilot_valentin.png",
+    groundColor: "#9a6b32",
+    roadColor: "#b88a4d",
+    roadBorder: "#d6a868",
+    bankColor: "#7c511e",
+    accentColor: "#fbbf24",
+    taunts: [
+      "Les dunes brûlantes engloutiront vos chenilles avant l'oasis fortifiée !",
+      "Nos buggies lance-missiles et tourelles SAM vous encerclent de tous côtés !",
+      "La tempête du désert cache nos escadrons blindés lourds !",
+      "Vous n'atteindrez jamais le puits central vivant !"
+    ],
+    pilotQuotes: [
+      "Filtres à sable activés, canon rotatif verrouillé sur vos buggies !",
+      "A-10 Thunderbolt prêt pour une frappe aérienne sur les dunes !",
+      "On roule à plein régime, rien n'arrête la colonne blindée Nova !"
+    ],
+    enemyReactions: [
+      "Il tire en roulant dans toutes les directions ! Dispersion !",
+      "Nos raffineries brûlent ! Envoyez les hélicoptères d'assaut !",
+      "Maudit blindé ! Le Goliath du Désert va t'écraser !"
+    ]
+  },
+  alien: {
+    id: "alien",
+    label: "🛸 Alien Xéno",
+    sectorTitle: "Zone Xéno-Tech // Cratères Plasma",
+    freq: "XENO-WAVE: 990.4 THz // ORBIT-GRID",
+    enemyName: "ARCHON XYLOS // NEXUS-MÈRE",
+    enemyAvatar: "warlord_thalassor.png",
+    pilotName: "CDR. VALENTIN // XENO-HUNTER",
+    pilotAvatar: "pilot_morgan.png",
+    groundColor: "#140b29",
+    roadColor: "#231542",
+    roadBorder: "#00f2ff",
+    bankColor: "#0a0417",
+    accentColor: "#00f2ff",
+    taunts: [
+      "Vos chenilles primitives profanent notre réseau de pylônes plasma !",
+      "Nos Tripodes et drones arachnides vont désintégrer votre blindage !",
+      "La ruche technologique s'étend sur 8 secteurs, vous êtes condamné !",
+      "Contemplez la puissance des citadelles antigravité !"
+    ],
+    pilotQuotes: [
+      "Blindage réactif chargé ! On va éteindre vos pylônes un par un !",
+      "Frégates orbitales parées au largage de bombes antimatière !",
+      "Votre technologie alien ne résiste pas au calibre Nova !"
+    ],
+    enemyReactions: [
+      "Anomalie ! Ce char terrestre détruit nos tripodes sur 360 degrés !",
+      "Alerte orbitale ! Bombardement massif détecté sur la grille !",
+      "Activez le Léviathan Xéno à la fin du couloir !"
+    ]
+  },
+  predator: {
+    id: "predator",
+    label: "🩸 Predator Hunt",
+    sectorTitle: "Jungle Bio-Hunt // Ruche & Chasseurs",
+    freq: "THERMAL: 66.6 MHz // BIO-TRACKER",
+    enemyName: "YAUTJA-PRIME // CLAN ALPHA",
+    enemyAvatar: "warlord_thalassor.png",
+    pilotName: "MAJ. DUTCH // JUNGLE-TANK",
+    pilotAvatar: "pilot_morgan.png",
+    groundColor: "#0d2618",
+    roadColor: "#1d3828",
+    roadBorder: "#ef4444",
+    bankColor: "#06170e",
+    accentColor: "#ef4444",
+    taunts: [
+      "Nos chasseurs camouflés vous observent depuis la jungle avec leurs viseurs tri-laser...",
+      "Votre char fait un beau trophée de chasse pour le Clan Alpha !",
+      "Dans cette jungle acide, vous êtes la proie et nous sommes les prédateurs !",
+      "Si ça saigne ou si ça perd de l'huile... nous pouvons le tuer !"
+    ],
+    pilotQuotes: [
+      "Scanner thermique activé ! Vos capes d'invisibilité ne vous sauveront pas !",
+      "Largage de napalm aérien imminent sur toute la jungle !",
+      "Approchez, les monstres, ma tourelle tourne plus vite que vos griffes !"
+    ],
+    enemyReactions: [
+      "Rrrrgh ! Il a repéré nos chasseurs furtifs dans les arbres !",
+      "Le ciel brûle ! Leurs bombardiers rasent nos totems de chasse !",
+      "Le Seigneur Alpha Predator t'attend au bout de la piste !"
+    ]
+  }
+};
 
 const BIOMES = {
   campagne: {
@@ -249,21 +450,31 @@ const state = {
   mouseTargetX: 0,
   mouseTargetY: 0,
   mouseDown: false,
+  // État Tank Assault (Défilement 8 écrans + Tourelle 360° + Bombardiers)
+  tankDistance: 0,
+  tankTargetDistance: 4800,
+  tankSpawnCursor: 0,
+  tankProps: [],
+  tankTracks: [],
+  airstrikes: 2,
+  bomberRun: null,
+  turretAngle: -Math.PI / 2,
+  lastForwardShotAt: 0,
 };
 
 const WEAPONS = {
-  normal: { name: "Agro-Laser", color: "#00f2ff", delay: 185, speed: 580, width: 6 },
+  normal: { name: "Agro-Laser / Obus", color: "#00f2ff", delay: 185, speed: 580, width: 6 },
   rapid: { name: "Twin Gatling", color: "#ffb84d", delay: 95, speed: 680, width: 5 },
   triple: { name: "Triple Harpon", color: "#10b981", delay: 215, speed: 540, width: 5 },
   spread: { name: "Cryo-Faisceau", color: "#38bdf8", delay: 260, speed: 500, width: 8 },
   plasma: { name: "Canon Plasma", color: "#c264ff", delay: 320, speed: 440, width: 14 },
   railgun: { name: "Railgun Tesla", color: "#00ffcc", delay: 270, speed: 880, width: 10, pierce: true },
-  deflagration: { name: "Torpille / Avalanche", color: "#ff4422", delay: 420, speed: 360, width: 18, explosion: true },
+  deflagration: { name: "Torpille / Obus HE", color: "#ff4422", delay: 420, speed: 360, width: 18, explosion: true },
   bomb: { name: "Méga Bombe", color: "#ffaa00", delay: 580, speed: 300, width: 48, height: 48, explosion: true, explosionHeight: 80 },
   fragbomb: { name: "Cluster Bomb", color: "#ffffff", delay: 460, speed: 340, width: 12, frag: true },
 };
 
-const powerupTypes = ["rapid", "triple", "spread", "plasma", "railgun", "deflagration", "bomb", "fragbomb", "invincibility", "clone"];
+const powerupTypes = ["rapid", "triple", "spread", "plasma", "railgun", "deflagration", "bomb", "fragbomb", "invincibility", "clone", "airstrike"];
 
 const player = {
   width: 78,
@@ -271,6 +482,7 @@ const player = {
   x: canvas.width / 2 - 39,
   y: canvas.height - 108,
   vxTilt: 0,
+  turretAngle: -Math.PI / 2,
   weapon: "normal",
   weaponTime: 0,
   cloneTime: 0,
@@ -280,6 +492,22 @@ const player = {
 };
 
 function applyShipSelection() {
+  if (selectedGameMode === "tank") {
+    const tank = TANKS[selectedTankId] || TANKS.grizzly;
+    player.width = tank.width;
+    player.height = tank.height;
+    player.speed = tank.speed;
+    player.invul = 1400;
+    player.color = tank.trimColor;
+    player.hullColor = tank.hullColor;
+    player.id = tank.id;
+    player.forwardGun = tank.forwardGun;
+    player.barrels = tank.barrels || 1;
+    const chosenWpn = selectedWeaponId && WEAPONS[selectedWeaponId] ? selectedWeaponId : tank.weapon;
+    player.baseWeapon = chosenWpn;
+    player.weapon = chosenWpn;
+    return;
+  }
   const ship = SHIPS[selectedShipId] || SHIPS.nova;
   player.width = ship.width;
   player.height = ship.height;
@@ -287,7 +515,6 @@ function applyShipSelection() {
   player.invul = ship.invul;
   player.color = ship.color;
   player.id = ship.id;
-  // L'utilisateur choisit désormais son armement de façon indépendante !
   const chosenWpn = selectedWeaponId && WEAPONS[selectedWeaponId] ? selectedWeaponId : ship.weapon;
   player.baseWeapon = chosenWpn;
   player.weapon = chosenWpn;
@@ -517,10 +744,201 @@ function spawnBoss() {
   };
 }
 
+function initTankLevel(level) {
+  const safeLevel = Math.max(1, Math.min(5, level));
+  state.wave = safeLevel;
+  state.tankDistance = 0;
+  // Exactement 8 écrans de distance !
+  state.tankTargetDistance = canvas.height * 8;
+  state.tankSpawnCursor = 240;
+  state.tankProps = [];
+  state.tankTracks = [];
+  state.bomberRun = null;
+  state.airstrikes = Math.max(state.airstrikes || 2, 2);
+  player.turretAngle = -Math.PI / 2;
+  enemies = [];
+  state.boss = null;
+
+  // Pré-remplir les décors latéraux initiaux sur l'écran
+  for (let y = 60; y < canvas.height; y += 110) {
+    spawnTankSceneryPair(y);
+  }
+  // Premiers ennemis de patrouille
+  spawnTankEncounter(safeLevel, 120);
+}
+
+function spawnTankSceneryPair(yPos) {
+  const w = canvas.width;
+  const roadMargin = Math.max(58, Math.min(130, w * 0.17));
+  const theme = selectedTankThemeId;
+  const typesByTheme = {
+    ww2: ["bunker", "trench", "hedgerow", "crater"],
+    desert: ["dune", "palm", "oilrig", "ruin"],
+    alien: ["pylon", "crystal", "pod", "crater"],
+    predator: ["jungle_tree", "totem", "hive", "acid_pool"]
+  };
+  const pool = typesByTheme[theme] || typesByTheme.ww2;
+
+  // Rive gauche
+  state.tankProps.push({
+    side: "left",
+    x: 10 + Math.random() * Math.max(16, roadMargin - 46),
+    y: yPos,
+    w: 36 + Math.random() * 18,
+    h: 36 + Math.random() * 20,
+    type: pool[Math.floor(Math.random() * pool.length)],
+    seed: Math.random()
+  });
+
+  // Rive droite
+  state.tankProps.push({
+    side: "right",
+    x: w - roadMargin + 8 + Math.random() * Math.max(16, roadMargin - 46),
+    y: yPos + (Math.random() * 30 - 15),
+    w: 36 + Math.random() * 18,
+    h: 36 + Math.random() * 20,
+    type: pool[Math.floor(Math.random() * pool.length)],
+    seed: Math.random()
+  });
+}
+
+function spawnTankEncounter(level, yStart = -50) {
+  const w = canvas.width;
+  const roadMargin = Math.max(58, Math.min(130, w * 0.17));
+  const roadLeft = roadMargin + 14;
+  const roadWidth = Math.max(140, w - roadMargin * 2 - 28);
+
+  // 1. Tourelles ou embuscades sur les bas-côtés (qui obligent à tourner le canon à gauche/droite !)
+  if (Math.random() < 0.78) {
+    const leftSide = Math.random() < 0.5;
+    const sideX = leftSide ? Math.max(10, roadMargin - 48) : Math.min(w - 54, w - roadMargin + 6);
+    enemies.push({
+      x: sideX,
+      y: yStart,
+      width: 46,
+      height: 46,
+      type: "side_turret",
+      tankRole: "flank_turret",
+      side: leftSide ? "left" : "right",
+      hp: 2 + Math.floor(level / 2),
+      maxHp: 2 + Math.floor(level / 2),
+      dead: false,
+      vx: 0,
+      vy: 0,
+      aimAngle: leftSide ? 0.4 : Math.PI - 0.4,
+      cloaked: selectedTankThemeId === "predator" && Math.random() < 0.55
+    });
+  }
+
+  // 2. Escouade sur la route ou les flancs (2 à 4 unités)
+  const count = Math.min(4, 2 + Math.floor(Math.random() * 2) + Math.floor(level / 2));
+  for (let i = 0; i < count; i++) {
+    const roll = Math.random();
+    let role = "trooper";
+    let hp = 1 + Math.floor(level / 3);
+    let ew = 44;
+    let eh = 44;
+    if (roll < 0.32) {
+      role = "light_vehicle";
+      hp = 2 + Math.floor(level / 2);
+      ew = 48;
+      eh = 52;
+    } else if (roll < 0.58) {
+      role = "heavy_tank";
+      hp = 4 + level;
+      ew = 56;
+      eh = 62;
+    } else if (selectedTankThemeId === "predator" || roll < 0.75) {
+      role = "hunter";
+      hp = 3 + Math.floor(level / 2);
+      ew = 46;
+      eh = 48;
+    }
+
+    const ex = roadLeft + (i + 0.5) * (roadWidth / count) - ew / 2 + (Math.random() * 20 - 10);
+    enemies.push({
+      x: Math.max(roadLeft, Math.min(roadLeft + roadWidth - ew, ex)),
+      y: yStart - i * 38,
+      width: ew,
+      height: eh,
+      type: role === "heavy_tank" ? "crab" : role === "hunter" ? "kamikaze" : "squid",
+      tankRole: role,
+      hp,
+      maxHp: hp,
+      dead: false,
+      vx: (Math.random() - 0.5) * (role === "light_vehicle" ? 130 : 55),
+      vy: role === "light_vehicle" ? 75 : role === "hunter" ? 95 : 35,
+      aimAngle: Math.PI / 2,
+      cloaked: selectedTankThemeId === "predator" && role === "hunter",
+      phaseOffset: Math.random() * Math.PI * 2
+    });
+  }
+}
+
+function spawnTankBoss(level) {
+  const safeLevel = Math.max(1, Math.min(5, level));
+  const bossConfigs = {
+    1: { name: "BOSS NIV.1 — TRAIN BLINDÉ & BUNKER", hp: 70, w: 230, h: 120, speed: 95, fireChance: 0.035, lives: 2, style: "bunker_train" },
+    2: { name: "BOSS NIV.2 — ESCADRON FAUCON NOIR", hp: 95, w: 210, h: 115, speed: 155, fireChance: 0.045, lives: 2, style: "gunship_duo" },
+    3: { name: "BOSS NIV.3 — MASTODONTE GOLIATH MK-IV", hp: 130, w: 220, h: 135, speed: 115, fireChance: 0.05, lives: 2, style: "super_tank" },
+    4: { name: "BOSS NIV.4 — SEIGNEUR ALPHA PREDATOR", hp: 160, w: 190, h: 130, speed: 185, fireChance: 0.06, lives: 2, style: "predator_lord" },
+    5: { name: "BOSS FINAL NIV.5 — CITADELLE APOCALYPSE", hp: 220, w: 260, h: 150, speed: 130, fireChance: 0.07, lives: 3, style: "apocalypse_citadel" }
+  };
+  const cfg = bossConfigs[safeLevel] || bossConfigs[1];
+  state.boss = {
+    name: cfg.name,
+    type: "boss",
+    tankBossStyle: cfg.style,
+    x: canvas.width / 2 - cfg.w / 2,
+    y: 68,
+    width: cfg.w,
+    height: cfg.h,
+    health: cfg.hp,
+    maxHealth: cfg.hp,
+    speed: cfg.speed,
+    direction: 1,
+    fireChance: cfg.fireChance,
+    phase: 1,
+    attackTimer: 0,
+    lives: cfg.lives
+  };
+  playSound("powerup");
+}
+
+function triggerAirstrike() {
+  if (selectedGameMode !== "tank" || !state.running || state.paused) return;
+  if (state.airstrikes <= 0 || state.bomberRun) return;
+
+  state.airstrikes -= 1;
+  playSound("powerup");
+
+  const w = canvas.width;
+  const h = canvas.height;
+  state.bomberRun = {
+    y: h + 120,
+    speed: 520,
+    bombers: [
+      { x: w * 0.22, offsetY: 40 },
+      { x: w * 0.5, offsetY: 0 },
+      { x: w * 0.78, offsetY: 40 }
+    ],
+    lastBombWaveY: h + 100
+  };
+
+  const tTheme = TANK_THEMES[selectedTankThemeId] || TANK_THEMES.ww2;
+  updateCommLinkBiome(
+    tTheme.enemyReactions[1] || "Alerte bombardement aérien !",
+    "Escadrille de bombardiers en approche ! Largage du tapis de bombes !"
+  );
+  syncUi();
+}
+
 function initGame() {
   state.score = 0;
-  state.lives = Math.max(1, 6 - Math.floor(selectedDifficulty / 2));
-  state.wave = selectedStartWave;
+  const baseLives = Math.max(2, 6 - Math.floor(selectedDifficulty / 2));
+  const tankBonus = selectedGameMode === "tank" && TANKS[selectedTankId] ? TANKS[selectedTankId].livesBonus : 0;
+  state.lives = baseLives + tankBonus;
+  state.wave = selectedGameMode === "tank" ? Math.min(5, Math.max(1, selectedStartWave)) : selectedStartWave;
   state.shots = [];
   state.enemyShots = [];
   state.particles = [];
@@ -529,11 +947,14 @@ function initGame() {
   state.powerups = [];
   state.showingQuestion = false;
   state.currentQuestion = null;
+  state.airstrikes = 2;
   player.weapon = player.baseWeapon || "normal";
   player.weaponTime = 0;
   resetPlayer();
-  
-  if (state.wave % 5 === 0) {
+
+  if (selectedGameMode === "tank") {
+    initTankLevel(state.wave);
+  } else if (state.wave % 5 === 0) {
     spawnBoss();
     enemies = [];
   } else {
@@ -547,12 +968,37 @@ function syncUi() {
   ui.score.textContent = String(state.score);
   ui.highScore.textContent = String(state.highScore);
   ui.lives.textContent = String(state.lives);
-  ui.wave.textContent = String(state.wave);
+  ui.wave.textContent = selectedGameMode === "tank" ? `${state.wave}/5` : String(state.wave);
   
   const biomeDisplay = document.getElementById("biomeDisplay");
-  const biome = BIOMES[selectedBiomeId] || BIOMES.campagne;
-  if (biomeDisplay) {
-    biomeDisplay.textContent = biome.label;
+  const waveLabel = document.getElementById("waveLabel");
+  const sectorLabel = document.getElementById("sectorLabel");
+  const airstrikeHudBox = document.getElementById("airstrikeHudBox");
+  const airstrikeCount = document.getElementById("airstrikeCount");
+  const mobAirCount = document.getElementById("mobAirCount");
+  const tankMobileTurret = document.getElementById("tankMobileTurretControls");
+  const switchGameMenuBtn = document.getElementById("switchGameMenuBtn");
+
+  if (selectedGameMode === "tank") {
+    const tTheme = TANK_THEMES[selectedTankThemeId] || TANK_THEMES.ww2;
+    if (biomeDisplay) biomeDisplay.textContent = tTheme.label;
+    if (waveLabel) waveLabel.textContent = "Niveau";
+    if (sectorLabel) sectorLabel.textContent = "Théâtre";
+    if (airstrikeHudBox && window.innerWidth > 900) airstrikeHudBox.style.display = "block";
+    if (airstrikeCount) airstrikeCount.textContent = String(state.airstrikes || 0);
+    if (mobAirCount) mobAirCount.textContent = String(state.airstrikes || 0);
+    if (tankMobileTurret) tankMobileTurret.style.display = "flex";
+  } else {
+    const biome = BIOMES[selectedBiomeId] || BIOMES.campagne;
+    if (biomeDisplay) biomeDisplay.textContent = biome.label;
+    if (waveLabel) waveLabel.textContent = "Vague";
+    if (sectorLabel) sectorLabel.textContent = "Secteur 3D";
+    if (airstrikeHudBox) airstrikeHudBox.style.display = "none";
+    if (tankMobileTurret) tankMobileTurret.style.display = "none";
+  }
+
+  if (switchGameMenuBtn) {
+    switchGameMenuBtn.style.display = (state.paused || !state.running) ? "inline-block" : "none";
   }
 
   if (ui.weapon) {
@@ -578,8 +1024,12 @@ function syncUi() {
 }
 
 function updateCommLinkBiome(customEnemyLine, customPilotLine) {
-  const biome = BIOMES[selectedBiomeId] || BIOMES.campagne;
-  document.body.setAttribute("data-biome", biome.id);
+  const activeSource = selectedGameMode === "tank"
+    ? (TANK_THEMES[selectedTankThemeId] || TANK_THEMES.ww2)
+    : (BIOMES[selectedBiomeId] || BIOMES.campagne);
+
+  document.body.setAttribute("data-biome", activeSource.id);
+  document.body.setAttribute("data-game", selectedGameMode);
 
   const enemyAvatar = document.getElementById("commEnemyAvatar");
   const enemyName = document.getElementById("commEnemyName");
@@ -590,25 +1040,25 @@ function updateCommLinkBiome(customEnemyLine, customPilotLine) {
   const freqEl = document.getElementById("commFreq");
   const sectorHint = document.getElementById("sectorHint");
 
-  if (enemyAvatar) enemyAvatar.src = biome.enemyAvatar;
-  if (enemyName) enemyName.textContent = biome.enemyName;
+  if (enemyAvatar) enemyAvatar.src = activeSource.enemyAvatar;
+  if (enemyName) enemyName.textContent = activeSource.enemyName;
   if (enemyText) {
-    const line = customEnemyLine || biome.taunts[(state.wave - 1) % biome.taunts.length];
+    const line = customEnemyLine || activeSource.taunts[(state.wave - 1) % activeSource.taunts.length];
     enemyText.textContent = `"${line}"`;
   }
-  if (pilotAvatar) pilotAvatar.src = biome.pilotAvatar;
-  if (pilotName) pilotName.textContent = biome.pilotName;
+  if (pilotAvatar) pilotAvatar.src = activeSource.pilotAvatar;
+  if (pilotName) pilotName.textContent = activeSource.pilotName;
   if (pilotText && customPilotLine) {
     pilotText.textContent = `"${customPilotLine}"`;
   }
-  if (freqEl) freqEl.textContent = biome.freq;
-  if (sectorHint) sectorHint.textContent = biome.sectorTitle;
+  if (freqEl) freqEl.textContent = activeSource.freq;
+  if (sectorHint) sectorHint.textContent = activeSource.sectorTitle;
 
   const replyBtns = document.querySelectorAll(".comm-reply-btn");
   replyBtns.forEach((btn, idx) => {
-    if (biome.pilotQuotes[idx]) {
+    if (activeSource.pilotQuotes[idx]) {
       const icon = idx === 0 ? "⚡ " : idx === 1 ? "🎯 " : "🛡️ ";
-      btn.textContent = icon + `"${biome.pilotQuotes[idx].slice(0, 34)}..."`;
+      btn.textContent = icon + `"${activeSource.pilotQuotes[idx].slice(0, 34)}..."`;
     }
   });
 }
@@ -688,8 +1138,81 @@ function firePlayerShot(timestamp) {
   playSound('shoot');
 
   const cx = player.x + player.width / 2;
+  const cy = player.y + player.height / 2;
   const baseY = player.y + 6;
   const wpnKey = player.weapon;
+
+  // MODE JEU 2 : NOVA TANK ASSAULT (Tourelle Rotative 360° + Canon Frontal)
+  if (selectedGameMode === "tank") {
+    const angle = typeof player.turretAngle === "number" ? player.turretAngle : -Math.PI / 2;
+    const muzzleDist = 34;
+    const mx = cx + Math.cos(angle) * muzzleDist;
+    const my = cy + Math.sin(angle) * muzzleDist;
+    const spd = weapon.speed;
+
+    const pushDirectionalShot = (angOffset, speedMult = 1, extra = {}) => {
+      const a = angle + angOffset;
+      state.shots.push({
+        x: mx - weapon.width / 2,
+        y: my - weapon.width / 2,
+        width: extra.width || weapon.width + 2,
+        height: extra.height || weapon.width + 2,
+        speed: spd * speedMult,
+        vx: Math.cos(a) * spd * speedMult,
+        vy: Math.sin(a) * spd * speedMult,
+        angle: a,
+        isTankShot: true,
+        pierce: Boolean(weapon.pierce || extra.pierce),
+        explosion: Boolean(weapon.explosion || extra.explosion),
+        explosionRadius: extra.explosionRadius || (weapon.explosion ? 78 : 0),
+        explosionHeight: weapon.explosionHeight || 0,
+        frag: Boolean(weapon.frag || extra.frag),
+        weapon: wpnKey
+      });
+    };
+
+    if (wpnKey === "triple" || player.barrels === 3) {
+      pushDirectionalShot(-0.18);
+      pushDirectionalShot(0);
+      pushDirectionalShot(0.18);
+    } else if (wpnKey === "spread") {
+      [-0.32, -0.16, 0, 0.16, 0.32].forEach(off => pushDirectionalShot(off, 0.94));
+    } else if (wpnKey === "rapid" || player.barrels === 2) {
+      const perpX = Math.cos(angle + Math.PI / 2) * 7;
+      const perpY = Math.sin(angle + Math.PI / 2) * 7;
+      state.shots.push({
+        x: mx - perpX - 3, y: my - perpY - 3, width: 6, height: 6,
+        speed: spd, vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd,
+        angle, isTankShot: true, weapon: wpnKey
+      });
+      state.shots.push({
+        x: mx + perpX - 3, y: my + perpY - 3, width: 6, height: 6,
+        speed: spd, vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd,
+        angle, isTankShot: true, weapon: wpnKey
+      });
+    } else {
+      pushDirectionalShot(0);
+    }
+
+    // Arme de Châssis Frontale (tire tout droit pendant que la tourelle tourne à gauche/droite !)
+    if (player.forwardGun && Math.abs(angle - (-Math.PI / 2)) > 0.18) {
+      state.shots.push({
+        x: cx - 3,
+        y: player.y - 4,
+        width: 6,
+        height: 16,
+        speed: 560,
+        vx: 0,
+        vy: -560,
+        angle: -Math.PI / 2,
+        isTankShot: true,
+        weapon: wpnKey
+      });
+    }
+
+    state.lastShotAt = timestamp;
+    return;
+  }
 
   if (wpnKey === "triple") {
     state.shots.push({ x: cx - 14, y: baseY, width: weapon.width, height: 18, speed: weapon.speed, vx: -65, weapon: wpnKey });
@@ -785,9 +1308,32 @@ function showWaveComplete(wave) {
   if (state.highScore === undefined || state.score > state.highScore) {
     state.highScore = state.score;
   }
+
+  if (selectedGameMode === "tank") {
+    if (wave >= 5) {
+      state.paused = false;
+      state.running = false;
+      const tTheme = TANK_THEMES[selectedTankThemeId] || TANK_THEMES.ww2;
+      showOverlay(
+        `🏆 VICTOIRE TOTALE — CAMPAGNE ${tTheme.label} TERMINÉE !`,
+        `Tu as conquis les 5 Niveaux (40 écrans) et détruit la Citadelle Apocalypse !\nScore Final : ${state.score} | Record : ${state.highScore}${subMsg}`,
+        "REJOUER LA CAMPAGNE"
+      );
+      state.wave = 1;
+      return;
+    }
+    const nextLvl = wave + 1;
+    state.airstrikes = (state.airstrikes || 0) + 1;
+    updateCommLinkBiome();
+    const tTheme = TANK_THEMES[selectedTankThemeId] || TANK_THEMES.ww2;
+    const msg = `Score: ${state.score} | Record: ${state.highScore}${subMsg}\n+1 Support Aérien (Bombardiers) accordé !\n\nNiveau ${nextLvl}/5 (8 écrans) prêt dans ${tTheme.label}.`;
+    state.paused = true;
+    state.showingQuestion = false;
+    showOverlay(`Niveau ${wave}/5 Conquis ! +${bonus} pts`, msg, `Lancer Niveau ${nextLvl}/5`);
+    return;
+  }
   
   const nextWave = wave + 1;
-  // Rotation automatique ou enrichissement du dialogue Comm-Link à chaque vague
   updateCommLinkBiome();
   const biome = BIOMES[selectedBiomeId] || BIOMES.campagne;
   let msg = `Score: ${state.score}\nRecord: ${state.highScore}${subMsg}\n\n`;
@@ -807,6 +1353,20 @@ const TAUNT_MESSAGES = [
 
 function levelCompleteContinue() {
   hideOverlay();
+
+  if (selectedGameMode === "tank") {
+    state.running = true;
+    state.paused = false;
+    state.lastFrame = performance.now();
+    state.shots = [];
+    state.enemyShots = [];
+    state.powerups = [];
+    initTankLevel(state.wave);
+    resetPlayer();
+    syncUi();
+    requestAnimationFrame(loop);
+    return;
+  }
   
   if (state.wave % 5 === 0) {
     document.getElementById("overlay").style.display = "flex";
@@ -960,53 +1520,108 @@ function updateStars(delta) {
 
 function updatePlayer(delta, timestamp) {
   const dt = delta / 1000;
-  const movingLeft = keys.has("ArrowLeft") || keys.has("a") || keys.has("A") || keys.has("q") || keys.has("Q");
+  const movingLeft = keys.has("ArrowLeft") || keys.has("q") || keys.has("Q");
   const movingRight = keys.has("ArrowRight") || keys.has("d") || keys.has("D");
   const movingUp = keys.has("ArrowUp") || keys.has("w") || keys.has("W") || keys.has("z") || keys.has("Z");
   const movingDown = keys.has("ArrowDown") || keys.has("s") || keys.has("S");
 
+  // Touches de rotation du canon de la tourelle (A / E ou boutons mobiles ⟲ / ⟳)
+  const turretTurnLeft = keys.has("a") || keys.has("A") || keys.has("TurretLeft");
+  const turretTurnRight = keys.has("e") || keys.has("E") || keys.has("TurretRight");
+
   const anyDirectionKey = movingLeft || movingRight || movingUp || movingDown;
-  if (anyDirectionKey) {
-    // Dès qu'une touche de direction est pressée, le clavier reprend la main sur le mouvement
-    state.mouseActive = false;
-  }
 
   let targetTilt = 0;
 
-  if (state.mouseActive) {
-    // Déplacement fluide vers le curseur de la souris + inclinaison 3D automatique
-    const desiredX = state.mouseTargetX - player.width / 2;
-    const desiredY = state.mouseTargetY - player.height / 2;
-    const dx = desiredX - player.x;
-    const dy = desiredY - player.y;
+  if (selectedGameMode === "tank") {
+    // En mode Tank : le tank roule sur la route centrale (ZQSD / Flèches) OU suit souplement si on glisse
+    const roadMargin = Math.max(58, Math.min(130, canvas.width * 0.17));
+    if (anyDirectionKey) {
+      if (movingLeft) {
+        player.x -= player.speed * dt;
+        targetTilt = -0.14;
+      }
+      if (movingRight) {
+        player.x += player.speed * dt;
+        targetTilt = 0.14;
+      }
+      if (movingUp) {
+        player.y -= player.speed * dt;
+      }
+      if (movingDown) {
+        player.y += player.speed * dt;
+      }
+    } else if (state.mouseActive && state.mouseDown && window.innerWidth <= 900) {
+      // Sur mobile en glissant sur l'écran : le tank s'aligne doucement tout en orientant le canon vers le doigt
+      const desiredX = state.mouseTargetX - player.width / 2;
+      player.x += (desiredX - player.x) * Math.min(1, dt * 4.5);
+    }
 
-    const followFactor = Math.min(1, dt * 16);
-    player.x += dx * followFactor;
-    player.y += dy * followFactor;
+    // Rotation de la tourelle à 360° (Souris/Doigt OU touches A/E / ⟲/⟳)
+    if (turretTurnLeft) {
+      player.turretAngle = (player.turretAngle || -Math.PI / 2) - 3.0 * dt;
+      state.mouseActive = false;
+    } else if (turretTurnRight) {
+      player.turretAngle = (player.turretAngle || -Math.PI / 2) + 3.0 * dt;
+      state.mouseActive = false;
+    } else if (state.mouseActive) {
+      const cx = player.x + player.width / 2;
+      const cy = player.y + player.height / 2;
+      player.turretAngle = Math.atan2(state.mouseTargetY - cy, state.mouseTargetX - cx);
+    }
 
-    targetTilt = Math.max(-0.28, Math.min(0.28, dx * 0.0045));
+    // Traces de chenilles au sol pendant que le tank avance
+    if (Math.random() < 0.45) {
+      state.tankTracks.push({
+        x: player.x + 10,
+        y: player.y + player.height - 8,
+        w: player.width - 20,
+        life: 1.0
+      });
+    }
+
+    const safeBottom = getBottomSafeMargin();
+    player.x = Math.max(roadMargin - 8, Math.min(canvas.width - roadMargin - player.width + 8, player.x));
+    player.y = Math.max(78, Math.min(canvas.height - player.height - safeBottom, player.y));
   } else {
-    if (movingLeft) {
-      player.x -= player.speed * dt;
-      targetTilt = -0.22;
+    if (anyDirectionKey) {
+      state.mouseActive = false;
     }
-    if (movingRight) {
-      player.x += player.speed * dt;
-      targetTilt = 0.22;
+
+    if (state.mouseActive) {
+      const desiredX = state.mouseTargetX - player.width / 2;
+      const desiredY = state.mouseTargetY - player.height / 2;
+      const dx = desiredX - player.x;
+      const dy = desiredY - player.y;
+
+      const followFactor = Math.min(1, dt * 16);
+      player.x += dx * followFactor;
+      player.y += dy * followFactor;
+
+      targetTilt = Math.max(-0.28, Math.min(0.28, dx * 0.0045));
+    } else {
+      if (movingLeft || keys.has("a") || keys.has("A")) {
+        player.x -= player.speed * dt;
+        targetTilt = -0.22;
+      }
+      if (movingRight) {
+        player.x += player.speed * dt;
+        targetTilt = 0.22;
+      }
+      if (movingUp) {
+        player.y -= player.speed * dt;
+      }
+      if (movingDown) {
+        player.y += player.speed * dt;
+      }
     }
-    if (movingUp) {
-      player.y -= player.speed * dt;
-    }
-    if (movingDown) {
-      player.y += player.speed * dt;
-    }
+
+    player.vxTilt = (player.vxTilt || 0) + (targetTilt - (player.vxTilt || 0)) * Math.min(1, dt * 12);
+
+    const safeBottom = getBottomSafeMargin();
+    player.x = Math.max(12, Math.min(canvas.width - player.width - 12, player.x));
+    player.y = Math.max(58, Math.min(canvas.height - player.height - safeBottom, player.y));
   }
-
-  player.vxTilt = (player.vxTilt || 0) + (targetTilt - (player.vxTilt || 0)) * Math.min(1, dt * 12);
-
-  const safeBottom = getBottomSafeMargin();
-  player.x = Math.max(12, Math.min(canvas.width - player.width - 12, player.x));
-  player.y = Math.max(58, Math.min(canvas.height - player.height - safeBottom, player.y));
 
   // Tir hybride : Barre Espace OU Clic gauche de la souris / Tactile maintenu
   if (keys.has(" ") || keys.has("Spacebar") || state.mouseDown) {
@@ -1018,21 +1633,29 @@ function updateProjectiles(delta) {
   const dt = delta / 1000;
 
   state.shots = state.shots.filter((shot) => {
-    shot.y -= shot.speed * dt;
+    if (typeof shot.vy === "number") {
+      shot.y += shot.vy * dt;
+    } else {
+      shot.y -= shot.speed * dt;
+    }
     if (shot.vx) {
       shot.x += shot.vx * dt;
     }
     const sh = shot.height || 18;
-    return shot.y + sh > 0 && shot.x > -50 && shot.x < canvas.width + 50;
+    return shot.y + sh > -40 && shot.y < canvas.height + 40 && shot.x > -60 && shot.x < canvas.width + 60;
   });
 
   state.enemyShots = state.enemyShots.filter((shot) => {
-    shot.y += shot.speed * dt;
+    if (typeof shot.vy === "number") {
+      shot.y += shot.vy * dt;
+    } else {
+      shot.y += shot.speed * dt;
+    }
     if (shot.vx) {
       shot.x += shot.vx * dt;
     }
     const sh = shot.height || 18;
-    return shot.y < canvas.height + sh && shot.x > -50 && shot.x < canvas.width + 50;
+    return shot.y + sh > -40 && shot.y < canvas.height + sh + 40 && shot.x > -60 && shot.x < canvas.width + 60;
   });
 }
 
@@ -1145,8 +1768,136 @@ function updateTeaseBoss(delta) {
   }
 }
 
+function updateBomberRun(delta) {
+  if (!state.bomberRun) return;
+  const dt = delta / 1000;
+  const run = state.bomberRun;
+  run.y -= run.speed * dt;
+
+  // Tapis de bombes pendant le survol des 3 bombardiers
+  if (run.lastBombWaveY - run.y >= 65 && run.y > -40 && run.y < canvas.height + 40) {
+    run.lastBombWaveY = run.y;
+    run.bombers.forEach((b) => {
+      const bx = b.x + (Math.random() * 60 - 30);
+      const by = run.y + b.offsetY;
+      addExplosion(bx, by, "#ffaa00");
+      addExplosion(bx + 14, by - 10, "#ff4422");
+    });
+
+    // Détruire ou endommager lourdement tous les ennemis dans la bande de bombardement
+    enemies.forEach((e) => {
+      if (Math.abs((e.y + e.height / 2) - run.y) < 130) {
+        e.hp -= 5;
+        if (e.hp <= 0) {
+          e.dead = true;
+          state.score += 50;
+          addExplosion(e.x + e.width / 2, e.y + e.height / 2, "#ffaa00");
+        }
+      }
+    });
+    enemies = enemies.filter((e) => !e.dead);
+
+    // Nettoyer les tirs ennemis proches
+    state.enemyShots = state.enemyShots.filter((s) => Math.abs(s.y - run.y) > 120);
+
+    // Dégâts massifs au Boss s'il est présent
+    if (state.boss && Math.abs((state.boss.y + state.boss.height / 2) - run.y) < 120) {
+      damageBoss(8, state.boss.x + state.boss.width / 2, state.boss.y + state.boss.height / 2, "#ffaa00");
+    }
+  }
+
+  if (run.y < -180) {
+    state.bomberRun = null;
+  }
+}
+
 function updateEnemies(delta) {
   const dt = delta / 1000;
+
+  // ======================================================
+  // MODE JEU 2 : NOVA TANK ASSAULT (Défilement 8 écrans)
+  // ======================================================
+  if (selectedGameMode === "tank") {
+    const scrollSpeed = state.boss ? 35 : 155;
+    if (!state.boss) {
+      state.tankDistance = Math.min(state.tankTargetDistance, state.tankDistance + scrollSpeed * dt);
+    }
+
+    // Faire défiler les décors latéraux et en générer de nouveaux
+    state.tankProps.forEach((p) => {
+      p.y += scrollSpeed * dt;
+    });
+    state.tankProps = state.tankProps.filter((p) => p.y < canvas.height + 90);
+    if (Math.random() < dt * 2.4) {
+      spawnTankSceneryPair(-60);
+    }
+
+    // Faire défiler les traces de chenilles
+    state.tankTracks.forEach((t) => {
+      t.y += scrollSpeed * dt;
+      t.life -= dt * 0.65;
+    });
+    state.tankTracks = state.tankTracks.filter((t) => t.life > 0 && t.y < canvas.height + 40);
+
+    // Générer des vagues d'ennemis tout au long des 8 écrans
+    if (!state.boss && state.tankDistance < state.tankTargetDistance - 240) {
+      if (state.tankDistance >= state.tankSpawnCursor || enemies.length === 0) {
+        spawnTankEncounter(state.wave, -55);
+        state.tankSpawnCursor = state.tankDistance + Math.max(230, 390 - state.wave * 22);
+      }
+    }
+
+    // Arrivée au bout du 8ème écran (Distance 100%) -> Apparition du Boss de fin de niveau !
+    if (!state.boss && state.tankDistance >= state.tankTargetDistance) {
+      spawnTankBoss(state.wave);
+    }
+
+    const fireMult = 0.35 + selectedDifficulty / 7;
+    const pCx = player.x + player.width / 2;
+    const pCy = player.y + player.height / 2;
+
+    enemies.forEach((enemy) => {
+      const eCx = enemy.x + enemy.width / 2;
+      const eCy = enemy.y + enemy.height / 2;
+      enemy.aimAngle = Math.atan2(pCy - eCy, pCx - eCx);
+
+      if (enemy.tankRole === "flank_turret") {
+        // Tourelle fixe sur les bas-côtés : défile avec le terrain et vise le tank à 360°
+        enemy.y += scrollSpeed * dt;
+      } else if (enemy.tankRole === "hunter") {
+        // Monstre / Chasseur style Predator : bondit vers le tank
+        enemy.y += (scrollSpeed * 0.55 + enemy.vy) * dt;
+        enemy.x += Math.cos(enemy.aimAngle) * 85 * dt;
+      } else {
+        // Blindé ou buggy ennemi sur la route
+        enemy.y += (scrollSpeed * 0.42 + enemy.vy) * dt;
+        enemy.x += enemy.vx * dt;
+        const roadMargin = Math.max(58, Math.min(130, canvas.width * 0.17));
+        if (enemy.x <= roadMargin + 6 || enemy.x + enemy.width >= canvas.width - roadMargin - 6) {
+          enemy.vx *= -1;
+        }
+      }
+
+      // Tir directionnel vers le tank du joueur
+      if (enemy.y > 10 && enemy.y < canvas.height - 90 && Math.random() < 0.0042 * fireMult) {
+        const spd = 250 + state.wave * 15;
+        playSound("enemyShoot");
+        state.enemyShots.push({
+          x: eCx - 4,
+          y: eCy - 4,
+          width: 8,
+          height: 8,
+          speed: spd,
+          vx: Math.cos(enemy.aimAngle) * spd,
+          vy: Math.sin(enemy.aimAngle) * spd
+        });
+      }
+    });
+
+    enemies = enemies.filter((e) => !e.dead && e.y < canvas.height + 80);
+    return true;
+  }
+
   let shouldDrop = false;
   let lowestEnemyY = 0;
 
@@ -1242,6 +1993,10 @@ function resolvePowerupCollisions() {
       } else if (pu.type === "clone") {
         player.cloneTime = performance.now() + 10000;
         state.score += 100;
+      } else if (pu.type === "airstrike") {
+        state.airstrikes = (state.airstrikes || 0) + 1;
+        state.score += 150;
+        syncUi();
       } else {
         player.weapon = pu.type;
         player.weaponTime = performance.now() + 8000;
@@ -1264,6 +2019,9 @@ function drawPowerups() {
     } else if (pu.type === "clone") {
       color = "#00ffff";
       text = "C";
+    } else if (pu.type === "airstrike") {
+      color = "#f97316";
+      text = "✈️";
     }
     
     const pulse = Math.sin(performance.now() * 0.008) * 4;
@@ -1296,6 +2054,12 @@ function showBossDefeatedDialog(customMsg) {
     addExplosion(state.boss.x + state.boss.width / 2, state.boss.y + state.boss.height / 2, "#4df2c2");
   }
   state.boss = null;
+
+  if (selectedGameMode === "tank") {
+    advanceWave();
+    return;
+  }
+
   state.bossDefeatedDialog = true;
   
   document.getElementById("overlay").style.display = "flex";
@@ -1524,8 +2288,10 @@ function resolveShotCollisions() {
   enemies = enemies.filter((enemy) => !enemy.dead);
   state.shots = state.shots.filter((shot) => !shot.hit);
 
-  if (!state.boss && enemies.length === 0 && !state.bossDefeatedDialog && !state.levelCompleteAnimation) {
-    advanceWave();
+  if (selectedGameMode === "space") {
+    if (!state.boss && enemies.length === 0 && !state.bossDefeatedDialog && !state.levelCompleteAnimation) {
+      advanceWave();
+    }
   }
 }
 
@@ -1607,9 +2373,13 @@ function update(delta, timestamp) {
   updateProjectiles(delta);
   updatePowerups(delta);
   updateTeaseBoss(delta);
+  updateBomberRun(delta);
 
   if (state.boss) {
     updateBoss(delta);
+    if (selectedGameMode === "tank") {
+      updateEnemies(delta);
+    }
   } else if (!updateEnemies(delta)) {
     return;
   }
@@ -1621,10 +2391,354 @@ function update(delta, timestamp) {
   syncUi();
 }
 
+function drawTankBattlefield(w, h, now) {
+  const tTheme = TANK_THEMES[selectedTankThemeId] || TANK_THEMES.ww2;
+  const roadMargin = Math.max(58, Math.min(130, w * 0.17));
+  const roadWidth = w - roadMargin * 2;
+  const scrollOffset = (state.tankDistance || 0) % 80;
+
+  // 1. Sol des bas-côtés (Berges / Jungle / Dunes / Cratères Xéno)
+  ctx.fillStyle = tTheme.bankColor;
+  ctx.fillRect(0, 0, w, h);
+
+  // Texture de sol latérale qui défile
+  ctx.fillStyle = tTheme.groundColor;
+  for (let y = -80 + scrollOffset; y < h + 80; y += 80) {
+    ctx.fillRect(6, y, roadMargin - 14, 42);
+    ctx.fillRect(w - roadMargin + 8, y + 25, roadMargin - 14, 42);
+  }
+
+  // 2. Route / Couloir Blindé Central (8 écrans)
+  const roadGrad = ctx.createLinearGradient(roadMargin, 0, w - roadMargin, 0);
+  roadGrad.addColorStop(0, tTheme.bankColor);
+  roadGrad.addColorStop(0.08, tTheme.roadColor);
+  roadGrad.addColorStop(0.5, tTheme.groundColor);
+  roadGrad.addColorStop(0.92, tTheme.roadColor);
+  roadGrad.addColorStop(1, tTheme.bankColor);
+  ctx.fillStyle = roadGrad;
+  ctx.fillRect(roadMargin, 0, roadWidth, h);
+
+  // Bordures de route / Tranchées / Barrières énergétiques
+  ctx.strokeStyle = tTheme.roadBorder;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(roadMargin, 0);
+  ctx.lineTo(roadMargin, h);
+  ctx.moveTo(w - roadMargin, 0);
+  ctx.lineTo(w - roadMargin, h);
+  ctx.stroke();
+
+  // Marquages de piste en défilement continu
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.16)";
+  ctx.lineWidth = 2;
+  for (let y = -80 + scrollOffset; y < h + 80; y += 80) {
+    ctx.beginPath();
+    ctx.moveTo(w * 0.5, y);
+    ctx.lineTo(w * 0.5, y + 36);
+    ctx.stroke();
+  }
+
+  // 3. Traces de chenilles laissées par le Tank
+  state.tankTracks.forEach((tr) => {
+    ctx.fillStyle = `rgba(10, 14, 18, ${Math.max(0, tr.life * 0.45)})`;
+    ctx.fillRect(tr.x, tr.y, 10, 6);
+    ctx.fillRect(tr.x + tr.w - 10, tr.y, 10, 6);
+  });
+
+  // 4. Décors latéraux défilants (Bunkers WW2, Dunes/Palmiers, Pylônes Aliens, Jungle/Totems Predator)
+  state.tankProps.forEach((p) => {
+    ctx.save();
+    ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
+    if (selectedTankThemeId === "ww2") {
+      // Bunker béton / sacs de sable / hérissons tchèques
+      ctx.fillStyle = "#57534e";
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * 0.75);
+      ctx.fillStyle = "#1c1917";
+      ctx.fillRect(-p.w * 0.3, -4, p.w * 0.6, 7);
+      ctx.strokeStyle = "#a8a29e";
+      ctx.strokeRect(-p.w / 2, -p.h / 2, p.w, p.h * 0.75);
+    } else if (selectedTankThemeId === "desert") {
+      // Dune dorée / oasis / structure désert
+      ctx.fillStyle = "#d97706";
+      ctx.beginPath();
+      ctx.arc(0, 0, p.w * 0.48, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#15803d";
+      ctx.beginPath();
+      ctx.arc(4, -4, p.w * 0.24, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (selectedTankThemeId === "alien") {
+      // Pylône et cristal Xéno-Tech luminescent
+      ctx.fillStyle = "#581c87";
+      ctx.beginPath();
+      ctx.moveTo(0, -p.h * 0.5);
+      ctx.lineTo(p.w * 0.4, 0);
+      ctx.lineTo(0, p.h * 0.5);
+      ctx.lineTo(-p.w * 0.4, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#00f2ff";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    } else {
+      // Jungle Predator : Canopée bioluminescente & bassin acide / totem
+      ctx.fillStyle = "#14532d";
+      ctx.beginPath();
+      ctx.arc(0, 0, p.w * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = p.seed > 0.5 ? "#84cc16" : "#ef4444";
+      ctx.beginPath();
+      ctx.arc(0, 0, p.w * 0.18, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  });
+
+  // 5. Barre de Progression des 8 Écrans (Kilométrage & Niveau)
+  const progRatio = Math.min(1, (state.tankDistance || 0) / Math.max(1, state.tankTargetDistance || 4800));
+  const currentScreen = Math.min(8, Math.floor(progRatio * 8) + 1);
+  const barW = Math.min(340, w * 0.62);
+  const barX = w / 2 - barW / 2;
+  const barY = 58;
+
+  ctx.save();
+  ctx.fillStyle = "rgba(5, 10, 20, 0.82)";
+  ctx.fillRect(barX - 8, barY - 14, barW + 16, 26);
+  ctx.strokeStyle = tTheme.accentColor;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(barX - 8, barY - 14, barW + 16, 26);
+
+  ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+  ctx.fillRect(barX, barY, barW, 6);
+  ctx.fillStyle = tTheme.accentColor;
+  ctx.fillRect(barX, barY, barW * progRatio, 6);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 10px sans-serif";
+  ctx.textAlign = "center";
+  const statusTxt = state.boss
+    ? `⚠️ ZONE BOSS ATTEINTE (ÉCRAN 8/8) — NIVEAU ${state.wave}/5`
+    : `NIVEAU ${state.wave}/5 • PROGRESSION : ÉCRAN ${currentScreen}/8 (${Math.round(progRatio * 100)}%) • [B] BOMBARDIERS: ${state.airstrikes}`;
+  ctx.fillText(statusTxt, w / 2, barY - 3);
+  ctx.restore();
+}
+
+function drawPlayerTank(entity, now) {
+  const cx = entity.x + entity.width / 2;
+  const cy = entity.y + entity.height / 2;
+  const w = entity.width;
+  const h = entity.height;
+  const tankCfg = TANKS[selectedTankId] || TANKS.grizzly;
+  const treadAnim = Math.floor((state.tankDistance || now * 0.1) / 8) % 2;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  // Ombre portée du blindé
+  ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+  ctx.fillRect(-w * 0.52, -h * 0.46 + 6, w * 1.04, h * 0.94);
+
+  // Chenilles gauche & droite crantées
+  ctx.fillStyle = "#1e293b";
+  ctx.fillRect(-w * 0.5, -h * 0.45, w * 0.2, h * 0.9);
+  ctx.fillRect(w * 0.3, -h * 0.45, w * 0.2, h * 0.9);
+  ctx.fillStyle = treadAnim ? "#475569" : "#334155";
+  for (let ty = -h * 0.42; ty < h * 0.42; ty += 10) {
+    ctx.fillRect(-w * 0.5, ty + (treadAnim ? 3 : 0), w * 0.2, 4);
+    ctx.fillRect(w * 0.3, ty + (treadAnim ? 3 : 0), w * 0.2, 4);
+  }
+
+  // Châssis blindé principal
+  const hullGrad = ctx.createLinearGradient(-w * 0.36, -h * 0.4, w * 0.36, h * 0.4);
+  hullGrad.addColorStop(0, tankCfg.trimColor);
+  hullGrad.addColorStop(0.25, tankCfg.hullColor);
+  hullGrad.addColorStop(1, "#0f172a");
+  ctx.fillStyle = hullGrad;
+  ctx.beginPath();
+  ctx.moveTo(-w * 0.28, -h * 0.44);
+  ctx.lineTo(w * 0.28, -h * 0.44);
+  ctx.lineTo(w * 0.36, -h * 0.28);
+  ctx.lineTo(w * 0.36, h * 0.42);
+  ctx.lineTo(-w * 0.36, h * 0.42);
+  ctx.lineTo(-w * 0.36, -h * 0.28);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = tankCfg.trimColor;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Canon frontal de châssis (pour les tanks qui tirent aussi tout droit)
+  if (tankCfg.forwardGun) {
+    ctx.fillStyle = "#e2e8f0";
+    ctx.fillRect(-3, -h * 0.56, 6, 14);
+  }
+
+  // Tourelle Rotative 360° (tourne à gauche/droite ou vers le curseur pendant que le tank avance !)
+  const angle = typeof player.turretAngle === "number" ? player.turretAngle : -Math.PI / 2;
+  ctx.rotate(angle);
+
+  // Ligne laser de visée tactique 360°
+  ctx.strokeStyle = "rgba(0, 242, 255, 0.28)";
+  ctx.setLineDash([5, 5]);
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(28, 0);
+  ctx.lineTo(135, 0);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Fût(s) du canon rotatif
+  ctx.fillStyle = "#cbd5e1";
+  if (tankCfg.barrels === 2) {
+    ctx.fillRect(8, -9, 34, 6);
+    ctx.fillRect(8, 3, 34, 6);
+  } else if (tankCfg.barrels === 3) {
+    ctx.fillRect(8, -11, 32, 5);
+    ctx.fillRect(10, -2.5, 36, 5);
+    ctx.fillRect(8, 6, 32, 5);
+  } else {
+    ctx.fillRect(8, -4.5, 38, 9);
+    ctx.fillStyle = tankCfg.trimColor;
+    ctx.fillRect(38, -6, 8, 12);
+  }
+
+  // Dôme de la tourelle
+  ctx.fillStyle = tankCfg.hullColor;
+  ctx.beginPath();
+  ctx.arc(0, 0, w * 0.24, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawTankEnemy(entity, now) {
+  const cx = entity.x + entity.width / 2;
+  const cy = entity.y + entity.height / 2;
+  const w = entity.width;
+  const h = entity.height;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  // Effet Camouflage Optique + Viseur Tri-Laser Rouge pour le thème Predator !
+  if (entity.cloaked) {
+    ctx.globalAlpha = 0.34 + Math.sin(now * 0.01) * 0.15;
+  }
+
+  if (entity.tankRole === "flank_turret") {
+    // Socle de bunker/tourelle sur les bas-côtés
+    ctx.fillStyle = "#334155";
+    ctx.fillRect(-w * 0.45, -h * 0.45, w * 0.9, h * 0.9);
+    ctx.strokeStyle = "#f97316";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(-w * 0.45, -h * 0.45, w * 0.9, h * 0.9);
+
+    ctx.rotate(entity.aimAngle || Math.PI / 2);
+    ctx.fillStyle = "#ef4444";
+    ctx.fillRect(0, -4, w * 0.55, 8);
+    ctx.beginPath();
+    ctx.arc(0, 0, w * 0.26, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (entity.tankRole === "hunter" || selectedTankThemeId === "predator") {
+    // Monstre / Chasseur Predator avec viseur tri-laser iconique !
+    ctx.fillStyle = selectedTankThemeId === "predator" ? "#15803d" : "#7c2d12";
+    ctx.beginPath();
+    ctx.arc(0, 0, w * 0.38, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#ef4444";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Les 3 points rouges du viseur laser Predator
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = "#ff0033";
+    ctx.shadowColor = "#ff0033";
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(0, -6, 3, 0, Math.PI * 2);
+    ctx.arc(-5, 3, 3, 0, Math.PI * 2);
+    ctx.arc(5, 3, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  } else {
+    // Char / Véhicule ennemi (Panzer WW2, Buggy Désert, Tripode Alien)
+    ctx.fillStyle = "#1e293b";
+    ctx.fillRect(-w * 0.46, -h * 0.44, w * 0.18, h * 0.88);
+    ctx.fillRect(w * 0.28, -h * 0.44, w * 0.18, h * 0.88);
+
+    ctx.fillStyle = selectedTankThemeId === "ww2" ? "#52525b" : selectedTankThemeId === "desert" ? "#b45309" : "#4c1d95";
+    ctx.fillRect(-w * 0.34, -h * 0.4, w * 0.68, h * 0.8);
+    ctx.strokeStyle = "#f87171";
+    ctx.strokeRect(-w * 0.34, -h * 0.4, w * 0.68, h * 0.8);
+
+    ctx.rotate(entity.aimAngle || Math.PI / 2);
+    ctx.fillStyle = "#f87171";
+    ctx.fillRect(0, -3.5, w * 0.5, 7);
+    ctx.beginPath();
+    ctx.arc(0, 0, w * 0.22, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+function drawBomberSquadron() {
+  if (!state.bomberRun) return;
+  const run = state.bomberRun;
+
+  run.bombers.forEach((b) => {
+    const bx = b.x;
+    const by = run.y + b.offsetY;
+
+    ctx.save();
+    // Ombre au sol du bombardier
+    ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+    ctx.beginPath();
+    ctx.moveTo(bx + 35, by - 25);
+    ctx.lineTo(bx + 95, by + 15);
+    ctx.lineTo(bx - 25, by + 15);
+    ctx.closePath();
+    ctx.fill();
+
+    // Fuselage & grandes ailes de bombardier lourd
+    ctx.translate(bx, by);
+    ctx.fillStyle = "#334155";
+    ctx.strokeStyle = "#fde68a";
+    ctx.lineWidth = 2;
+
+    // Ailes
+    ctx.fillRect(-68, -10, 136, 22);
+    ctx.strokeRect(-68, -10, 136, 22);
+
+    // Fuselage
+    ctx.fillStyle = "#475569";
+    ctx.fillRect(-10, -42, 20, 84);
+    ctx.strokeRect(-10, -42, 20, 84);
+
+    // Hélices / moteurs ardents
+    ctx.fillStyle = "#f97316";
+    [-46, -24, 24, 46].forEach((mx) => {
+      ctx.beginPath();
+      ctx.arc(mx, -12, 5, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.restore();
+  });
+}
+
 function drawBackground() {
   const w = canvas.width;
   const h = canvas.height;
   const now = performance.now();
+
+  if (selectedGameMode === "tank") {
+    drawTankBattlefield(w, h, now);
+    return;
+  }
+
   const biome = BIOMES[selectedBiomeId] || BIOMES.campagne;
 
   // 1. Décor 3D 4K Photoréaliste avec parallaxe 3D fluide
@@ -1857,6 +2971,18 @@ function drawBiomeEnemy3D(entity, now) {
 
 function drawSprite(img, entity, fallbackColor, type) {
   const now = performance.now();
+
+  if (selectedGameMode === "tank") {
+    if (type === "player") {
+      drawPlayerTank(entity, now);
+      return;
+    }
+    if (type === "enemy") {
+      drawTankEnemy(entity, now);
+      return;
+    }
+  }
+
   if (type === "player" && img) {
     ctx.save();
     const cx = entity.x + entity.width / 2;
@@ -2222,6 +3348,7 @@ function draw() {
     drawSprite(state.images.boss, state.teaseBoss, "#ffb84d", "boss");
   }
 
+  drawBomberSquadron();
   drawParticles();
 }
 
@@ -2267,6 +3394,11 @@ function handleKeydown(event) {
 
   if (event.key === "p" || event.key === "P" || event.key === "Escape") {
     togglePause();
+  }
+
+  // Touche B ou Maj pour déclencher le Support Aérien (Bombardiers) en mode Tank
+  if (event.key === "b" || event.key === "B" || event.key === "Shift") {
+    triggerAirstrike();
   }
 
   if ((event.key === "Enter" || event.key === "r" || event.key === "R") && !state.running && state.paused && state.wave > 1) {
@@ -2326,6 +3458,138 @@ ui.pauseButton.addEventListener("click", () => {
 
 window.addEventListener("keydown", handleKeydown);
 window.addEventListener("keyup", handleKeyup);
+
+// 0. Sélecteur de Jeu (Hub 2-en-1 : Space Invaders 3D vs Tank Assault 360°)
+const gameModeCards = document.querySelectorAll(".game-mode-card");
+const spaceConfigPanel = document.getElementById("spaceConfigPanel");
+const tankConfigPanel = document.getElementById("tankConfigPanel");
+
+function setGameMode(mode) {
+  selectedGameMode = mode === "tank" ? "tank" : "space";
+  gameModeCards.forEach(c => c.classList.toggle("active", c.getAttribute("data-gamemode") === selectedGameMode));
+  if (spaceConfigPanel) spaceConfigPanel.style.display = selectedGameMode === "space" ? "flex" : "none";
+  if (tankConfigPanel) tankConfigPanel.style.display = selectedGameMode === "tank" ? "flex" : "none";
+
+  const waveInput = document.getElementById("startWaveInput");
+  const waveInputLabel = document.getElementById("waveInputLabel");
+  if (selectedGameMode === "tank") {
+    if (waveInput) {
+      waveInput.max = "5";
+      if (parseInt(waveInput.value, 10) > 5) waveInput.value = "1";
+    }
+    if (waveInputLabel) waveInputLabel.textContent = "Niveau (1-5) :";
+    if (ui.startButton && !state.running) ui.startButton.textContent = "LANCER L'ASSAUT BLINDÉ";
+  } else {
+    if (waveInput) waveInput.max = "50";
+    if (waveInputLabel) waveInputLabel.textContent = "Vague (1-50) :";
+    if (ui.startButton && !state.running) ui.startButton.textContent = "DÉMARRER LA MISSION 3D";
+  }
+
+  applyShipSelection();
+  updateCommLinkBiome();
+  syncUi();
+  draw();
+}
+
+gameModeCards.forEach(card => {
+  const chooseMode = () => {
+    setGameMode(card.getAttribute("data-gamemode") || "space");
+  };
+  card.addEventListener("click", chooseMode);
+  card.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    chooseMode();
+  });
+});
+
+// Sélection du Thème Terrestre (WW2, Désert, Alien, Predator)
+const tankThemeCards = document.querySelectorAll(".tank-theme-card");
+tankThemeCards.forEach(card => {
+  const selectTankTheme = () => {
+    tankThemeCards.forEach(c => c.classList.remove("active"));
+    card.classList.add("active");
+    selectedTankThemeId = card.getAttribute("data-tanktheme") || "ww2";
+    updateCommLinkBiome();
+    syncUi();
+    draw();
+  };
+  card.addEventListener("click", selectTankTheme);
+  card.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    selectTankTheme();
+  });
+});
+
+// Sélection du Tank Blindé
+const tankCards = document.querySelectorAll(".tank-card");
+tankCards.forEach(card => {
+  const selectTank = () => {
+    tankCards.forEach(c => c.classList.remove("active"));
+    card.classList.add("active");
+    selectedTankId = card.getAttribute("data-tank") || "grizzly";
+    applyShipSelection();
+    syncUi();
+    draw();
+  };
+  card.addEventListener("click", selectTank);
+  card.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    selectTank();
+  });
+});
+
+// Bouton "Changer de Jeu" dans le menu Pause / Fin
+const switchGameMenuBtn = document.getElementById("switchGameMenuBtn");
+if (switchGameMenuBtn) {
+  const returnToHub = () => {
+    state.running = false;
+    state.paused = false;
+    setGameMode(selectedGameMode === "space" ? "tank" : "space");
+    showOverlay(
+      "NOVA DUAL WARFARE // HUB ARCADE",
+      "Choisis ton Jeu (Space Invaders 3D ou Tank Assault 360°), ton Thème, ton Véhicule et ton Armement !",
+      selectedGameMode === "tank" ? "LANCER L'ASSAUT BLINDÉ" : "DÉMARRER LA MISSION 3D"
+    );
+    syncUi();
+  };
+  switchGameMenuBtn.addEventListener("click", returnToHub);
+  switchGameMenuBtn.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    returnToHub();
+  });
+}
+
+// Boutons Support Aérien (HUD Desktop + Dock Mobile) & Rotation Tourelle Mobile
+const hudAirstrikeBtn = document.getElementById("hudAirstrikeBtn");
+if (hudAirstrikeBtn) {
+  hudAirstrikeBtn.addEventListener("click", triggerAirstrike);
+  hudAirstrikeBtn.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    triggerAirstrike();
+  });
+}
+const btnAirstrikeMobile = document.getElementById("btnAirstrikeMobile");
+if (btnAirstrikeMobile) {
+  btnAirstrikeMobile.addEventListener("click", triggerAirstrike);
+  btnAirstrikeMobile.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    triggerAirstrike();
+  });
+}
+const btnTurretLeft = document.getElementById("btnTurretLeft");
+const btnTurretRight = document.getElementById("btnTurretRight");
+if (btnTurretLeft) {
+  btnTurretLeft.addEventListener("touchstart", (e) => { e.preventDefault(); keys.add("TurretLeft"); });
+  btnTurretLeft.addEventListener("touchend", (e) => { e.preventDefault(); keys.delete("TurretLeft"); });
+  btnTurretLeft.addEventListener("mousedown", () => keys.add("TurretLeft"));
+  btnTurretLeft.addEventListener("mouseup", () => keys.delete("TurretLeft"));
+}
+if (btnTurretRight) {
+  btnTurretRight.addEventListener("touchstart", (e) => { e.preventDefault(); keys.add("TurretRight"); });
+  btnTurretRight.addEventListener("touchend", (e) => { e.preventDefault(); keys.delete("TurretRight"); });
+  btnTurretRight.addEventListener("mousedown", () => keys.add("TurretRight"));
+  btnTurretRight.addEventListener("mouseup", () => keys.delete("TurretRight"));
+}
 
 const shipCards = document.querySelectorAll(".ship-card");
 shipCards.forEach(card => {
@@ -2401,9 +3665,11 @@ const commReplyBtns = document.querySelectorAll(".comm-reply-btn");
 commReplyBtns.forEach(btn => {
   const handleReply = () => {
     const idx = parseInt(btn.getAttribute("data-reply") || "0", 10);
-    const biome = BIOMES[selectedBiomeId] || BIOMES.campagne;
-    const pQuote = biome.pilotQuotes[idx] || biome.pilotQuotes[0];
-    const eReact = biome.enemyReactions[idx] || biome.enemyReactions[0];
+    const activeSource = selectedGameMode === "tank"
+      ? (TANK_THEMES[selectedTankThemeId] || TANK_THEMES.ww2)
+      : (BIOMES[selectedBiomeId] || BIOMES.campagne);
+    const pQuote = activeSource.pilotQuotes[idx] || activeSource.pilotQuotes[0];
+    const eReact = activeSource.enemyReactions[idx] || activeSource.enemyReactions[0];
     playSound("powerup");
     updateCommLinkBiome(eReact, pQuote);
   };
