@@ -136,34 +136,43 @@ const TANKS = {
     width: 68,
     height: 82,
     weapon: "normal",
-    forwardGun: true, // Tire aussi droit devant en plus de la tourelle 360°
-    barrels: 1
+    forwardGun: true,
+    barrels: 1,
+    chassisKey: "tank_grizzly_chassis",
+    turretKey: "tank_grizzly_turret",
+    iconKey: "tank_grizzly"
   },
   vulcan: {
     id: "vulcan",
     name: "Vulcan Hellfire",
     hullColor: "#b45309",
     trimColor: "#fbbf24",
-    speed: 410,
+    speed: 415,
     livesBonus: 0,
-    width: 64,
-    height: 78,
+    width: 58,
+    height: 72,
     weapon: "rapid",
     forwardGun: true,
-    barrels: 2
+    barrels: 2,
+    chassisKey: "tank_vulcan_chassis",
+    turretKey: "tank_vulcan_turret",
+    iconKey: "tank_vulcan"
   },
   mammoth: {
     id: "mammoth",
     name: "Mammoth Titan",
     hullColor: "#334155",
     trimColor: "#f97316",
-    speed: 270,
+    speed: 260,
     livesBonus: 3,
-    width: 80,
-    height: 92,
+    width: 92,
+    height: 104,
     weapon: "plasma",
     forwardGun: true,
-    barrels: 2
+    barrels: 2,
+    chassisKey: "tank_mammoth_chassis",
+    turretKey: "tank_mammoth_turret",
+    iconKey: "tank_mammoth"
   },
   tesla: {
     id: "tesla",
@@ -172,24 +181,30 @@ const TANKS = {
     trimColor: "#00f2ff",
     speed: 350,
     livesBonus: 1,
-    width: 68,
-    height: 82,
+    width: 66,
+    height: 80,
     weapon: "railgun",
     forwardGun: false,
-    barrels: 1
+    barrels: 1,
+    chassisKey: "tank_tesla_chassis",
+    turretKey: "tank_tesla_turret",
+    iconKey: "tank_tesla"
   },
   cerberus: {
     id: "cerberus",
     name: "Cerberus Hydra",
     hullColor: "#581c87",
     trimColor: "#c084fc",
-    speed: 370,
+    speed: 360,
     livesBonus: 1,
-    width: 72,
-    height: 84,
+    width: 82,
+    height: 90,
     weapon: "triple",
     forwardGun: true,
-    barrels: 3
+    barrels: 3,
+    chassisKey: "tank_cerberus_chassis",
+    turretKey: "tank_cerberus_turret",
+    iconKey: "tank_cerberus"
   }
 };
 
@@ -586,8 +601,20 @@ async function bootstrapAssets() {
   state.images.bg_tank_alien = await loadImage("bg_tank_alien_4k.jpg" + v);
   state.images.bg_tank_predator = await loadImage("bg_tank_predator_4k.jpg" + v);
 
-  state.images.tank_chassis = await loadImage("tank_chassis_4k.png" + v);
-  state.images.tank_turret = await loadImage("tank_turret_4k.png" + v);
+  // 5 Châssis & Tourelles 3D Dédiés (Tailles & Silhouettes distinctes)
+  state.images.tank_grizzly_chassis = await loadImage("tank_grizzly_chassis.png" + v);
+  state.images.tank_grizzly_turret = await loadImage("tank_grizzly_turret.png" + v);
+  state.images.tank_vulcan_chassis = await loadImage("tank_vulcan_chassis.png" + v);
+  state.images.tank_vulcan_turret = await loadImage("tank_vulcan_turret.png" + v);
+  state.images.tank_mammoth_chassis = await loadImage("tank_mammoth_chassis.png" + v);
+  state.images.tank_mammoth_turret = await loadImage("tank_mammoth_turret.png" + v);
+  state.images.tank_tesla_chassis = await loadImage("tank_tesla_chassis.png" + v);
+  state.images.tank_tesla_turret = await loadImage("tank_tesla_turret.png" + v);
+  state.images.tank_cerberus_chassis = await loadImage("tank_cerberus_chassis.png" + v);
+  state.images.tank_cerberus_turret = await loadImage("tank_cerberus_turret.png" + v);
+
+  state.images.tank_chassis = state.images.tank_grizzly_chassis;
+  state.images.tank_turret = state.images.tank_grizzly_turret;
   state.images.tank_enemy_panzer = await loadImage("tank_enemy_panzer_4k.png" + v);
   state.images.tank_enemy_predator = await loadImage("tank_enemy_predator_4k.png" + v);
   state.images.tank_bomber = await loadImage("tank_bomber_4k.png" + v);
@@ -2835,8 +2862,8 @@ function drawPlayerTank(entity, now) {
   const w = entity.width;
   const h = entity.height;
   const tankCfg = TANKS[selectedTankId] || TANKS.grizzly;
-  const chassisImg = state.images.tank_chassis;
-  const turretImg = state.images.tank_turret;
+  const chassisImg = (tankCfg.chassisKey && state.images[tankCfg.chassisKey]) || state.images.tank_chassis;
+  const turretImg = (tankCfg.turretKey && state.images[tankCfg.turretKey]) || state.images.tank_turret;
   const angle = typeof player.turretAngle === "number" ? player.turretAngle : -Math.PI / 2;
 
   ctx.save();
@@ -2845,35 +2872,70 @@ function drawPlayerTank(entity, now) {
   // 1. Ombre portée 3D réaliste au sol + Halo tactique de la couleur du blindé choisi
   ctx.fillStyle = "rgba(0, 0, 0, 0.62)";
   ctx.beginPath();
-  ctx.ellipse(0, 6, w * 0.54, h * 0.52, 0, 0, Math.PI * 2);
+  if (selectedTankId === "mammoth") {
+    ctx.ellipse(0, 8, w * 0.58, h * 0.54, 0, 0, Math.PI * 2);
+  } else if (selectedTankId === "tesla") {
+    // Effet de lévitation / hover : ombre légèrement décalée et plus douce
+    ctx.ellipse(0, 14, w * 0.46, h * 0.44, 0, 0, Math.PI * 2);
+  } else {
+    ctx.ellipse(0, 6, w * 0.52, h * 0.5, 0, 0, Math.PI * 2);
+  }
   ctx.fill();
 
   ctx.shadowColor = tankCfg.trimColor;
-  ctx.shadowBlur = 14;
+  ctx.shadowBlur = selectedTankId === "tesla" ? 22 : 14;
 
-  // 2. Châssis 3D 4K (avec inclinaison légère quand le tank tourne à gauche/droite)
+  // 2. Châssis 3D Dédié (avec inclinaison légère selon la direction de braquage)
   ctx.save();
   const tilt = player.vxTilt || 0;
   ctx.rotate(tilt * 0.35);
+
+  // Effet d'ondulation de suspension ou de lévitation hover
+  if (selectedTankId === "tesla") {
+    const hoverBob = Math.sin(now * 0.006) * 3;
+    ctx.translate(0, hoverBob);
+
+    // Halo d'énergie cyan sous les 4 répulseurs aéro-hover
+    ctx.strokeStyle = "#00f2ff";
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.6 + Math.sin(now * 0.01) * 0.3;
+    ctx.beginPath();
+    ctx.arc(-w * 0.32, -h * 0.3, 10, 0, Math.PI * 2);
+    ctx.arc(w * 0.32, -h * 0.3, 10, 0, Math.PI * 2);
+    ctx.arc(-w * 0.32, h * 0.3, 10, 0, Math.PI * 2);
+    ctx.arc(w * 0.32, h * 0.3, 10, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
   if (chassisImg) {
     ctx.drawImage(chassisImg, -w * 0.62, -h * 0.58, w * 1.24, h * 1.16);
   } else {
     ctx.fillStyle = tankCfg.hullColor;
     ctx.fillRect(-w * 0.42, -h * 0.45, w * 0.84, h * 0.9);
   }
-  // Flamme des turbines arrière du blindé
-  const exhaustH = 10 + Math.sin(now * 0.05) * 4;
-  ctx.fillStyle = tankCfg.trimColor;
-  ctx.beginPath();
-  ctx.arc(-w * 0.18, h * 0.48, 4, 0, Math.PI * 2);
-  ctx.arc(w * 0.18, h * 0.48, 4, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "rgba(255, 180, 50, 0.75)";
-  ctx.fillRect(-w * 0.21, h * 0.48, 6, exhaustH);
-  ctx.fillRect(w * 0.15, h * 0.48, 6, exhaustH);
+
+  // Échappements & Réacteurs selon le type de blindé
+  if (selectedTankId === "vulcan") {
+    // Flammes doubles vives du buggy rapide
+    const exh = 12 + Math.sin(now * 0.08) * 6;
+    ctx.fillStyle = "#f59e0b";
+    ctx.fillRect(-w * 0.24, h * 0.46, 5, exh);
+    ctx.fillRect(w * 0.16, h * 0.46, 5, exh);
+  } else if (selectedTankId !== "tesla") {
+    const exhaustH = 8 + Math.sin(now * 0.05) * 4;
+    ctx.fillStyle = tankCfg.trimColor;
+    ctx.beginPath();
+    ctx.arc(-w * 0.18, h * 0.48, 3.5, 0, Math.PI * 2);
+    ctx.arc(w * 0.18, h * 0.48, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255, 180, 50, 0.75)";
+    ctx.fillRect(-w * 0.21, h * 0.48, 6, exhaustH);
+    ctx.fillRect(w * 0.15, h * 0.48, 6, exhaustH);
+  }
   ctx.restore();
 
-  // 3. Tourelle Rotative 360° 3D 4K (tourne indépendamment vers la cible !)
+  // 3. Tourelle Rotative 360° Dédiée (tourne indépendamment vers la cible !)
   ctx.save();
   ctx.rotate(angle);
 
@@ -2890,11 +2952,22 @@ function drawPlayerTank(entity, now) {
   ctx.globalAlpha = 1;
 
   if (turretImg) {
-    // Le sprite tank_turret_4k pointe vers le HAUT (-PI/2), donc on tourne de +PI/2 pour l'aligner avec l'axe 0 radian
+    // Le sprite de tourelle pointe vers le HAUT (-PI/2), on tourne de +PI/2 pour l'aligner avec l'axe 0 radian
     ctx.rotate(Math.PI / 2);
     const tw = w * 1.18;
     const th = h * 1.18;
     ctx.drawImage(turretImg, -tw / 2, -th * 0.62, tw, th);
+
+    // Effet d'arc électrique pour la tourelle Tesla
+    if (selectedTankId === "tesla") {
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      const sparkY = -th * 0.45;
+      ctx.moveTo(0, sparkY);
+      ctx.lineTo((Math.random() - 0.5) * 14, sparkY - 12);
+      ctx.stroke();
+    }
   } else {
     ctx.fillStyle = "#e2e8f0";
     ctx.fillRect(8, -4.5, 38, 9);
