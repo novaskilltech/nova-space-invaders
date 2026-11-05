@@ -332,13 +332,13 @@ canvas {
   justify-content: flex-start;
   background: radial-gradient(circle at 50% 0%, rgba(30, 27, 75, 0.94) 0%, rgba(15, 23, 42, 0.97) 50%, rgba(2, 6, 23, 0.99) 100%);
   text-align: center;
-  gap: 14px;
+  gap: 10px;
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   z-index: 1000;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 24px 20px 48px;
+  padding: 16px 20px 28px;
   box-sizing: border-box;
 }
 
@@ -433,7 +433,7 @@ canvas {
 .biome-selection,
 .weapon-selection {
   width: 100%;
-  max-width: 860px;
+  max-width: 980px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -474,17 +474,6 @@ canvas {
   box-shadow: 0 0 10px rgba(77, 242, 194, 0.2);
 }
 
-@media (max-width: 600px) {
-  .sidebar {
-    width: 140px;
-    min-width: 140px;
-    padding: 12px;
-  }
-  
-  .stat-box .value {
-    font-size: 1.2rem;
-  }
-}
 
 /* =========================================
    CINEMATIC INTRO 
@@ -846,89 +835,108 @@ canvas {
   100% { transform: translateX(-50%) translateY(-600px) scale(0); opacity: 0; }
 }
 
-/* --- Mobile Fixes & Controls --- */
+/* --- Mobile Fixes & Controls (HUD Translucide & Non-Intrusif) --- */
 .mobile-controls {
   display: none;
   position: absolute;
   bottom: 8px;
   left: 8px;
   right: 8px;
-  height: 112px;
-  padding: 6px 14px;
-  background: rgba(5, 10, 20, 0.78);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(0, 242, 255, 0.25);
-  border-top: 2px solid rgba(0, 242, 255, 0.45);
-  border-radius: 16px;
+  height: 104px;
+  padding: 0 8px;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  box-shadow: none !important;
   justify-content: space-between;
-  align-items: center;
-  pointer-events: auto;
+  align-items: flex-end;
+  pointer-events: none;
   z-index: 2000;
-  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.65);
 }
 
 .mobile-hint {
-  font-size: 0.62rem;
-  color: var(--muted);
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.6);
   text-align: center;
-  max-width: 110px;
+  max-width: 130px;
   line-height: 1.25;
   pointer-events: none;
-  opacity: 0.85;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 4px 8px;
+  border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 6px;
+  backdrop-filter: blur(8px);
 }
 
 .move-btns {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  pointer-events: auto;
+  gap: 3px;
+  pointer-events: none;
 }
 
 .horizontal-btns {
   display: flex;
-  gap: 20px;
+  gap: 16px;
 }
 
 .ctrl-btn {
-  width: 36px;
-  height: 36px;
-  background: rgba(16, 35, 62, 0.88);
-  border: 1.5px solid #4df2c2;
+  width: 42px;
+  height: 42px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1.5px solid rgba(77, 242, 194, 0.55);
   border-radius: 50%;
   color: #4df2c2;
-  font-size: 15px;
-  font-weight: bold;
+  font-size: 16px;
+  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  box-shadow: 0 0 10px rgba(77, 242, 194, 0.28);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5), 0 0 10px rgba(77, 242, 194, 0.25);
   pointer-events: auto;
+  opacity: 0.72;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: transform 0.1s ease, opacity 0.1s ease, background 0.1s ease;
 }
 
 .ctrl-btn:active {
-  background: #4df2c2;
+  background: rgba(77, 242, 194, 0.85);
   color: #07111f;
-  transform: scale(0.93);
+  transform: scale(0.92);
+  opacity: 1;
+  box-shadow: 0 0 18px rgba(77, 242, 194, 0.7);
 }
 
 .fire-btn {
-  width: 66px;
-  height: 66px;
-  background: rgba(255, 100, 116, 0.24);
-  border: 2px solid #ff6474;
-  color: #ff6474;
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  box-shadow: 0 0 16px rgba(255, 100, 116, 0.45);
+  width: 68px;
+  height: 68px;
+  background: rgba(220, 38, 38, 0.4);
+  border: 2px solid rgba(255, 100, 116, 0.8);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 100, 116, 0.45);
+  opacity: 0.82;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  pointer-events: auto;
+  transition: transform 0.1s ease, opacity 0.1s ease, background 0.1s ease;
 }
 
 .fire-btn:active {
   background: #ff6474;
-  color: white;
+  color: #ffffff;
+  transform: scale(0.92);
+  opacity: 1;
+  box-shadow: 0 0 28px rgba(255, 100, 116, 0.85);
+}
 }
 
 @media (max-width: 900px) {
@@ -1085,8 +1093,9 @@ canvas {
     overflow: hidden;
   }
 
-  .ships-container {
-    grid-template-columns: repeat(3, 1fr);
+  .ships-container,
+  .tank-grid-5 {
+    grid-template-columns: repeat(3, 1fr) !important;
     gap: 6px;
   }
 
@@ -1229,13 +1238,13 @@ canvas {
 .biome-selection,
 .weapon-selection,
 .ship-selection {
-  margin: 4px 0 10px;
+  margin: 2px 0 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   width: 100%;
-  max-width: 860px;
+  max-width: 980px;
 }
 
 .biomes-container {
@@ -1332,11 +1341,12 @@ canvas {
 }
 
 /* --- Grille Véhicules & Blindés --- */
-.ships-container {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 10px;
-  width: 100%;
+.ships-container,
+.tank-grid-5 {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  width: 100% !important;
 }
 
 .ship-card,
@@ -1344,72 +1354,75 @@ canvas {
   position: relative;
   background: linear-gradient(150deg, rgba(30, 41, 59, 0.75), rgba(15, 23, 42, 0.9));
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
-  padding: 12px 8px 10px;
+  border-radius: 12px;
+  padding: 8px 6px 8px;
   cursor: pointer;
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 6px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  gap: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   overflow: hidden;
   min-width: 0;
 }
 
 .ship-card:hover,
 .tank-card:hover {
-  transform: translateY(-4px) scale(1.03);
+  transform: translateY(-3px) scale(1.02);
   border-color: rgba(56, 189, 248, 0.6);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.3);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6), 0 0 18px rgba(56, 189, 248, 0.3);
 }
 
 .ship-card.active {
   background: linear-gradient(150deg, rgba(56, 189, 248, 0.2), rgba(15, 23, 42, 0.95));
   border: 2px solid #38bdf8;
-  box-shadow: 0 0 28px rgba(56, 189, 248, 0.45), inset 0 0 16px rgba(56, 189, 248, 0.18);
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.45), inset 0 0 14px rgba(56, 189, 248, 0.18);
   transform: translateY(-2px);
 }
 
 .tank-card.active {
   background: linear-gradient(150deg, rgba(245, 158, 11, 0.22), rgba(15, 23, 42, 0.95));
   border: 2px solid #fbbf24;
-  box-shadow: 0 0 28px rgba(245, 158, 11, 0.45), inset 0 0 16px rgba(245, 158, 11, 0.18);
+  box-shadow: 0 0 24px rgba(245, 158, 11, 0.45), inset 0 0 14px rgba(245, 158, 11, 0.18);
   transform: translateY(-2px);
 }
 
 .ship-icon {
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.85));
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.85));
   transition: transform 0.25s ease;
   margin-bottom: 2px;
 }
 
 .ship-card:hover .ship-icon,
 .tank-card:hover .ship-icon {
-  transform: scale(1.14);
+  transform: scale(1.12);
 }
 
 .ship-name {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 800;
   color: #ffffff;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
 }
 
 .ship-stats {
-  font-size: 0.64rem;
+  font-size: 0.6rem;
   font-weight: 700;
-  letter-spacing: 0.03em;
-  padding: 3px 8px;
+  letter-spacing: 0.02em;
+  padding: 2px 6px;
   border-radius: 99px;
   background: rgba(255, 255, 255, 0.07);
   color: #94a3b8;
   border: 1px solid rgba(255, 255, 255, 0.1);
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ship-card.active .ship-stats {
