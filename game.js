@@ -577,6 +577,21 @@ async function bootstrapAssets() {
   state.images.boss = await loadImage("boss_ship.png" + v);
   state.images.kamikaze = await loadImage("enemy_nova.png" + v);
   state.images.interceptor = await loadImage("enemy_nova.png" + v);
+
+  // ======================================================
+  // ASSETS 3D 4K PHOTORÉALISTES — NOVA TANK ASSAULT
+  // ======================================================
+  state.images.bg_tank_ww2 = await loadImage("bg_tank_ww2_4k.jpg" + v);
+  state.images.bg_tank_desert = await loadImage("bg_tank_desert_4k.jpg" + v);
+  state.images.bg_tank_alien = await loadImage("bg_tank_alien_4k.jpg" + v);
+  state.images.bg_tank_predator = await loadImage("bg_tank_predator_4k.jpg" + v);
+
+  state.images.tank_chassis = await loadImage("tank_chassis_4k.png" + v);
+  state.images.tank_turret = await loadImage("tank_turret_4k.png" + v);
+  state.images.tank_enemy_panzer = await loadImage("tank_enemy_panzer_4k.png" + v);
+  state.images.tank_enemy_predator = await loadImage("tank_enemy_predator_4k.png" + v);
+  state.images.tank_bomber = await loadImage("tank_bomber_4k.png" + v);
+  state.images.tank_boss = await loadImage("tank_boss_4k.png" + v);
   draw();
 }
 
@@ -2395,106 +2410,82 @@ function drawTankBattlefield(w, h, now) {
   const tTheme = TANK_THEMES[selectedTankThemeId] || TANK_THEMES.ww2;
   const roadMargin = Math.max(58, Math.min(130, w * 0.17));
   const roadWidth = w - roadMargin * 2;
-  const scrollOffset = (state.tankDistance || 0) % 80;
+  const bgImg = state.images["bg_tank_" + selectedTankThemeId];
+  const scrollY = (state.tankDistance || 0) % h;
 
-  // 1. Sol des bas-côtés (Berges / Jungle / Dunes / Cratères Xéno)
-  ctx.fillStyle = tTheme.bankColor;
-  ctx.fillRect(0, 0, w, h);
+  if (bgImg) {
+    // 1. Défilement vertical continu (8 écrans) du décor 3D 4K photoréaliste !
+    const panX = ((player.x + player.width / 2 - w / 2) / Math.max(1, w)) * -22;
+    ctx.drawImage(bgImg, panX - 18, scrollY - h, w + 36, h + 2);
+    ctx.drawImage(bgImg, panX - 18, scrollY, w + 36, h + 2);
 
-  // Texture de sol latérale qui défile
-  ctx.fillStyle = tTheme.groundColor;
-  for (let y = -80 + scrollOffset; y < h + 80; y += 80) {
-    ctx.fillRect(6, y, roadMargin - 14, 42);
-    ctx.fillRect(w - roadMargin + 8, y + 25, roadMargin - 14, 42);
-  }
+    // Voile de profondeur cinématique pour faire ressortir les tirs et les blindés 3D
+    const vignette = ctx.createLinearGradient(0, 0, w, 0);
+    vignette.addColorStop(0, "rgba(4, 8, 16, 0.45)");
+    vignette.addColorStop(0.2, "rgba(4, 8, 16, 0.12)");
+    vignette.addColorStop(0.5, "rgba(4, 8, 16, 0.05)");
+    vignette.addColorStop(0.8, "rgba(4, 8, 16, 0.12)");
+    vignette.addColorStop(1, "rgba(4, 8, 16, 0.45)");
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, w, h);
 
-  // 2. Route / Couloir Blindé Central (8 écrans)
-  const roadGrad = ctx.createLinearGradient(roadMargin, 0, w - roadMargin, 0);
-  roadGrad.addColorStop(0, tTheme.bankColor);
-  roadGrad.addColorStop(0.08, tTheme.roadColor);
-  roadGrad.addColorStop(0.5, tTheme.groundColor);
-  roadGrad.addColorStop(0.92, tTheme.roadColor);
-  roadGrad.addColorStop(1, tTheme.bankColor);
-  ctx.fillStyle = roadGrad;
-  ctx.fillRect(roadMargin, 0, roadWidth, h);
-
-  // Bordures de route / Tranchées / Barrières énergétiques
-  ctx.strokeStyle = tTheme.roadBorder;
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(roadMargin, 0);
-  ctx.lineTo(roadMargin, h);
-  ctx.moveTo(w - roadMargin, 0);
-  ctx.lineTo(w - roadMargin, h);
-  ctx.stroke();
-
-  // Marquages de piste en défilement continu
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.16)";
-  ctx.lineWidth = 2;
-  for (let y = -80 + scrollOffset; y < h + 80; y += 80) {
+    // Lignes holographiques subtiles délimitant le couloir de roulage central
+    ctx.strokeStyle = tTheme.accentColor;
+    ctx.globalAlpha = 0.28;
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(w * 0.5, y);
-    ctx.lineTo(w * 0.5, y + 36);
+    ctx.moveTo(roadMargin, 0);
+    ctx.lineTo(roadMargin, h);
+    ctx.moveTo(w - roadMargin, 0);
+    ctx.lineTo(w - roadMargin, h);
     ctx.stroke();
+    ctx.globalAlpha = 1;
+  } else {
+    // Fallback pendant le chargement initial
+    const scrollOffset = (state.tankDistance || 0) % 80;
+    ctx.fillStyle = tTheme.bankColor;
+    ctx.fillRect(0, 0, w, h);
+    const roadGrad = ctx.createLinearGradient(roadMargin, 0, w - roadMargin, 0);
+    roadGrad.addColorStop(0, tTheme.bankColor);
+    roadGrad.addColorStop(0.1, tTheme.roadColor);
+    roadGrad.addColorStop(0.5, tTheme.groundColor);
+    roadGrad.addColorStop(0.9, tTheme.roadColor);
+    roadGrad.addColorStop(1, tTheme.bankColor);
+    ctx.fillStyle = roadGrad;
+    ctx.fillRect(roadMargin, 0, roadWidth, h);
+    ctx.strokeStyle = tTheme.roadBorder;
+    ctx.lineWidth = 2;
+    for (let y = -80 + scrollOffset; y < h + 80; y += 80) {
+      ctx.beginPath();
+      ctx.moveTo(w * 0.5, y);
+      ctx.lineTo(w * 0.5, y + 36);
+      ctx.stroke();
+    }
   }
 
-  // 3. Traces de chenilles laissées par le Tank
+  // 2. Traces de chenilles 3D laissées par le Tank au sol
   state.tankTracks.forEach((tr) => {
-    ctx.fillStyle = `rgba(10, 14, 18, ${Math.max(0, tr.life * 0.45)})`;
-    ctx.fillRect(tr.x, tr.y, 10, 6);
-    ctx.fillRect(tr.x + tr.w - 10, tr.y, 10, 6);
+    ctx.fillStyle = `rgba(8, 12, 18, ${Math.max(0, tr.life * 0.52)})`;
+    ctx.fillRect(tr.x + 4, tr.y, 12, 7);
+    ctx.fillRect(tr.x + tr.w - 16, tr.y, 12, 7);
   });
 
-  // 4. Décors latéraux défilants (Bunkers WW2, Dunes/Palmiers, Pylônes Aliens, Jungle/Totems Predator)
-  state.tankProps.forEach((p) => {
-    ctx.save();
-    ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
-    if (selectedTankThemeId === "ww2") {
-      // Bunker béton / sacs de sable / hérissons tchèques
-      ctx.fillStyle = "#57534e";
-      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * 0.75);
-      ctx.fillStyle = "#1c1917";
-      ctx.fillRect(-p.w * 0.3, -4, p.w * 0.6, 7);
-      ctx.strokeStyle = "#a8a29e";
-      ctx.strokeRect(-p.w / 2, -p.h / 2, p.w, p.h * 0.75);
-    } else if (selectedTankThemeId === "desert") {
-      // Dune dorée / oasis / structure désert
-      ctx.fillStyle = "#d97706";
-      ctx.beginPath();
-      ctx.arc(0, 0, p.w * 0.48, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#15803d";
-      ctx.beginPath();
-      ctx.arc(4, -4, p.w * 0.24, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (selectedTankThemeId === "alien") {
-      // Pylône et cristal Xéno-Tech luminescent
-      ctx.fillStyle = "#581c87";
-      ctx.beginPath();
-      ctx.moveTo(0, -p.h * 0.5);
-      ctx.lineTo(p.w * 0.4, 0);
-      ctx.lineTo(0, p.h * 0.5);
-      ctx.lineTo(-p.w * 0.4, 0);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "#00f2ff";
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-    } else {
-      // Jungle Predator : Canopée bioluminescente & bassin acide / totem
-      ctx.fillStyle = "#14532d";
-      ctx.beginPath();
-      ctx.arc(0, 0, p.w * 0.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = p.seed > 0.5 ? "#84cc16" : "#ef4444";
-      ctx.beginPath();
-      ctx.arc(0, 0, p.w * 0.18, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
+  // 3. Particules d'ambiance 3D (Braises WW2, Sable du désert, Spores Predator, Énergie Alien)
+  state.stars.forEach((star) => {
+    const twinkle = 0.45 + Math.sin(now * 0.003 * star.twinkleSpeed + star.twinkleOffset) * 0.4;
+    ctx.fillStyle = selectedTankThemeId === "alien"
+      ? `rgba(0, 242, 255, ${twinkle})`
+      : selectedTankThemeId === "predator"
+      ? `rgba(132, 204, 22, ${twinkle})`
+      : selectedTankThemeId === "desert"
+      ? `rgba(251, 191, 36, ${twinkle})`
+      : `rgba(249, 115, 22, ${twinkle})`;
+    ctx.beginPath();
+    ctx.arc(star.x, star.y, star.size * 1.25, 0, Math.PI * 2);
+    ctx.fill();
   });
 
-  // 5. Barre de Progression des 8 Écrans (Kilométrage & Niveau)
+  // 4. Barre de Progression des 8 Écrans (Kilométrage & Niveau)
   const progRatio = Math.min(1, (state.tankDistance || 0) / Math.max(1, state.tankTargetDistance || 4800));
   const currentScreen = Math.min(8, Math.floor(progRatio * 8) + 1);
   const barW = Math.min(340, w * 0.62);
@@ -2502,10 +2493,10 @@ function drawTankBattlefield(w, h, now) {
   const barY = 58;
 
   ctx.save();
-  ctx.fillStyle = "rgba(5, 10, 20, 0.82)";
+  ctx.fillStyle = "rgba(5, 10, 20, 0.84)";
   ctx.fillRect(barX - 8, barY - 14, barW + 16, 26);
   ctx.strokeStyle = tTheme.accentColor;
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 1.2;
   ctx.strokeRect(barX - 8, barY - 14, barW + 16, 26);
 
   ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
@@ -2529,88 +2520,77 @@ function drawPlayerTank(entity, now) {
   const w = entity.width;
   const h = entity.height;
   const tankCfg = TANKS[selectedTankId] || TANKS.grizzly;
-  const treadAnim = Math.floor((state.tankDistance || now * 0.1) / 8) % 2;
+  const chassisImg = state.images.tank_chassis;
+  const turretImg = state.images.tank_turret;
+  const angle = typeof player.turretAngle === "number" ? player.turretAngle : -Math.PI / 2;
 
   ctx.save();
   ctx.translate(cx, cy);
 
-  // Ombre portée du blindé
-  ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
-  ctx.fillRect(-w * 0.52, -h * 0.46 + 6, w * 1.04, h * 0.94);
-
-  // Chenilles gauche & droite crantées
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(-w * 0.5, -h * 0.45, w * 0.2, h * 0.9);
-  ctx.fillRect(w * 0.3, -h * 0.45, w * 0.2, h * 0.9);
-  ctx.fillStyle = treadAnim ? "#475569" : "#334155";
-  for (let ty = -h * 0.42; ty < h * 0.42; ty += 10) {
-    ctx.fillRect(-w * 0.5, ty + (treadAnim ? 3 : 0), w * 0.2, 4);
-    ctx.fillRect(w * 0.3, ty + (treadAnim ? 3 : 0), w * 0.2, 4);
-  }
-
-  // Châssis blindé principal
-  const hullGrad = ctx.createLinearGradient(-w * 0.36, -h * 0.4, w * 0.36, h * 0.4);
-  hullGrad.addColorStop(0, tankCfg.trimColor);
-  hullGrad.addColorStop(0.25, tankCfg.hullColor);
-  hullGrad.addColorStop(1, "#0f172a");
-  ctx.fillStyle = hullGrad;
+  // 1. Ombre portée 3D réaliste au sol + Halo tactique de la couleur du blindé choisi
+  ctx.fillStyle = "rgba(0, 0, 0, 0.62)";
   ctx.beginPath();
-  ctx.moveTo(-w * 0.28, -h * 0.44);
-  ctx.lineTo(w * 0.28, -h * 0.44);
-  ctx.lineTo(w * 0.36, -h * 0.28);
-  ctx.lineTo(w * 0.36, h * 0.42);
-  ctx.lineTo(-w * 0.36, h * 0.42);
-  ctx.lineTo(-w * 0.36, -h * 0.28);
-  ctx.closePath();
+  ctx.ellipse(0, 6, w * 0.54, h * 0.52, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = tankCfg.trimColor;
-  ctx.lineWidth = 2;
-  ctx.stroke();
 
-  // Canon frontal de châssis (pour les tanks qui tirent aussi tout droit)
-  if (tankCfg.forwardGun) {
-    ctx.fillStyle = "#e2e8f0";
-    ctx.fillRect(-3, -h * 0.56, 6, 14);
+  ctx.shadowColor = tankCfg.trimColor;
+  ctx.shadowBlur = 14;
+
+  // 2. Châssis 3D 4K (avec inclinaison légère quand le tank tourne à gauche/droite)
+  ctx.save();
+  const tilt = player.vxTilt || 0;
+  ctx.rotate(tilt * 0.35);
+  if (chassisImg) {
+    ctx.drawImage(chassisImg, -w * 0.62, -h * 0.58, w * 1.24, h * 1.16);
+  } else {
+    ctx.fillStyle = tankCfg.hullColor;
+    ctx.fillRect(-w * 0.42, -h * 0.45, w * 0.84, h * 0.9);
   }
+  // Flamme des turbines arrière du blindé
+  const exhaustH = 10 + Math.sin(now * 0.05) * 4;
+  ctx.fillStyle = tankCfg.trimColor;
+  ctx.beginPath();
+  ctx.arc(-w * 0.18, h * 0.48, 4, 0, Math.PI * 2);
+  ctx.arc(w * 0.18, h * 0.48, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "rgba(255, 180, 50, 0.75)";
+  ctx.fillRect(-w * 0.21, h * 0.48, 6, exhaustH);
+  ctx.fillRect(w * 0.15, h * 0.48, 6, exhaustH);
+  ctx.restore();
 
-  // Tourelle Rotative 360° (tourne à gauche/droite ou vers le curseur pendant que le tank avance !)
-  const angle = typeof player.turretAngle === "number" ? player.turretAngle : -Math.PI / 2;
+  // 3. Tourelle Rotative 360° 3D 4K (tourne indépendamment vers la cible !)
+  ctx.save();
   ctx.rotate(angle);
 
-  // Ligne laser de visée tactique 360°
-  ctx.strokeStyle = "rgba(0, 242, 255, 0.28)";
-  ctx.setLineDash([5, 5]);
-  ctx.lineWidth = 1.5;
+  // Ligne laser de visée 360°
+  ctx.strokeStyle = tankCfg.trimColor;
+  ctx.globalAlpha = 0.38;
+  ctx.setLineDash([6, 6]);
+  ctx.lineWidth = 1.6;
   ctx.beginPath();
   ctx.moveTo(28, 0);
-  ctx.lineTo(135, 0);
+  ctx.lineTo(150, 0);
   ctx.stroke();
   ctx.setLineDash([]);
+  ctx.globalAlpha = 1;
 
-  // Fût(s) du canon rotatif
-  ctx.fillStyle = "#cbd5e1";
-  if (tankCfg.barrels === 2) {
-    ctx.fillRect(8, -9, 34, 6);
-    ctx.fillRect(8, 3, 34, 6);
-  } else if (tankCfg.barrels === 3) {
-    ctx.fillRect(8, -11, 32, 5);
-    ctx.fillRect(10, -2.5, 36, 5);
-    ctx.fillRect(8, 6, 32, 5);
+  if (turretImg) {
+    // Le sprite tank_turret_4k pointe vers le HAUT (-PI/2), donc on tourne de +PI/2 pour l'aligner avec l'axe 0 radian
+    ctx.rotate(Math.PI / 2);
+    const tw = w * 1.18;
+    const th = h * 1.18;
+    ctx.drawImage(turretImg, -tw / 2, -th * 0.62, tw, th);
   } else {
+    ctx.fillStyle = "#e2e8f0";
     ctx.fillRect(8, -4.5, 38, 9);
-    ctx.fillStyle = tankCfg.trimColor;
-    ctx.fillRect(38, -6, 8, 12);
+    ctx.fillStyle = tankCfg.hullColor;
+    ctx.beginPath();
+    ctx.arc(0, 0, w * 0.24, 0, Math.PI * 2);
+    ctx.fill();
   }
+  ctx.restore();
 
-  // Dôme de la tourelle
-  ctx.fillStyle = tankCfg.hullColor;
-  ctx.beginPath();
-  ctx.arc(0, 0, w * 0.24, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
+  ctx.shadowBlur = 0;
   ctx.restore();
 }
 
@@ -2619,67 +2599,77 @@ function drawTankEnemy(entity, now) {
   const cy = entity.y + entity.height / 2;
   const w = entity.width;
   const h = entity.height;
+  const panzerImg = state.images.tank_enemy_panzer;
+  const predatorImg = state.images.tank_enemy_predator;
+  const turretImg = state.images.tank_turret;
 
   ctx.save();
   ctx.translate(cx, cy);
 
+  // Ombre portée 3D au sol
+  ctx.fillStyle = "rgba(0, 0, 0, 0.52)";
+  ctx.beginPath();
+  ctx.ellipse(0, 5, w * 0.48, h * 0.42, 0, 0, Math.PI * 2);
+  ctx.fill();
+
   // Effet Camouflage Optique + Viseur Tri-Laser Rouge pour le thème Predator !
   if (entity.cloaked) {
-    ctx.globalAlpha = 0.34 + Math.sin(now * 0.01) * 0.15;
+    ctx.globalAlpha = 0.38 + Math.sin(now * 0.012) * 0.18;
   }
 
   if (entity.tankRole === "flank_turret") {
-    // Socle de bunker/tourelle sur les bas-côtés
-    ctx.fillStyle = "#334155";
-    ctx.fillRect(-w * 0.45, -h * 0.45, w * 0.9, h * 0.9);
-    ctx.strokeStyle = "#f97316";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(-w * 0.45, -h * 0.45, w * 0.9, h * 0.9);
-
-    ctx.rotate(entity.aimAngle || Math.PI / 2);
-    ctx.fillStyle = "#ef4444";
-    ctx.fillRect(0, -4, w * 0.55, 8);
+    // Tourelle d'artillerie 3D 4K sur les bas-côtés qui pivote vers le joueur
+    ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
     ctx.beginPath();
-    ctx.arc(0, 0, w * 0.26, 0, Math.PI * 2);
-    ctx.fill();
-  } else if (entity.tankRole === "hunter" || selectedTankThemeId === "predator") {
-    // Monstre / Chasseur Predator avec viseur tri-laser iconique !
-    ctx.fillStyle = selectedTankThemeId === "predator" ? "#15803d" : "#7c2d12";
-    ctx.beginPath();
-    ctx.arc(0, 0, w * 0.38, 0, Math.PI * 2);
+    ctx.arc(0, 0, w * 0.46, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = "#ef4444";
     ctx.lineWidth = 2;
     ctx.stroke();
 
+    ctx.rotate((entity.aimAngle || Math.PI / 2) + Math.PI / 2);
+    if (turretImg) {
+      ctx.drawImage(turretImg, -w * 0.62, -h * 0.68, w * 1.24, h * 1.24);
+    } else {
+      ctx.fillStyle = "#ef4444";
+      ctx.fillRect(-4, -w * 0.55, 8, w * 0.55);
+    }
+  } else if (entity.tankRole === "hunter" || selectedTankThemeId === "predator") {
+    // Monstre / Chasseur Predator 3D 4K ou Drone Alien 3D 4K
+    const sprite = predatorImg || state.images.kraken_drone;
+    const lookAngle = (entity.aimAngle || Math.PI / 2) - Math.PI / 2;
+    ctx.rotate(lookAngle * 0.35);
+    if (sprite) {
+      ctx.drawImage(sprite, -w * 0.62, -h * 0.62, w * 1.24, h * 1.24);
+    } else {
+      ctx.fillStyle = "#15803d";
+      ctx.beginPath();
+      ctx.arc(0, 0, w * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
     // Les 3 points rouges du viseur laser Predator
     ctx.globalAlpha = 1;
     ctx.fillStyle = "#ff0033";
     ctx.shadowColor = "#ff0033";
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 12;
     ctx.beginPath();
-    ctx.arc(0, -6, 3, 0, Math.PI * 2);
-    ctx.arc(-5, 3, 3, 0, Math.PI * 2);
-    ctx.arc(5, 3, 3, 0, Math.PI * 2);
+    ctx.arc(0, -7, 3, 0, Math.PI * 2);
+    ctx.arc(-5, 2, 3, 0, Math.PI * 2);
+    ctx.arc(5, 2, 3, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
   } else {
-    // Char / Véhicule ennemi (Panzer WW2, Buggy Désert, Tripode Alien)
-    ctx.fillStyle = "#1e293b";
-    ctx.fillRect(-w * 0.46, -h * 0.44, w * 0.18, h * 0.88);
-    ctx.fillRect(w * 0.28, -h * 0.44, w * 0.18, h * 0.88);
-
-    ctx.fillStyle = selectedTankThemeId === "ww2" ? "#52525b" : selectedTankThemeId === "desert" ? "#b45309" : "#4c1d95";
-    ctx.fillRect(-w * 0.34, -h * 0.4, w * 0.68, h * 0.8);
-    ctx.strokeStyle = "#f87171";
-    ctx.strokeRect(-w * 0.34, -h * 0.4, w * 0.68, h * 0.8);
-
-    ctx.rotate(entity.aimAngle || Math.PI / 2);
-    ctx.fillStyle = "#f87171";
-    ctx.fillRect(0, -3.5, w * 0.5, 7);
-    ctx.beginPath();
-    ctx.arc(0, 0, w * 0.22, 0, Math.PI * 2);
-    ctx.fill();
+    // Char Panzer / Blindé Ennemi 3D 4K (ou Méca Alien 4K en thème Alien)
+    const sprite = selectedTankThemeId === "alien"
+      ? (state.images.harvester_mech || panzerImg)
+      : panzerImg;
+    if (sprite) {
+      ctx.drawImage(sprite, -w * 0.6, -h * 0.6, w * 1.2, h * 1.2);
+    } else {
+      ctx.fillStyle = "#52525b";
+      ctx.fillRect(-w * 0.4, -h * 0.4, w * 0.8, h * 0.8);
+    }
   }
 
   ctx.restore();
@@ -2688,43 +2678,30 @@ function drawTankEnemy(entity, now) {
 function drawBomberSquadron() {
   if (!state.bomberRun) return;
   const run = state.bomberRun;
+  const bomberImg = state.images.tank_bomber;
 
   run.bombers.forEach((b) => {
     const bx = b.x;
     const by = run.y + b.offsetY;
 
     ctx.save();
-    // Ombre au sol du bombardier
-    ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+    // Ombre portée au sol du bombardier 3D
+    ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
     ctx.beginPath();
-    ctx.moveTo(bx + 35, by - 25);
-    ctx.lineTo(bx + 95, by + 15);
-    ctx.lineTo(bx - 25, by + 15);
-    ctx.closePath();
+    ctx.ellipse(bx + 36, by + 28, 62, 28, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Fuselage & grandes ailes de bombardier lourd
     ctx.translate(bx, by);
-    ctx.fillStyle = "#334155";
-    ctx.strokeStyle = "#fde68a";
-    ctx.lineWidth = 2;
-
-    // Ailes
-    ctx.fillRect(-68, -10, 136, 22);
-    ctx.strokeRect(-68, -10, 136, 22);
-
-    // Fuselage
-    ctx.fillStyle = "#475569";
-    ctx.fillRect(-10, -42, 20, 84);
-    ctx.strokeRect(-10, -42, 20, 84);
-
-    // Hélices / moteurs ardents
-    ctx.fillStyle = "#f97316";
-    [-46, -24, 24, 46].forEach((mx) => {
-      ctx.beginPath();
-      ctx.arc(mx, -12, 5, 0, Math.PI * 2);
-      ctx.fill();
-    });
+    if (bomberImg) {
+      ctx.shadowColor = "#00f2ff";
+      ctx.shadowBlur = 18;
+      ctx.drawImage(bomberImg, -78, -72, 156, 144);
+      ctx.shadowBlur = 0;
+    } else {
+      ctx.fillStyle = "#334155";
+      ctx.fillRect(-68, -10, 136, 22);
+      ctx.fillRect(-10, -42, 20, 84);
+    }
     ctx.restore();
   });
 }
@@ -2979,6 +2956,18 @@ function drawSprite(img, entity, fallbackColor, type) {
     }
     if (type === "enemy") {
       drawTankEnemy(entity, now);
+      return;
+    }
+    if (type === "boss" && state.images.tank_boss) {
+      ctx.save();
+      ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+      ctx.beginPath();
+      ctx.ellipse(entity.x + entity.width / 2, entity.y + entity.height * 0.58, entity.width * 0.52, entity.height * 0.44, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowColor = "#ef4444";
+      ctx.shadowBlur = 18;
+      ctx.drawImage(state.images.tank_boss, entity.x, entity.y, entity.width, entity.height);
+      ctx.restore();
       return;
     }
   }
