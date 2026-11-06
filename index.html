@@ -18,7 +18,7 @@
   <meta name="twitter:description" content="2 Jeux en 1 : Défendez l'espace dans NOVA Space Invaders 3D ou prenez les commandes d'un blindé à tourelle 360° dans NOVA Tank Assault !">
   <meta name="twitter:image" content="https://nova-space-invaders.vercel.app/og-image.png">
 
-  <link rel="stylesheet" href="styles.css?v=42">
+  <link rel="stylesheet" href="styles.css?v=43">
 </head>
 <body data-biome="campagne" data-game="space">
   <!-- =========================================================
@@ -180,8 +180,11 @@
     </div>
   </section>
 
-  <aside class="sidebar">
-    <h1>NOVA Games <span class="v-badge" id="gameModeBadge">V4</span></h1>
+  <aside class="sidebar" id="mainSidebar">
+    <div class="sidebar-header-row">
+      <h1>NOVA Games <span class="v-badge" id="gameModeBadge">V4</span></h1>
+      <button id="sidebarCollapseHeaderBtn" class="sidebar-collapse-btn" title="Rétracter le menu latéral (Touche M)">◀</button>
+    </div>
     <button id="backToPortalSidebarBtn" class="portal-back-sidebar-btn" title="Retourner à l'accueil Nova Games">🏠 Accueil Nova Games</button>
     
     <div class="stat-box stat-biome">
@@ -250,6 +253,9 @@
   
   <main class="game-area" id="gameArea">
     <canvas id="gameCanvas" width="960" height="600"></canvas>
+    <button id="floatingSidebarToggle" class="floating-sidebar-btn" title="Afficher / Masquer le menu latéral (Touche M)">
+      <span id="floatingToggleIcon">◀</span> <span class="floating-btn-text">Menu</span>
+    </button>
     <button id="pauseButton" class="pause-btn" title="Pause (P)">II</button>
 
     <!-- BOÎTE DE DIALOGUE TACTIQUE INTERACTIVE (COMM-LINK ENNEMI <-> PERSONNAGE) -->
@@ -281,9 +287,17 @@
     </div>
     
     <div class="overlay" id="overlay">
-      <div class="briefing-top-badge">
-        <span class="briefing-pulse-dot"></span>
-        <span class="briefing-badge-text">CENTRE DE COMMANDEMENT TACTIQUE</span>
+      <div class="overlay-top-nav">
+        <button id="overlaySidebarToggle" class="overlay-nav-btn sidebar-toggle-btn" title="Rétracter / Déployer le menu latéral (Touche M)">
+          <span id="overlaySidebarToggleIcon">◀</span> <span id="overlaySidebarToggleText">Masquer Menu</span>
+        </button>
+        <div class="briefing-top-badge">
+          <span class="briefing-pulse-dot"></span>
+          <span class="briefing-badge-text">CENTRE DE COMMANDEMENT TACTIQUE</span>
+        </div>
+        <button id="fullscreenToggleBtn" class="overlay-nav-btn fullscreen-btn" title="Basculer en Plein Écran (Recommandé sur Mobile/Tablette)">
+          <span id="fullscreenIcon">⛶</span> <span id="fullscreenText">Plein Écran</span>
+        </button>
       </div>
       <h2 id="overlayTitle">NOVA DUAL WARFARE // HUB ARCADE</h2>
       <p id="overlayMessage">Choisis ton Jeu, ton Théâtre d'Opérations, ton Véhicule et ton Armement !</p>
@@ -509,6 +523,6 @@
     </div>
   </main>
 
-  <script src="game.js?v=42"></script>
+  <script src="game.js?v=43"></script>
 </body>
 </html>

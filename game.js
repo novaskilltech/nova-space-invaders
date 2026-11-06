@@ -1197,6 +1197,11 @@ function showOverlay(title, message, buttonLabel) {
   
   const mob = document.getElementById("mobileControls");
   if (mob) mob.style.display = "none";
+
+  // Sur mobile et écran étroit, rétracter le menu par défaut pour donner 100% de la surface aux véhicules et armements
+  if (window.innerWidth <= 900) {
+    toggleSidebar(true);
+  }
 }
 
 function hideOverlay() {
@@ -3769,6 +3774,11 @@ function handleKeydown(event) {
     syncUi();
   }
 
+  // Raccourci M pour rétracter / déployer le menu de gauche (sidebar)
+  if (event.key === "m" || event.key === "M") {
+    toggleSidebar();
+  }
+
   if (event.key === "p" || event.key === "P" || event.key === "Escape") {
     togglePause();
   }
@@ -3790,6 +3800,98 @@ function handleKeydown(event) {
 
 function handleKeyup(event) {
   keys.delete(event.key);
+}
+
+// ==============================================================
+// GESTION DU MENU LATÉRAL RÉRACTABLE (PC, TABLETTE & MOBILE)
+// ==============================================================
+function toggleSidebar(forceState) {
+  const isCurrentlyCollapsed = document.body.classList.contains("sidebar-collapsed");
+  const willCollapse = typeof forceState === "boolean" ? forceState : !isCurrentlyCollapsed;
+  
+  document.body.classList.toggle("sidebar-collapsed", willCollapse);
+  updateSidebarToggleButtons(willCollapse);
+  setTimeout(resizeCanvas, 320);
+}
+
+function updateSidebarToggleButtons(isCollapsed) {
+  const floatIcon = document.getElementById("floatingToggleIcon");
+  const floatText = document.querySelector(".floating-btn-text");
+  const overlayIcon = document.getElementById("overlaySidebarToggleIcon");
+  const overlayText = document.getElementById("overlaySidebarToggleText");
+  const sideCollapseBtn = document.getElementById("sidebarCollapseHeaderBtn");
+
+  const icon = isCollapsed ? "▶" : "◀";
+  const label = isCollapsed ? "Afficher Menu" : "Masquer Menu";
+
+  if (floatIcon) floatIcon.textContent = icon;
+  if (floatText) floatText.textContent = isCollapsed ? "Stats" : "Menu";
+  if (overlayIcon) overlayIcon.textContent = icon;
+  if (overlayText) overlayText.textContent = label;
+  if (sideCollapseBtn) sideCollapseBtn.textContent = isCollapsed ? "▶" : "◀";
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+    const el = document.documentElement;
+    if (el.requestFullscreen) {
+      el.requestFullscreen().catch(err => console.warn(err));
+    } else if (el.webkitRequestFullscreen) {
+      el.webkitRequestFullscreen();
+    }
+  } else {
+    if (document.exitFullscreen) {
+      document.exitFullscreen().catch(err => console.warn(err));
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    }
+  }
+}
+
+document.addEventListener("fullscreenchange", () => {
+  const icon = document.getElementById("fullscreenIcon");
+  const text = document.getElementById("fullscreenText");
+  const isFull = !!document.fullscreenElement;
+  if (icon) icon.textContent = isFull ? "🗗" : "⛶";
+  if (text) text.textContent = isFull ? "Quitter" : "Plein Écran";
+  setTimeout(resizeCanvas, 200);
+});
+
+// Écouteurs pour les boutons de rétractation du menu
+const overlaySidebarToggle = document.getElementById("overlaySidebarToggle");
+if (overlaySidebarToggle) {
+  overlaySidebarToggle.addEventListener("click", () => toggleSidebar());
+  overlaySidebarToggle.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    toggleSidebar();
+  });
+}
+
+const floatingSidebarToggle = document.getElementById("floatingSidebarToggle");
+if (floatingSidebarToggle) {
+  floatingSidebarToggle.addEventListener("click", () => toggleSidebar());
+  floatingSidebarToggle.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    toggleSidebar();
+  });
+}
+
+const sidebarCollapseHeaderBtn = document.getElementById("sidebarCollapseHeaderBtn");
+if (sidebarCollapseHeaderBtn) {
+  sidebarCollapseHeaderBtn.addEventListener("click", () => toggleSidebar());
+  sidebarCollapseHeaderBtn.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    toggleSidebar();
+  });
+}
+
+const fullscreenToggleBtn = document.getElementById("fullscreenToggleBtn");
+if (fullscreenToggleBtn) {
+  fullscreenToggleBtn.addEventListener("click", toggleFullscreen);
+  fullscreenToggleBtn.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    toggleFullscreen();
+  });
 }
 
 function runSelfChecks() {
