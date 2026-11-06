@@ -1198,9 +1198,16 @@ function showOverlay(title, message, buttonLabel) {
   const mob = document.getElementById("mobileControls");
   if (mob) mob.style.display = "none";
 
-  // Sur mobile et écran étroit, rétracter le menu par défaut pour donner 100% de la surface aux véhicules et armements
-  if (window.innerWidth <= 900) {
-    toggleSidebar(true);
+  // Si l'utilisateur a une préférence enregistrée dans localStorage, la respecter ; sinon sur mobile rétracter par défaut
+  try {
+    const saved = localStorage.getItem("nova_sidebar_collapsed");
+    if (saved !== null) {
+      toggleSidebar(saved === "true");
+    } else if (window.innerWidth <= 900) {
+      toggleSidebar(true);
+    }
+  } catch (e) {
+    if (window.innerWidth <= 900) toggleSidebar(true);
   }
 }
 
@@ -1451,6 +1458,7 @@ const TAUNT_MESSAGES = [
 ];
 
 function levelCompleteContinue() {
+  requestFullscreenMode();
   hideOverlay();
 
   if (selectedGameMode === "tank") {
@@ -3810,6 +3818,9 @@ function toggleSidebar(forceState) {
   const willCollapse = typeof forceState === "boolean" ? forceState : !isCurrentlyCollapsed;
   
   document.body.classList.toggle("sidebar-collapsed", willCollapse);
+  try {
+    localStorage.setItem("nova_sidebar_collapsed", willCollapse ? "true" : "false");
+  } catch (e) {}
   updateSidebarToggleButtons(willCollapse);
   setTimeout(resizeCanvas, 320);
 }
@@ -3831,14 +3842,20 @@ function updateSidebarToggleButtons(isCollapsed) {
   if (sideCollapseBtn) sideCollapseBtn.textContent = isCollapsed ? "▶" : "◀";
 }
 
-function toggleFullscreen() {
+function requestFullscreenMode() {
   if (!document.fullscreenElement && !document.webkitFullscreenElement) {
     const el = document.documentElement;
     if (el.requestFullscreen) {
-      el.requestFullscreen().catch(err => console.warn(err));
+      el.requestFullscreen().catch(() => {});
     } else if (el.webkitRequestFullscreen) {
       el.webkitRequestFullscreen();
     }
+  }
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+    requestFullscreenMode();
   } else {
     if (document.exitFullscreen) {
       document.exitFullscreen().catch(err => console.warn(err));
@@ -3901,6 +3918,9 @@ function runSelfChecks() {
 function handleStartClick() {
   console.log("Start button clicked, running:", state.running, "paused:", state.paused);
   
+  // Activer automatiquement le mode Plein Écran au lancement de la mission
+  requestFullscreenMode();
+
   // Reprendre l'AudioContext sur mobile
   if (audioCtx && audioCtx.state === 'suspended') {
     audioCtx.resume();
@@ -4361,10 +4381,24 @@ if (btnFire) {
   btnFire.addEventListener("touchend", (e) => { e.preventDefault(); keys.delete(" "); });
 }
 
+function initSidebarPreference() {
+  try {
+    const saved = localStorage.getItem("nova_sidebar_collapsed");
+    if (saved !== null) {
+      toggleSidebar(saved === "true");
+    } else if (window.innerWidth <= 900) {
+      toggleSidebar(true);
+    }
+  } catch (e) {
+    if (window.innerWidth <= 900) toggleSidebar(true);
+  }
+}
+
 (function init() {
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
   makeStars();
+  initSidebarPreference();
   resizeCanvas();
   updateCommLinkBiome();
   draw();
