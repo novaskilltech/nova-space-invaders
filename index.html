@@ -18,7 +18,7 @@
   <meta name="twitter:description" content="2 Jeux en 1 : Défendez l'espace dans NOVA Space Invaders 3D ou prenez les commandes d'un blindé à tourelle 360° dans NOVA Tank Assault !">
   <meta name="twitter:image" content="https://nova-space-invaders.vercel.app/og-image.png">
 
-  <link rel="stylesheet" href="styles.css?v=49">
+  <link rel="stylesheet" href="styles.css?v=50">
 </head>
 <body data-biome="campagne" data-game="space">
   <!-- =========================================================
@@ -33,6 +33,7 @@
           <span class="portal-tag">STUDIO ARCADE 3D & 4K</span>
         </div>
         <nav class="portal-nav">
+          <a href="#portalNews" class="portal-nav-link">🔥 Nouvelles & Mises à Jour</a>
           <a href="#bentoCatalog" class="portal-nav-link">Catalogue Bento</a>
           <a href="#descSpaceInvaders" class="portal-nav-link">Space Invaders 3D</a>
           <a href="#descTankAssault" class="portal-nav-link">Tank Assault 360°</a>
@@ -46,6 +47,65 @@
         <h1 class="portal-hero-title">Choisis ton univers de combat <span>NOVA GAMES</span></h1>
         <p class="portal-hero-sub">Des jeux d'action arcade en haute définition 4K jouables instantanément au clavier, à la souris ou sur mobile. Clique sur une carte du Bento pour lancer le jeu.</p>
       </div>
+
+      <!-- SECTION DERNIÈRES NOUVELLES & ACTUALITÉS NOVA GAMES -->
+      <section id="portalNews" class="portal-news-section">
+        <div class="news-header">
+          <div class="news-badge">🔥 NOUVEAUTÉS & ACTUALITÉS DU FRONT</div>
+          <h2 class="news-title">Quoi de neuf sur <span>NOVA GAMES</span> ?</h2>
+          <p class="news-sub">Toutes les dernières fonctionnalités ajoutées en direct sur la plateforme : nouveaux modes de combat 4K, blindés et mécaniques de jeu.</p>
+        </div>
+
+        <div class="portal-news-grid">
+          <!-- News Card 1 : Duel 2D Street Fighter 4K -->
+          <article class="news-card" onclick="document.getElementById('descNovaFighter').scrollIntoView({ behavior: 'smooth' });">
+            <div class="news-card-thumb">
+              <img src="duel_street_fighter_showcase.svg" alt="Duel Street Fighter 4K" class="news-img">
+              <span class="news-tag tag-red">MAJEURE • COMBAT 2D</span>
+            </div>
+            <div class="news-card-body">
+              <div class="news-date">Aujourd'hui • Version 4.9</div>
+              <h3>Le Duel Street Fighter 2D Post-Boss passe en 4K Intégrale</h3>
+              <p>Affronte le Commandant Xéno au corps-à-corps : Ken Masters en kimono rouge, Hadoukens Ki, sabre laser écarlate, public en liesse et cinématique de K.O. (+50 000 pts).</p>
+              <div class="news-card-footer">
+                <span class="news-link">Découvrir le duel 4K →</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- News Card 2 : Bouclier & Interception de Tirs -->
+          <article class="news-card" onclick="document.getElementById('descDefense').scrollIntoView({ behavior: 'smooth' });">
+            <div class="news-card-thumb">
+              <img src="shield_defense_showcase.svg" alt="Bouclier 3s et Tir vs Tir" class="news-img">
+              <span class="news-tag tag-cyan">DÉFENSE • GAMEPLAY</span>
+            </div>
+            <div class="news-card-body">
+              <div class="news-date">Aujourd'hui • Version 4.8</div>
+              <h3>Bouclier d'Urgence 3s & Interception Bullet Cancellation</h3>
+              <p>Neutralise les tirs et missiles ennemis lorsqu'ils croisent tes obus ! Active ton dôme énergétique de 3 secondes avec la touche [X] pour repousser les tirs les plus denses.</p>
+              <div class="news-card-footer">
+                <span class="news-link">Voir le système de défense →</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- News Card 3 : 5 Blindés & Nouveaux Théâtres -->
+          <article class="news-card" onclick="document.getElementById('descTankAssault').scrollIntoView({ behavior: 'smooth' });">
+            <div class="news-card-thumb">
+              <img src="bg_tank_desert_4k.jpg" alt="Tank Assault 5 Chars" class="news-img">
+              <span class="news-tag tag-amber">NOUVEAU CONTENU</span>
+            </div>
+            <div class="news-card-body">
+              <div class="news-date">Cette semaine • Version 4.7</div>
+              <h3>Escouade de 5 Chars 4K & Défilement 8 Écrans</h3>
+              <p>Prends les commandes du M4 Grizzly, Vulcan, Mammoth, Tesla Prism ou Cerberus avec tourelle rotative 360°, support de bombardiers et 4 théâtres de guerre immersifs.</p>
+              <div class="news-card-footer">
+                <span class="news-link">Explorer les blindés →</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
 
       <!-- SECTION BENTO POUR LES JEUX -->
       <div id="bentoCatalog" class="bento-grid">
@@ -627,6 +687,6 @@
     </div>
   </main>
 
-  <script src="game.js?v=49"></script>
+  <script src="game.js?v=50"></script>
 </body>
 </html>
