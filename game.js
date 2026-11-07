@@ -60,6 +60,67 @@ function playSound(type) {
     gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
     osc.start(now);
     osc.stop(now + 0.1);
+  } else if (type === 'punch') {
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(280, now);
+    osc.frequency.exponentialRampToValueAtTime(45, now + 0.12);
+    gainNode.gain.setValueAtTime(0.18, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+    osc.start(now);
+    osc.stop(now + 0.12);
+  } else if (type === 'kick') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(210, now);
+    osc.frequency.exponentialRampToValueAtTime(35, now + 0.18);
+    gainNode.gain.setValueAtTime(0.22, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+    osc.start(now);
+    osc.stop(now + 0.18);
+  } else if (type === 'hadouken') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(160, now);
+    osc.frequency.linearRampToValueAtTime(560, now + 0.12);
+    osc.frequency.exponentialRampToValueAtTime(80, now + 0.35);
+    gainNode.gain.setValueAtTime(0.05, now);
+    gainNode.gain.linearRampToValueAtTime(0.24, now + 0.12);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc.start(now);
+    osc.stop(now + 0.35);
+  } else if (type === 'saber') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(460, now);
+    osc.frequency.linearRampToValueAtTime(320, now + 0.14);
+    gainNode.gain.setValueAtTime(0.14, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+    osc.start(now);
+    osc.stop(now + 0.16);
+  } else if (type === 'shield') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(340, now);
+    osc.frequency.linearRampToValueAtTime(680, now + 0.15);
+    osc.frequency.linearRampToValueAtTime(1020, now + 0.3);
+    gainNode.gain.setValueAtTime(0.15, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+    osc.start(now);
+    osc.stop(now + 0.38);
+  } else if (type === 'crowd') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(220, now);
+    osc.frequency.linearRampToValueAtTime(440, now + 0.35);
+    osc.frequency.linearRampToValueAtTime(310, now + 0.7);
+    gainNode.gain.setValueAtTime(0.08, now);
+    gainNode.gain.linearRampToValueAtTime(0.16, now + 0.35);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+    osc.start(now);
+    osc.stop(now + 0.8);
+  } else if (type === 'ko') {
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(420, now);
+    osc.frequency.exponentialRampToValueAtTime(40, now + 0.65);
+    gainNode.gain.setValueAtTime(0.35, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+    osc.start(now);
+    osc.stop(now + 0.65);
   }
 }
 
@@ -501,6 +562,8 @@ const player = {
   weapon: "normal",
   weaponTime: 0,
   cloneTime: 0,
+  shieldsLeft: 3,
+  shieldActiveTime: 0,
   speed: 420,
   invul: 1200,
   color: "#00f2ff"
@@ -1042,6 +1105,8 @@ function initGame() {
   state.showingQuestion = false;
   state.currentQuestion = null;
   state.airstrikes = 2;
+  player.shieldsLeft = 3;
+  player.shieldActiveTime = 0;
   player.weapon = player.baseWeapon || "normal";
   player.weaponTime = 0;
   resetPlayer();
@@ -1115,6 +1180,25 @@ function syncUi() {
   document.querySelectorAll(".hud-wpn-btn").forEach((btn) => {
     btn.classList.toggle("active", btn.getAttribute("data-weapon") === player.weapon);
   });
+
+  const shieldCount = document.getElementById("shieldCount");
+  const mobShieldCount = document.getElementById("mobShieldCount");
+  if (shieldCount) shieldCount.textContent = String(player.shieldsLeft ?? 3);
+  if (mobShieldCount) mobShieldCount.textContent = String(player.shieldsLeft ?? 3);
+}
+
+function activateShield() {
+  if (!state.running || state.paused || (typeof versusDuel !== "undefined" && versusDuel.active)) return;
+  if ((player.shieldsLeft || 0) <= 0) {
+    createFloatingText("BOUCLIER ÉPUISÉ !", player.x + player.width / 2, player.y - 12, "#ff6474");
+    return;
+  }
+  if ((player.shieldActiveTime || 0) > 0) return;
+  player.shieldsLeft--;
+  player.shieldActiveTime = 3.0;
+  playSound("shield");
+  createFloatingText("🛡️ BOUCLIER 3s ACTIF !", player.x + player.width / 2, player.y - 16, "#38bdf8");
+  syncUi();
 }
 
 function updateCommLinkBiome(customEnemyLine, customPilotLine) {
@@ -1573,6 +1657,7 @@ function startNormalLevel() {
 }
 
 function handlePlayerHit() {
+  if ((player.shieldActiveTime || 0) > 0) return;
   state.lives -= 1;
   state.flawless = false;
   addExplosion(player.x + player.width / 2, player.y + player.height / 2, "#ff6474");
@@ -2238,65 +2323,8 @@ function showBossDefeatedDialog(customMsg) {
   }
   state.boss = null;
 
-  if (selectedGameMode === "tank") {
-    advanceWave();
-    return;
-  }
-
-  state.bossDefeatedDialog = true;
-  
-  document.getElementById("overlay").style.display = "flex";
-  document.getElementById("overlayTitle").style.display = "none";
-  document.getElementById("overlayMessage").style.display = "none";
-  if(document.getElementById("shipSelection")) document.getElementById("shipSelection").style.display = "none";
-  if(document.getElementById("difficultySelection")) document.getElementById("difficultySelection").style.display = "none";
-  if(document.getElementById("waveSelection")) document.getElementById("waveSelection").style.display = "none";
-  if(document.getElementById("startButton")) document.getElementById("startButton").style.display = "none";
-  
-  document.getElementById("bossTaunt").style.display = "flex";
-  
-  const msg = customMsg || "Notre monde est libre. La galaxie ne vous appartient pas !";
-  const textEl = document.getElementById("tauntText");
-  const nameEl = document.querySelector(".taunt-name");
-  const imgEl = document.querySelector(".taunt-portrait");
-  
-  nameEl.innerText = "Pilote Nova";
-  imgEl.src = state.images[player.id] ? state.images[player.id].src : "ship_vanguard.png";
-  textEl.style.color = "#4df2c2";
-  
-  textEl.innerHTML = "";
-  
-  let i = 0;
-  const typeInterval = setInterval(() => {
-    textEl.innerHTML += msg[i];
-    i++;
-    if (i >= msg.length) {
-      clearInterval(typeInterval);
-      setTimeout(async () => {
-        nameEl.innerText = "Commandant Alien";
-        const bossType = (state.wave / 5) === 1 ? "crab" : (state.wave / 5) === 2 ? "boss" : (state.wave / 5) === 3 ? "octopus" : "squid";
-        imgEl.src = state.images[bossType] ? state.images[bossType].src : "boss_ship.png";
-        
-        textEl.style.color = "#ffcccc";
-        document.getElementById("overlay").style.display = "none";
-        document.getElementById("bossTaunt").style.display = "none";
-        
-        document.getElementById("overlayTitle").style.display = "block";
-        document.getElementById("overlayMessage").style.display = "block";
-        if(document.getElementById("shipSelection")) document.getElementById("shipSelection").style.display = "flex";
-        if(document.getElementById("difficultySelection")) document.getElementById("difficultySelection").style.display = "block";
-        if(document.getElementById("waveSelection")) document.getElementById("waveSelection").style.display = "block";
-        if(document.getElementById("startButton")) document.getElementById("startButton").style.display = "block";
-        
-        state.bossDefeatedDialog = false;
-        
-        // Nouvelle cinématique de saut galactique
-        await playGalaxyCinematic();
-        
-        advanceWave();
-      }, 3000);
-    }
-  }, 50);
+  // Déclenchement du duel post-boss façon Street Fighter (Ken Masters vs Commandant Xéno)
+  startVersusDuel(state.wave);
 }
 
 async function playGalaxyCinematic() {
@@ -2475,6 +2503,23 @@ function resolveShotCollisions() {
     });
   });
 
+  // Interception et annulation mutuelle : Tirs joueur vs Tirs / Missiles ennemis
+  state.shots.forEach((shot) => {
+    if (shot.hit) return;
+    state.enemyShots.forEach((eShot) => {
+      if (eShot.hit) return;
+      if (rectsOverlap(shot, eShot)) {
+        shot.hit = true;
+        eShot.hit = true;
+        addExplosion((shot.x + eShot.x) / 2, (shot.y + eShot.y) / 2, "#38bdf8");
+        playSound("hit");
+        createFloatingText("INTERCEPTÉ ! +50", (shot.x + eShot.x) / 2, (shot.y + eShot.y) / 2, "#38bdf8");
+        state.score += 50;
+      }
+    });
+  });
+  state.enemyShots = state.enemyShots.filter((shot) => !shot.hit);
+
   enemies = enemies.filter((enemy) => !enemy.dead);
   state.shots = state.shots.filter((shot) => !shot.hit);
 
@@ -2486,6 +2531,20 @@ function resolveShotCollisions() {
 }
 
 function resolvePlayerCollisions(timestamp) {
+  // Bouclier d'urgence actif : absorbe et désintègre tous les tirs ennemis
+  if ((player.shieldActiveTime || 0) > 0) {
+    state.enemyShots.forEach((shot) => {
+      if (rectsOverlap(shot, player)) {
+        shot.hit = true;
+        addExplosion(shot.x + shot.width / 2, shot.y + shot.height / 2, "#38bdf8");
+        playSound("hit");
+        createFloatingText("DEFLECT !", shot.x, shot.y, "#7dd3fc");
+      }
+    });
+    state.enemyShots = state.enemyShots.filter((shot) => !shot.hit);
+    return;
+  }
+
   if (isPlayerInvulnerable(timestamp)) {
     state.enemyShots = state.enemyShots.filter((shot) => !rectsOverlap(shot, player));
     return;
@@ -2519,6 +2578,16 @@ function resolvePlayerCollisions(timestamp) {
 
 function update(delta, timestamp) {
   if (!state.running || state.paused || state.isCinematic) {
+    return;
+  }
+
+  const dt = delta / 1000;
+  if ((player.shieldActiveTime || 0) > 0) {
+    player.shieldActiveTime = Math.max(0, player.shieldActiveTime - dt);
+  }
+
+  if (typeof versusDuel !== "undefined" && versusDuel.active) {
+    updateVersusDuel(delta, timestamp);
     return;
   }
 
@@ -3707,9 +3776,54 @@ function drawBossHealth() {
 function draw() {
   const now = performance.now();
 
+  if (typeof versusDuel !== "undefined" && versusDuel.active) {
+    drawVersusDuel();
+    return;
+  }
+
   drawBackground();
   if (!isPlayerInvulnerable(now) || Math.floor(now / 100) % 2 === 0) {
     drawSprite(state.images[player.id], player, player.color, "player");
+  }
+
+  // Dôme énergétique du Bouclier d'urgence
+  if ((player.shieldActiveTime || 0) > 0) {
+    ctx.save();
+    const cx = player.x + player.width / 2;
+    const cy = player.y + player.height / 2;
+    const rad = Math.max(player.width, player.height) * 0.72 + Math.sin(now * 0.015) * 4;
+
+    ctx.shadowColor = "#38bdf8";
+    ctx.shadowBlur = 24;
+    ctx.strokeStyle = "rgba(56, 189, 248, 0.95)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+    ctx.stroke();
+
+    const shieldGrad = ctx.createRadialGradient(cx, cy, rad * 0.2, cx, cy, rad);
+    shieldGrad.addColorStop(0, "rgba(56, 189, 248, 0.06)");
+    shieldGrad.addColorStop(0.7, "rgba(14, 165, 233, 0.22)");
+    shieldGrad.addColorStop(1, "rgba(125, 211, 252, 0.5)");
+    ctx.fillStyle = shieldGrad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+    for (let i = 0; i < 4; i++) {
+      const arcAngle = (now * 0.003) + (i * Math.PI / 2);
+      ctx.beginPath();
+      ctx.arc(cx, cy, rad - 3, arcAngle, arcAngle + 0.55);
+      ctx.stroke();
+    }
+
+    ctx.font = "bold 11px system-ui, sans-serif";
+    ctx.fillStyle = "#7dd3fc";
+    ctx.textAlign = "center";
+    ctx.fillText(`🛡️ ${(player.shieldActiveTime).toFixed(1)}s`, cx, cy - rad - 8);
+    ctx.restore();
   }
   enemies.forEach((enemy) => {
     let col = "#ff6474";
@@ -3763,6 +3877,31 @@ function loop(timestamp) {
 function handleKeydown(event) {
   keys.add(event.key);
 
+  // Mode Duel Versus Street Fighter (Ken Masters)
+  if (typeof versusDuel !== "undefined" && versusDuel.active) {
+    if (event.key === "a" || event.key === "A" || event.key === "j" || event.key === "J") {
+      performDuelAction("punch");
+      return;
+    }
+    if (event.key === "z" || event.key === "Z" || event.key === "k" || event.key === "K") {
+      performDuelAction("kick");
+      return;
+    }
+    if (event.key === "e" || event.key === "E" || event.key === "l" || event.key === "L") {
+      performDuelAction("hadouken");
+      return;
+    }
+    if (event.key === "ArrowUp" || event.key === "w" || event.key === "W" || event.key === " ") {
+      performDuelAction("jump");
+      return;
+    }
+  }
+
+  // Raccourci Bouclier d'urgence 3s : Touches X, C ou B (en mode spatial)
+  if (event.key === "x" || event.key === "X" || event.key === "c" || event.key === "C" || (selectedGameMode === "space" && (event.key === "b" || event.key === "B"))) {
+    activateShield();
+  }
+
   // Raccourcis clavier 1-8 pour changer d'arme principale à tout moment
   const wpnKeys = {
     "1": "normal",
@@ -3792,7 +3931,7 @@ function handleKeydown(event) {
   }
 
   // Touche B ou Maj pour déclencher le Support Aérien (Bombardiers) en mode Tank
-  if (event.key === "b" || event.key === "B" || event.key === "Shift") {
+  if (selectedGameMode === "tank" && (event.key === "b" || event.key === "B" || event.key === "Shift")) {
     triggerAirstrike();
   }
 
@@ -4038,6 +4177,916 @@ tankCards.forEach(card => {
 });
 
 // ==============================================================
+// SOUS-MOTEUR "NOVA FIGHTER" (DUEL 2D STREET FIGHTER POST-BOSS)
+// KEN MASTERS (JOUEUR) VS COMMANDANT XÉNO (BOSS PILOT)
+// ==============================================================
+const versusDuel = {
+  active: false,
+  wave: 1,
+  phase: "intro", // "intro", "fight", "ko", "victory"
+  timer: 60,
+  phaseTimer: 0,
+  flashTimer: 0,
+  player: {
+    name: "Ken Masters",
+    x: 180,
+    y: 440,
+    groundY: 440,
+    vx: 0,
+    vy: 0,
+    hp: 100,
+    maxHp: 100,
+    isGrounded: true,
+    facing: 1,
+    state: "idle", // "idle", "walk", "jump", "punch", "kick", "hadouken", "hit", "win"
+    stateTime: 0,
+    attackCooldown: 0,
+    combo: 0
+  },
+  enemy: {
+    name: "Commandant Xéno",
+    x: 740,
+    y: 440,
+    groundY: 440,
+    vx: 0,
+    vy: 0,
+    hp: 100,
+    maxHp: 100,
+    isGrounded: true,
+    facing: -1,
+    state: "idle", // "idle", "walk", "jump", "slash", "shoot", "hit", "ko"
+    stateTime: 0,
+    aiTimer: 0,
+    saberActive: false,
+    attackCooldown: 0
+  },
+  projectiles: [],
+  particles: [],
+  confetti: [],
+  spectators: []
+};
+
+function initDuelSpectators() {
+  versusDuel.spectators = [];
+  // 7 Humains à gauche (troupes de la résistance / civils)
+  for (let i = 0; i < 7; i++) {
+    versusDuel.spectators.push({
+      side: "human",
+      x: 35 + i * 28 + Math.random() * 8,
+      y: 450 + Math.random() * 12,
+      baseY: 450 + Math.random() * 12,
+      phase: Math.random() * Math.PI * 2,
+      color: i % 2 === 0 ? "#10b981" : "#0284c7",
+      hair: i % 3 === 0 ? "#f59e0b" : "#475569",
+      flag: i === 2 || i === 5
+    });
+  }
+  // 7 Extraterrestres à droite (fanatiques xénos)
+  for (let i = 0; i < 7; i++) {
+    versusDuel.spectators.push({
+      side: "alien",
+      x: 730 + i * 28 + Math.random() * 8,
+      y: 450 + Math.random() * 12,
+      baseY: 450 + Math.random() * 12,
+      phase: Math.random() * Math.PI * 2,
+      color: i % 2 === 0 ? "#a855f7" : "#ef4444",
+      skin: "#22c55e",
+      banner: i === 1 || i === 4
+    });
+  }
+}
+
+function startVersusDuel(wave) {
+  state.paused = false;
+  state.running = true;
+  state.shots = [];
+  state.enemyShots = [];
+  state.powerups = [];
+  
+  versusDuel.active = true;
+  versusDuel.wave = wave || 1;
+  versusDuel.phase = "intro";
+  versusDuel.timer = 60;
+  versusDuel.phaseTimer = 0;
+  versusDuel.flashTimer = 0;
+  versusDuel.projectiles = [];
+  versusDuel.particles = [];
+  versusDuel.confetti = [];
+
+  const gy = canvas.height - 105;
+  versusDuel.player.x = Math.max(90, canvas.width * 0.22);
+  versusDuel.player.y = gy;
+  versusDuel.player.groundY = gy;
+  versusDuel.player.vx = 0;
+  versusDuel.player.vy = 0;
+  versusDuel.player.hp = 100;
+  versusDuel.player.maxHp = 100;
+  versusDuel.player.facing = 1;
+  versusDuel.player.state = "idle";
+  versusDuel.player.stateTime = 0;
+  versusDuel.player.combo = 0;
+
+  versusDuel.enemy.x = Math.min(canvas.width - 90, canvas.width * 0.78);
+  versusDuel.enemy.y = gy;
+  versusDuel.enemy.groundY = gy;
+  versusDuel.enemy.vx = 0;
+  versusDuel.enemy.vy = 0;
+  versusDuel.enemy.hp = 100;
+  versusDuel.enemy.maxHp = 100;
+  versusDuel.enemy.facing = -1;
+  versusDuel.enemy.state = "idle";
+  versusDuel.enemy.stateTime = 0;
+  versusDuel.enemy.aiTimer = 0;
+  versusDuel.enemy.saberActive = false;
+
+  initDuelSpectators();
+  playSound("crowd");
+
+  // Masquer les contrôles tank/space mobile et afficher les boutons tactiles de combat
+  const tankControls = document.getElementById("tankMobileTurretControls");
+  if (tankControls) tankControls.style.display = "none";
+  const duelMob = document.getElementById("duelMobileControls");
+  if (duelMob) duelMob.style.display = "flex";
+}
+
+function performDuelAction(action) {
+  if (!versusDuel.active || versusDuel.phase !== "fight") return;
+  const p = versusDuel.player;
+  const e = versusDuel.enemy;
+
+  if (action === "jump" && p.isGrounded) {
+    p.vy = -490;
+    p.isGrounded = false;
+    p.state = "jump";
+    p.stateTime = 0;
+    return;
+  }
+
+  if (p.attackCooldown > 0) return;
+
+  if (action === "punch") {
+    p.state = "punch";
+    p.stateTime = 0;
+    p.attackCooldown = 0.24;
+    playSound("punch");
+
+    const dist = Math.abs((p.x + (p.facing * 35)) - e.x);
+    if (dist < 65 && Math.abs(p.y - e.y) < 50) {
+      e.hp = Math.max(0, e.hp - 12);
+      e.state = "hit";
+      e.stateTime = 0;
+      e.vx = p.facing * 160;
+      p.combo++;
+      addDuelSparks((p.x + e.x) / 2, e.y - 35, "#ffea00", 12);
+      playSound("hit");
+      if (e.hp <= 0) triggerDuelKO();
+    }
+  } else if (action === "kick") {
+    p.state = "kick";
+    p.stateTime = 0;
+    p.attackCooldown = 0.32;
+    playSound("kick");
+
+    const dist = Math.abs((p.x + (p.facing * 45)) - e.x);
+    if (dist < 85 && Math.abs(p.y - e.y) < 55) {
+      e.hp = Math.max(0, e.hp - 18);
+      e.state = "hit";
+      e.stateTime = 0;
+      e.vx = p.facing * 220;
+      p.combo++;
+      addDuelSparks((p.x + e.x) / 2, e.y - 45, "#f97316", 16);
+      playSound("hit");
+      if (e.hp <= 0) triggerDuelKO();
+    }
+  } else if (action === "hadouken") {
+    p.state = "hadouken";
+    p.stateTime = 0;
+    p.attackCooldown = 0.55;
+    playSound("hadouken");
+
+    versusDuel.projectiles.push({
+      x: p.x + p.facing * 42,
+      y: p.y - 40,
+      vx: p.facing * 540,
+      radius: 20,
+      type: "hadouken",
+      color: "#38bdf8",
+      owner: "player"
+    });
+  }
+}
+
+function addDuelSparks(x, y, color, count = 10) {
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const spd = 60 + Math.random() * 220;
+    versusDuel.particles.push({
+      x, y,
+      vx: Math.cos(angle) * spd,
+      vy: Math.sin(angle) * spd - 60,
+      life: 0.35 + Math.random() * 0.25,
+      maxLife: 0.5,
+      color: color || "#ffea00",
+      size: 2.5 + Math.random() * 3.5
+    });
+  }
+}
+
+function triggerDuelKO() {
+  versusDuel.phase = "ko";
+  versusDuel.phaseTimer = 0;
+  versusDuel.flashTimer = 0.4;
+  versusDuel.enemy.state = "ko";
+  versusDuel.enemy.stateTime = 0;
+  versusDuel.player.state = "win";
+  playSound("ko");
+  playSound("crowd");
+
+  addDuelSparks(versusDuel.enemy.x, versusDuel.enemy.y - 30, "#ef4444", 30);
+
+  versusDuel.confetti = [];
+  for (let i = 0; i < 90; i++) {
+    versusDuel.confetti.push({
+      x: Math.random() * canvas.width,
+      y: -20 - Math.random() * 120,
+      vx: (Math.random() - 0.5) * 80,
+      vy: 120 + Math.random() * 140,
+      color: ["#f59e0b", "#38bdf8", "#ef4444", "#10b981", "#ec4899", "#ffffff"][Math.floor(Math.random() * 6)],
+      w: 6 + Math.random() * 6,
+      h: 4 + Math.random() * 5,
+      rot: Math.random() * Math.PI * 2,
+      rotSpd: (Math.random() - 0.5) * 6
+    });
+  }
+}
+
+function endVersusDuelVictory() {
+  versusDuel.active = false;
+  state.score += 50000;
+  createFloatingText("⭐ VICTOIRE DUEL : +50 000 PTS ⭐", canvas.width / 2, canvas.height / 2, "#fbbf24");
+  syncUi();
+
+  const duelMob = document.getElementById("duelMobileControls");
+  if (duelMob) duelMob.style.display = "none";
+  const tankControls = document.getElementById("tankMobileTurretControls");
+  if (tankControls && selectedGameMode === "tank") tankControls.style.display = "flex";
+
+  advanceWave();
+}
+
+function updateVersusDuel(delta, timestamp) {
+  const dt = delta / 1000;
+  const p = versusDuel.player;
+  const e = versusDuel.enemy;
+  const gy = canvas.height - 105;
+  p.groundY = gy;
+  e.groundY = gy;
+
+  versusDuel.phaseTimer += dt;
+  if (versusDuel.flashTimer > 0) versusDuel.flashTimer -= dt;
+
+  if (versusDuel.phase === "intro") {
+    if (versusDuel.phaseTimer > 1.8) {
+      versusDuel.phase = "fight";
+      versusDuel.phaseTimer = 0;
+      playSound("hadouken");
+    }
+  } else if (versusDuel.phase === "fight") {
+    versusDuel.timer = Math.max(0, versusDuel.timer - dt);
+    if (versusDuel.timer <= 0) {
+      if (p.hp >= e.hp) triggerDuelKO();
+      else {
+        p.hp = 0;
+        versusDuel.phase = "ko";
+      }
+    }
+  } else if (versusDuel.phase === "ko") {
+    if (versusDuel.phaseTimer > 1.5) {
+      versusDuel.phase = "victory";
+      versusDuel.phaseTimer = 0;
+    }
+  } else if (versusDuel.phase === "victory") {
+    if (versusDuel.phaseTimer > 3.2) {
+      endVersusDuelVictory();
+      return;
+    }
+  }
+
+  if (p.attackCooldown > 0) p.attackCooldown -= dt;
+  p.stateTime += dt;
+
+  if (versusDuel.phase === "fight" && p.state !== "punch" && p.state !== "kick" && p.state !== "hadouken") {
+    let moveDir = 0;
+    if (keys.has("ArrowLeft") || keys.has("q") || keys.has("Q")) moveDir -= 1;
+    if (keys.has("ArrowRight") || keys.has("d") || keys.has("D")) moveDir += 1;
+
+    p.vx = moveDir * 230;
+    if (moveDir !== 0) {
+      p.facing = moveDir;
+      if (p.isGrounded) p.state = "walk";
+    } else if (p.isGrounded) {
+      p.state = "idle";
+    }
+  }
+
+  p.x += p.vx * dt;
+  p.y += p.vy * dt;
+  if (!p.isGrounded) {
+    p.vy += 1200 * dt;
+    if (p.y >= p.groundY) {
+      p.y = p.groundY;
+      p.vy = 0;
+      p.isGrounded = true;
+      if (p.state === "jump") p.state = "idle";
+    }
+  }
+  p.x = Math.max(40, Math.min(canvas.width - 40, p.x));
+
+  if ((p.state === "punch" && p.stateTime > 0.22) ||
+      (p.state === "kick" && p.stateTime > 0.28) ||
+      (p.state === "hadouken" && p.stateTime > 0.38) ||
+      (p.state === "hit" && p.stateTime > 0.26)) {
+    p.state = p.isGrounded ? "idle" : "jump";
+  }
+
+  e.stateTime += dt;
+  e.aiTimer += dt;
+  if (e.attackCooldown > 0) e.attackCooldown -= dt;
+
+  if (versusDuel.phase === "fight" && e.hp > 0) {
+    const dx = p.x - e.x;
+    e.facing = dx >= 0 ? 1 : -1;
+    const dist = Math.abs(dx);
+
+    if (e.aiTimer > 0.8 && e.attackCooldown <= 0) {
+      e.aiTimer = 0;
+      if (dist < 90) {
+        e.state = "slash";
+        e.stateTime = 0;
+        e.saberActive = true;
+        e.attackCooldown = 0.65;
+        playSound("saber");
+        if (dist < 75 && Math.abs(p.y - e.y) < 45) {
+          p.hp = Math.max(0, p.hp - 15);
+          p.state = "hit";
+          p.stateTime = 0;
+          p.vx = e.facing * 180;
+          p.combo = 0;
+          addDuelSparks((p.x + e.x) / 2, p.y - 35, "#a855f7", 14);
+          playSound("hit");
+          if (p.hp <= 0) triggerDuelKO();
+        }
+      } else if (dist > 180 && Math.random() < 0.6) {
+        e.state = "shoot";
+        e.stateTime = 0;
+        e.attackCooldown = 0.8;
+        playSound("enemyShoot");
+        versusDuel.projectiles.push({
+          x: e.x + e.facing * 35,
+          y: e.y - 40,
+          vx: e.facing * 430,
+          radius: 12,
+          type: "laser",
+          color: "#22c55e",
+          owner: "enemy"
+        });
+      } else {
+        e.vx = e.facing * 130;
+        e.state = "walk";
+      }
+    } else if (e.state === "walk") {
+      e.vx *= 0.95;
+      if (Math.abs(e.vx) < 10) e.state = "idle";
+    }
+
+    if (e.state === "slash" && e.stateTime > 0.35) {
+      e.state = "idle";
+      e.saberActive = false;
+    }
+    if (e.state === "shoot" && e.stateTime > 0.3) {
+      e.state = "idle";
+    }
+    if (e.state === "hit" && e.stateTime > 0.28) {
+      e.state = "idle";
+    }
+  }
+
+  e.x += e.vx * dt;
+  e.y += e.vy * dt;
+  if (!e.isGrounded) {
+    e.vy += 1200 * dt;
+    if (e.y >= e.groundY) {
+      e.y = e.groundY;
+      e.vy = 0;
+      e.isGrounded = true;
+    }
+  }
+  e.x = Math.max(50, Math.min(canvas.width - 50, e.x));
+
+  versusDuel.projectiles.forEach((proj) => {
+    proj.x += proj.vx * dt;
+  });
+
+  for (let i = versusDuel.projectiles.length - 1; i >= 0; i--) {
+    const p1 = versusDuel.projectiles[i];
+    if (p1.dead) continue;
+    for (let j = i - 1; j >= 0; j--) {
+      const p2 = versusDuel.projectiles[j];
+      if (p2.dead || p1.owner === p2.owner) continue;
+      if (Math.hypot(p1.x - p2.x, p1.y - p2.y) < p1.radius + p2.radius) {
+        p1.dead = true;
+        p2.dead = true;
+        addDuelSparks((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, "#38bdf8", 22);
+        playSound("hit");
+      }
+    }
+  }
+
+  versusDuel.projectiles.forEach((proj) => {
+    if (proj.dead) return;
+    if (proj.owner === "player") {
+      if (Math.hypot(proj.x - e.x, proj.y - (e.y - 40)) < proj.radius + 30) {
+        proj.dead = true;
+        e.hp = Math.max(0, e.hp - 25);
+        e.state = "hit";
+        e.stateTime = 0;
+        e.vx = p.facing * 240;
+        p.combo++;
+        addDuelSparks(proj.x, proj.y, "#38bdf8", 25);
+        playSound("punch");
+        playSound("hit");
+        if (e.hp <= 0) triggerDuelKO();
+      }
+    } else if (proj.owner === "enemy") {
+      if (Math.hypot(proj.x - p.x, proj.y - (p.y - 40)) < proj.radius + 25) {
+        proj.dead = true;
+        p.hp = Math.max(0, p.hp - 14);
+        p.state = "hit";
+        p.stateTime = 0;
+        p.vx = e.facing * 180;
+        p.combo = 0;
+        addDuelSparks(proj.x, proj.y, "#22c55e", 18);
+        playSound("hit");
+        if (p.hp <= 0) triggerDuelKO();
+      }
+    }
+  });
+
+  versusDuel.projectiles = versusDuel.projectiles.filter((proj) => !proj.dead && proj.x > -40 && proj.x < canvas.width + 40);
+
+  versusDuel.particles.forEach((pt) => {
+    pt.x += pt.vx * dt;
+    pt.y += pt.vy * dt;
+    pt.life -= dt;
+  });
+  versusDuel.particles = versusDuel.particles.filter((pt) => pt.life > 0);
+
+  versusDuel.confetti.forEach((c) => {
+    c.x += c.vx * dt;
+    c.y += c.vy * dt;
+    c.rot += c.rotSpd * dt;
+  });
+  versusDuel.confetti = versusDuel.confetti.filter((c) => c.y < canvas.height + 40);
+}
+
+function drawVersusDuel() {
+  const now = performance.now();
+  const w = canvas.width;
+  const h = canvas.height;
+  const gy = canvas.height - 105;
+
+  ctx.save();
+
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, gy);
+  skyGrad.addColorStop(0, "#090d16");
+  skyGrad.addColorStop(0.65, "#1e1b4b");
+  skyGrad.addColorStop(1, "#311042");
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.fillStyle = "rgba(15, 23, 42, 0.75)";
+  ctx.beginPath();
+  ctx.moveTo(w * 0.38, gy);
+  ctx.lineTo(w * 0.45, gy - 65);
+  ctx.lineTo(w * 0.58, gy - 55);
+  ctx.lineTo(w * 0.65, gy);
+  ctx.closePath();
+  ctx.fill();
+
+  const groundGrad = ctx.createLinearGradient(0, gy, 0, h);
+  groundGrad.addColorStop(0, "#1e293b");
+  groundGrad.addColorStop(0.15, "#0f172a");
+  groundGrad.addColorStop(1, "#020617");
+  ctx.fillStyle = groundGrad;
+  ctx.fillRect(0, gy, w, h - gy);
+
+  ctx.strokeStyle = "rgba(56, 189, 248, 0.4)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, gy + 1);
+  ctx.lineTo(w, gy + 1);
+  ctx.stroke();
+
+  const isWinning = versusDuel.phase === "victory" || versusDuel.phase === "ko";
+  versusDuel.spectators.forEach((sp) => {
+    const jumpAmp = isWinning && sp.side === "human" ? 14 : 6;
+    const jumpY = sp.baseY - Math.abs(Math.sin(now * 0.007 + sp.phase)) * jumpAmp;
+
+    ctx.save();
+    ctx.translate(sp.x, jumpY);
+
+    if (sp.side === "human") {
+      ctx.fillStyle = sp.color;
+      ctx.fillRect(-6, -20, 12, 18);
+      ctx.fillStyle = "#fed7aa";
+      ctx.beginPath();
+      ctx.arc(0, -26, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = sp.hair;
+      ctx.fillRect(-6, -30, 12, 5);
+      ctx.strokeStyle = "#fed7aa";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(-6, -16);
+      ctx.lineTo(-11, -28 + Math.sin(now * 0.01 + sp.phase) * 4);
+      ctx.moveTo(6, -16);
+      ctx.lineTo(11, -28 - Math.sin(now * 0.01 + sp.phase) * 4);
+      ctx.stroke();
+      if (sp.flag) {
+        ctx.fillStyle = "#fbbf24";
+        ctx.fillRect(-12, -44, 24, 12);
+        ctx.fillStyle = "#000000";
+        ctx.font = "bold 8px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("NOVA", 0, -35);
+      }
+    } else {
+      ctx.fillStyle = sp.color;
+      ctx.fillRect(-7, -22, 14, 20);
+      ctx.fillStyle = sp.skin;
+      ctx.beginPath();
+      ctx.ellipse(0, -28, 7, 9, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ef4444";
+      ctx.fillRect(-4, -29, 2.5, 2.5);
+      ctx.fillRect(1.5, -29, 2.5, 2.5);
+      ctx.strokeStyle = sp.skin;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(-6, -16);
+      ctx.lineTo(-13, -24 + Math.cos(now * 0.008 + sp.phase) * 5);
+      ctx.moveTo(6, -16);
+      ctx.lineTo(13, -24 - Math.cos(now * 0.008 + sp.phase) * 5);
+      ctx.stroke();
+    }
+    ctx.restore();
+  });
+
+  drawKenMasters(versusDuel.player, now);
+  drawAlienWarlord(versusDuel.enemy, now);
+
+  versusDuel.projectiles.forEach((proj) => {
+    ctx.save();
+    if (proj.type === "hadouken") {
+      const grad = ctx.createRadialGradient(proj.x, proj.y, 4, proj.x, proj.y, proj.radius);
+      grad.addColorStop(0, "#ffffff");
+      grad.addColorStop(0.3, "#38bdf8");
+      grad.addColorStop(0.8, "#0284c7");
+      grad.addColorStop(1, "rgba(2, 132, 199, 0)");
+
+      ctx.shadowColor = "#38bdf8";
+      ctx.shadowBlur = 24;
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, proj.radius + Math.sin(now * 0.03) * 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "rgba(56, 189, 248, 0.4)";
+      ctx.beginPath();
+      ctx.ellipse(proj.x - proj.vx * 0.04, proj.y, proj.radius * 1.5, proj.radius * 0.6, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.shadowColor = "#22c55e";
+      ctx.shadowBlur = 18;
+      ctx.fillStyle = "#86efac";
+      ctx.beginPath();
+      ctx.ellipse(proj.x, proj.y, proj.radius * 1.6, proj.radius * 0.6, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  });
+
+  versusDuel.particles.forEach((pt) => {
+    ctx.save();
+    ctx.fillStyle = pt.color;
+    ctx.shadowColor = pt.color;
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+
+  versusDuel.confetti.forEach((c) => {
+    ctx.save();
+    ctx.translate(c.x, c.y);
+    ctx.rotate(c.rot);
+    ctx.fillStyle = c.color;
+    ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
+    ctx.restore();
+  });
+
+  if (versusDuel.flashTimer > 0) {
+    ctx.fillStyle = `rgba(255, 255, 255, ${Math.min(1, versusDuel.flashTimer * 2.5)})`;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  drawStreetFighterHUD(now);
+  ctx.restore();
+}
+
+function drawKenMasters(p, now) {
+  ctx.save();
+  ctx.translate(p.x, p.y);
+  ctx.scale(p.facing, 1);
+
+  ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+  ctx.beginPath();
+  ctx.ellipse(0, 4, 22, 7, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const isPunch = p.state === "punch";
+  const isKick = p.state === "kick";
+  const isHadouken = p.state === "hadouken";
+  const isWin = p.state === "win";
+
+  ctx.fillStyle = "#dc2626";
+  if (isKick) {
+    ctx.fillRect(-10, -32, 10, 32);
+    ctx.save();
+    ctx.translate(0, -32);
+    ctx.rotate(-0.8);
+    ctx.fillRect(0, -6, 42, 12);
+    ctx.fillStyle = "#fed7aa";
+    ctx.fillRect(38, -8, 10, 14);
+    ctx.restore();
+  } else {
+    ctx.fillRect(-14, -32, 11, 32);
+    ctx.fillRect(3, -32, 11, 32);
+    ctx.fillStyle = "#fed7aa";
+    ctx.fillRect(-15, -4, 13, 6);
+    ctx.fillRect(2, -4, 13, 6);
+  }
+
+  ctx.fillStyle = "#ef4444";
+  ctx.fillRect(-15, -60, 30, 32);
+
+  ctx.fillStyle = "#fed7aa";
+  ctx.beginPath();
+  ctx.moveTo(-7, -60);
+  ctx.lineTo(7, -60);
+  ctx.lineTo(0, -42);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(-16, -34, 32, 7);
+  ctx.fillRect(-4, -28, 4, 14);
+  ctx.fillRect(1, -28, 4, 18);
+
+  ctx.fillStyle = "#fed7aa";
+  ctx.beginPath();
+  ctx.arc(0, -68, 9, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#fbbf24";
+  ctx.beginPath();
+  ctx.moveTo(-11, -70);
+  ctx.lineTo(-14, -80);
+  ctx.lineTo(-7, -76);
+  ctx.lineTo(0, -84);
+  ctx.lineTo(7, -76);
+  ctx.lineTo(14, -80);
+  ctx.lineTo(11, -70);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#fed7aa";
+  if (isPunch) {
+    ctx.fillRect(4, -58, 38, 10);
+    ctx.fillStyle = "#78350f";
+    ctx.fillRect(38, -61, 14, 14);
+    ctx.fillStyle = "rgba(255, 234, 0, 0.4)";
+    ctx.fillRect(14, -63, 26, 18);
+  } else if (isHadouken) {
+    ctx.fillRect(4, -54, 32, 11);
+    ctx.fillStyle = "#78350f";
+    ctx.fillRect(32, -56, 13, 15);
+  } else if (isWin) {
+    ctx.fillRect(4, -88, 10, 32);
+    ctx.fillStyle = "#78350f";
+    ctx.fillRect(3, -96, 12, 12);
+  } else {
+    ctx.fillRect(6, -56, 16, 9);
+    ctx.fillRect(16, -64, 9, 14);
+    ctx.fillStyle = "#78350f";
+    ctx.fillRect(14, -68, 12, 12);
+  }
+
+  ctx.restore();
+}
+
+function drawAlienWarlord(e, now) {
+  ctx.save();
+  ctx.translate(e.x, e.y);
+  ctx.scale(e.facing, 1);
+
+  ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+  ctx.beginPath();
+  ctx.ellipse(0, 4, 24, 8, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const isSlash = e.state === "slash";
+  const isShoot = e.state === "shoot";
+  const isKo = e.state === "ko";
+
+  if (isKo) {
+    ctx.rotate(Math.PI / 2);
+    ctx.translate(20, -10);
+  }
+
+  ctx.fillStyle = "#1e1b4b";
+  ctx.fillRect(-15, -34, 12, 34);
+  ctx.fillRect(3, -34, 12, 34);
+  ctx.fillStyle = "#a855f7";
+  ctx.fillRect(-13, -18, 8, 3);
+  ctx.fillRect(5, -18, 8, 3);
+
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(-18, -64, 36, 34);
+
+  ctx.fillStyle = "#22c55e";
+  ctx.shadowColor = "#22c55e";
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  ctx.arc(0, -48, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  ctx.fillStyle = "#15803d";
+  ctx.beginPath();
+  ctx.ellipse(0, -74, 10, 13, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#ef4444";
+  ctx.fillRect(1, -77, 5, 4);
+
+  if (isSlash) {
+    ctx.save();
+    ctx.translate(14, -50);
+    ctx.rotate(-0.4);
+    ctx.shadowColor = "#ef4444";
+    ctx.shadowBlur = 24;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, -4, 52, 6);
+    ctx.fillStyle = "#ef4444";
+    ctx.fillRect(0, -6, 52, 10);
+    ctx.restore();
+  } else {
+    ctx.fillStyle = "#64748b";
+    ctx.fillRect(-22, -38, 5, 18);
+    ctx.fillStyle = "#ef4444";
+    ctx.fillRect(-22, -26, 5, 4);
+  }
+
+  if (isShoot) {
+    ctx.fillStyle = "#334155";
+    ctx.fillRect(4, -56, 36, 9);
+    ctx.fillStyle = "#22c55e";
+    ctx.fillRect(38, -58, 6, 13);
+  } else {
+    ctx.fillStyle = "#334155";
+    ctx.fillRect(2, -48, 16, 7);
+  }
+
+  ctx.restore();
+}
+
+function drawStreetFighterHUD(now) {
+  const w = canvas.width;
+  const h = canvas.height;
+  const p = versusDuel.player;
+  const e = versusDuel.enemy;
+
+  ctx.save();
+  const barW = Math.min(340, w * 0.38);
+  const barH = 18;
+  const barY = 22;
+
+  const pRatio = Math.max(0, p.hp / p.maxHp);
+  ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+  ctx.fillRect(24, barY, barW, barH);
+  ctx.strokeStyle = "#fbbf24";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(24, barY, barW, barH);
+
+  const pGrad = ctx.createLinearGradient(24, barY, 24 + barW, barY);
+  pGrad.addColorStop(0, "#ef4444");
+  pGrad.addColorStop(0.3, "#f59e0b");
+  pGrad.addColorStop(1, "#22c55e");
+  ctx.fillStyle = pGrad;
+  ctx.fillRect(24 + (barW * (1 - pRatio)), barY, barW * pRatio, barH);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 12px system-ui, sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText("KEN MASTERS (NOVA)", 26, barY - 6);
+
+  const timerX = w / 2;
+  ctx.fillStyle = "rgba(15, 23, 42, 0.95)";
+  ctx.beginPath();
+  ctx.arc(timerX, barY + 9, 22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#fbbf24";
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  ctx.fillStyle = versusDuel.timer <= 10 ? "#ef4444" : "#fbbf24";
+  ctx.font = "900 18px 'Courier New', monospace";
+  ctx.textAlign = "center";
+  ctx.fillText(String(Math.ceil(versusDuel.timer)), timerX, barY + 16);
+
+  const eRatio = Math.max(0, e.hp / e.maxHp);
+  const eBarX = w - 24 - barW;
+  ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+  ctx.fillRect(eBarX, barY, barW, barH);
+  ctx.strokeStyle = "#ef4444";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(eBarX, barY, barW, barH);
+
+  const eGrad = ctx.createLinearGradient(eBarX, barY, eBarX + barW, barY);
+  eGrad.addColorStop(0, "#22c55e");
+  eGrad.addColorStop(0.7, "#f59e0b");
+  eGrad.addColorStop(1, "#ef4444");
+  ctx.fillStyle = eGrad;
+  ctx.fillRect(eBarX, barY, barW * eRatio, barH);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 12px system-ui, sans-serif";
+  ctx.textAlign = "right";
+  ctx.fillText("COMMANDANT XÉNO", w - 26, barY - 6);
+
+  if (versusDuel.phase === "intro") {
+    ctx.fillStyle = "#fbbf24";
+    ctx.shadowColor = "#f59e0b";
+    ctx.shadowBlur = 28;
+    ctx.font = "900 36px 'Impact', system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("ROUND 1", w / 2, h * 0.38);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "900 24px system-ui, sans-serif";
+    ctx.fillText("READY...", w / 2, h * 0.46);
+  } else if (versusDuel.phase === "fight" && versusDuel.phaseTimer < 1.2) {
+    ctx.fillStyle = "#ef4444";
+    ctx.shadowColor = "#ef4444";
+    ctx.shadowBlur = 32;
+    ctx.font = "900 52px 'Impact', system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("FIGHT !", w / 2, h * 0.42);
+  } else if (versusDuel.phase === "ko") {
+    ctx.fillStyle = "#fbbf24";
+    ctx.shadowColor = "#f59e0b";
+    ctx.shadowBlur = 40;
+    ctx.font = "900 78px 'Impact', system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("K. O. !", w / 2, h * 0.42);
+  } else if (versusDuel.phase === "victory") {
+    ctx.fillStyle = "#22c55e";
+    ctx.shadowColor = "#22c55e";
+    ctx.shadowBlur = 30;
+    ctx.font = "900 38px 'Impact', system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("VICTOIRE PAR K.O. !", w / 2, h * 0.34);
+
+    ctx.fillStyle = "#fbbf24";
+    ctx.font = "900 28px system-ui, sans-serif";
+    ctx.fillText("+50 000 PTS BONUS !", w / 2, h * 0.43);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 15px system-ui, sans-serif";
+    ctx.fillText("LA FOULE ACCLAME LE CHAMPION NOVA !", w / 2, h * 0.51);
+  }
+
+  if (p.combo > 1 && versusDuel.phase === "fight") {
+    ctx.fillStyle = "#38bdf8";
+    ctx.font = "900 20px 'Impact', system-ui, sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText(`${p.combo} HITS COMBO !`, 28, barY + 48);
+  }
+
+  ctx.restore();
+}
+
+// ==============================================================
 // GESTION DU PORTAIL "NOVA GAMES" (Landing Bento & Hub Multi-Jeux)
 // ==============================================================
 const novaGamesPortal = document.getElementById("novaGamesPortal");
@@ -4115,6 +5164,46 @@ if (btnAirstrikeMobile) {
     e.preventDefault();
     triggerAirstrike();
   });
+}
+
+// Boutons Bouclier d'Urgence 3s (HUD Desktop + Mobile)
+const hudShieldBtn = document.getElementById("hudShieldBtn");
+if (hudShieldBtn) {
+  hudShieldBtn.addEventListener("click", activateShield);
+  hudShieldBtn.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    activateShield();
+  });
+}
+const btnShieldMobile = document.getElementById("btnShieldMobile");
+if (btnShieldMobile) {
+  btnShieldMobile.addEventListener("click", activateShield);
+  btnShieldMobile.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    activateShield();
+  });
+}
+
+// Boutons tactiles Street Fighter Duel Post-Boss
+const btnDuelPunch = document.getElementById("btnDuelPunch");
+if (btnDuelPunch) {
+  btnDuelPunch.addEventListener("click", () => performDuelAction("punch"));
+  btnDuelPunch.addEventListener("touchstart", (e) => { e.preventDefault(); performDuelAction("punch"); });
+}
+const btnDuelKick = document.getElementById("btnDuelKick");
+if (btnDuelKick) {
+  btnDuelKick.addEventListener("click", () => performDuelAction("kick"));
+  btnDuelKick.addEventListener("touchstart", (e) => { e.preventDefault(); performDuelAction("kick"); });
+}
+const btnDuelHadouken = document.getElementById("btnDuelHadouken");
+if (btnDuelHadouken) {
+  btnDuelHadouken.addEventListener("click", () => performDuelAction("hadouken"));
+  btnDuelHadouken.addEventListener("touchstart", (e) => { e.preventDefault(); performDuelAction("hadouken"); });
+}
+const btnDuelJump = document.getElementById("btnDuelJump");
+if (btnDuelJump) {
+  btnDuelJump.addEventListener("click", () => performDuelAction("jump"));
+  btnDuelJump.addEventListener("touchstart", (e) => { e.preventDefault(); performDuelAction("jump"); });
 }
 const btnTurretLeft = document.getElementById("btnTurretLeft");
 const btnTurretRight = document.getElementById("btnTurretRight");

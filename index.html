@@ -18,7 +18,7 @@
   <meta name="twitter:description" content="2 Jeux en 1 : Défendez l'espace dans NOVA Space Invaders 3D ou prenez les commandes d'un blindé à tourelle 360° dans NOVA Tank Assault !">
   <meta name="twitter:image" content="https://nova-space-invaders.vercel.app/og-image.png">
 
-  <link rel="stylesheet" href="styles.css?v=45">
+  <link rel="stylesheet" href="styles.css?v=46">
 </head>
 <body data-biome="campagne" data-game="space">
   <!-- =========================================================
@@ -219,6 +219,14 @@
         ✈️ BOMBARDIER (<span id="airstrikeCount">2</span>)
       </button>
     </div>
+
+    <!-- Jauge Bouclier d'Urgence (Commun aux 2 Jeux) -->
+    <div class="stat-box stat-shield" id="shieldHudBox">
+      <div class="label">Défense Tactique</div>
+      <button id="hudShieldBtn" class="shield-hud-btn" title="Bouclier Invulnérable 3s (Touche X ou C)">
+        🛡️ BOUCLIER (<span id="shieldCount">3</span>)
+      </button>
+    </div>
     
     <div class="stat-box stat-weapon">
       <div class="label">Arme Active</div>
@@ -246,8 +254,8 @@
     
     <div class="controls-info" id="controlsInfoBox">
       <div><kbd>Souris</kbd> ou <kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> Pilotage</div>
-      <div><kbd>A</kbd>/<kbd>E</kbd> ou <kbd>Souris</kbd> Tourelle 360°</div>
-      <div><kbd>B</kbd> Bombardiers • <kbd>1-8</kbd> Armes</div>
+      <div><kbd>X</kbd>/<kbd>C</kbd> Bouclier 3s • <kbd>B</kbd> Bombardiers</div>
+      <div>Duel : <kbd>A</kbd> Poing • <kbd>Z</kbd> Pied • <kbd>E</kbd> Hadouken</div>
     </div>
   </aside>
   
@@ -516,13 +524,21 @@
       <div id="tankMobileTurretControls" class="tank-mobile-turret" style="display: none;">
         <button id="btnTurretLeft" class="ctrl-btn turret-btn" title="Tourner Canon Gauche">⟲</button>
         <button id="btnAirstrikeMobile" class="ctrl-btn airstrike-mob-btn" title="Support Aérien Bombardiers">✈️<span id="mobAirCount">2</span></button>
+        <button id="btnShieldMobile" class="ctrl-btn shield-mob-btn" title="Bouclier d'Urgence 3s">🛡️<span id="mobShieldCount">3</span></button>
         <button id="btnTurretRight" class="ctrl-btn turret-btn" title="Tourner Canon Droite">⟳</button>
+      </div>
+      <!-- Commandes de Combat Rapproché 2D (Duel Street Fighter Post-Boss) -->
+      <div id="duelMobileControls" class="duel-mobile-controls" style="display: none;">
+        <button id="btnDuelPunch" class="duel-btn duel-punch">👊 POING</button>
+        <button id="btnDuelKick" class="duel-btn duel-kick">🦵 PIED</button>
+        <button id="btnDuelHadouken" class="duel-btn duel-hadouken">⚡ HADOUKEN</button>
+        <button id="btnDuelJump" class="duel-btn duel-jump">⬆️ SAUT</button>
       </div>
       <div class="mobile-hint" id="mobileHintText">Glisse sur l'écran pour viser/tirer à 360°</div>
       <button id="btnFire" class="ctrl-btn fire-btn">FIRE</button>
     </div>
   </main>
 
-  <script src="game.js?v=45"></script>
+  <script src="game.js?v=46"></script>
 </body>
 </html>
