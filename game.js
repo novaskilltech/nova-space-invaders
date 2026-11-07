@@ -4299,32 +4299,24 @@ const versusDuel = {
 
 function initDuelSpectators() {
   versusDuel.spectators = [];
-  // 7 Humains à gauche (troupes de la résistance / civils)
-  for (let i = 0; i < 7; i++) {
-    versusDuel.spectators.push({
-      side: "human",
-      x: 35 + i * 28 + Math.random() * 8,
-      y: 450 + Math.random() * 12,
-      baseY: 450 + Math.random() * 12,
-      phase: Math.random() * Math.PI * 2,
-      color: i % 2 === 0 ? "#10b981" : "#0284c7",
-      hair: i % 3 === 0 ? "#f59e0b" : "#475569",
-      flag: i === 2 || i === 5
-    });
-  }
-  // 7 Extraterrestres à droite (fanatiques xénos)
-  for (let i = 0; i < 7; i++) {
-    versusDuel.spectators.push({
-      side: "alien",
-      x: 730 + i * 28 + Math.random() * 8,
-      y: 450 + Math.random() * 12,
-      baseY: 450 + Math.random() * 12,
-      phase: Math.random() * Math.PI * 2,
-      color: i % 2 === 0 ? "#a855f7" : "#ef4444",
-      skin: "#22c55e",
-      banner: i === 1 || i === 4
-    });
-  }
+  const gy = canvas.height - 105;
+  // Planche 1 : Foule Populaire & Supporters Gourmands (10 spectateurs uniques et animés)
+  // Gauche : 5 supporters populaires terrestres
+  versusDuel.spectators.push(
+    { id: "fries", side: "human", ratioX: 0.032, y: gy - 8, baseY: gy - 8, phase: 0.2, jacket: "#0284c7", hair: "#b45309" },
+    { id: "child", side: "human", ratioX: 0.072, y: gy - 6, baseY: gy - 6, phase: 1.4, shirt: "#dc2626", cap: "#ef4444", scale: 0.72 },
+    { id: "balloon", side: "human", ratioX: 0.112, y: gy - 7, baseY: gy - 7, phase: 2.8, dress: "#ec4899", hair: "#f59e0b", scale: 0.78 },
+    { id: "soda", side: "human", ratioX: 0.152, y: gy - 9, baseY: gy - 9, phase: 3.9, jacket: "#10b981", hair: "#334155" },
+    { id: "flag", side: "human", ratioX: 0.192, y: gy - 10, baseY: gy - 10, phase: 5.1, shirt: "#2563eb", hair: "#fde047" }
+  );
+  // Droite : 5 supporters de la garnison & hangar militaire
+  versusDuel.spectators.push(
+    { id: "burger", side: "human", ratioX: 0.808, y: gy - 10, baseY: gy - 10, phase: 0.8, shirt: "#b91c1c", hair: "#1e293b" },
+    { id: "beer", side: "human", ratioX: 0.848, y: gy - 9, baseY: gy - 9, phase: 2.1, jacket: "#15803d", hair: "#94a3b8", beret: "#166534" },
+    { id: "sign", side: "human", ratioX: 0.888, y: gy - 11, baseY: gy - 11, phase: 3.4, shirt: "#f59e0b", hair: "#475569" },
+    { id: "popcorn", side: "human", ratioX: 0.928, y: gy - 8, baseY: gy - 8, phase: 4.6, jacket: "#78350f", hair: "#d97706" },
+    { id: "megaphone", side: "human", ratioX: 0.968, y: gy - 9, baseY: gy - 9, phase: 5.8, shirt: "#ea580c", hair: "#1e293b" }
+  );
 }
 
 function startVersusDuel(wave) {
@@ -4728,265 +4720,678 @@ function drawVersusDuel() {
 
   ctx.save();
 
-  // 1. DÉCOR 4K : Ciel Cosmique Profond & Nébuleuse Spatiale
-  const skyGrad = ctx.createLinearGradient(0, 0, 0, gy);
-  skyGrad.addColorStop(0, "#030712");
-  skyGrad.addColorStop(0.35, "#0b0f19");
-  skyGrad.addColorStop(0.7, "#1e1138");
-  skyGrad.addColorStop(1, "#2e0854");
-  ctx.fillStyle = skyGrad;
+  // 1. DÉCOR C : ASTRO-HANGAR MILITAIRE TERRIEN (128-BIT 4K)
+  // Mur d'arrière-plan en plaques de blindage rivetées
+  const wallGrad = ctx.createLinearGradient(0, 0, 0, gy);
+  wallGrad.addColorStop(0, "#080c14");
+  wallGrad.addColorStop(0.3, "#0f172a");
+  wallGrad.addColorStop(0.7, "#1e293b");
+  wallGrad.addColorStop(1, "#111827");
+  ctx.fillStyle = wallGrad;
   ctx.fillRect(0, 0, w, h);
 
-  // Étoiles scintillantes lointaines
-  ctx.fillStyle = "#ffffff";
-  for (let i = 0; i < 45; i++) {
-    const starX = (i * 97 + 13) % w;
-    const starY = (i * 53 + 7) % (gy * 0.75);
-    const starAlpha = 0.3 + 0.7 * Math.abs(Math.sin(now * 0.002 + i * 1.7));
-    ctx.globalAlpha = starAlpha;
-    ctx.fillRect(starX, starY, (i % 3 === 0) ? 2 : 1, (i % 3 === 0) ? 2 : 1);
-  }
-  ctx.globalAlpha = 1;
+  // Verrière industrielle supérieure & Ciel crépusculaire d'alerte
+  const winH = gy * 0.38;
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, winH);
+  skyGrad.addColorStop(0, "#1e293b");
+  skyGrad.addColorStop(0.5, "#334155");
+  skyGrad.addColorStop(1, "#475569");
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(w * 0.08, 12, w * 0.84, winH);
 
-  // Planète Gazeuse Géante à Anneaux 4K à l'horizon cosmique
-  const planetX = w * 0.52;
-  const planetY = gy * 0.32;
-  const planetR = Math.min(85, gy * 0.28);
-  const planetGrad = ctx.createRadialGradient(planetX - planetR * 0.35, planetY - planetR * 0.35, planetR * 0.1, planetX, planetY, planetR);
-  planetGrad.addColorStop(0, "#cbd5e1");
-  planetGrad.addColorStop(0.4, "#6366f1");
-  planetGrad.addColorStop(0.8, "#312e81");
-  planetGrad.addColorStop(1, "#0f172a");
-  ctx.fillStyle = planetGrad;
-  ctx.beginPath();
-  ctx.arc(planetX, planetY, planetR, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Anneaux de la planète
-  ctx.save();
-  ctx.translate(planetX, planetY);
-  ctx.rotate(-0.4);
-  ctx.strokeStyle = "rgba(199, 210, 254, 0.45)";
-  ctx.lineWidth = 3.5;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, planetR * 2.3, planetR * 0.55, 0, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.strokeStyle = "rgba(129, 140, 248, 0.25)";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, planetR * 2.6, planetR * 0.62, 0, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.restore();
-
-  // 2. DÉCOR 4K : Arène Cyber-Colisée / Piliers et Gradins
-  // Projecteurs d'arène volumétriques rotatifs
-  for (let s = 0; s < 4; s++) {
-    const sBaseX = (w * 0.12) + s * (w * 0.25);
-    const sAngle = Math.sin(now * 0.0012 + s * 1.5) * 0.35;
-    ctx.save();
-    ctx.translate(sBaseX, gy - 25);
-    ctx.rotate(sAngle);
-    const beamGrad = ctx.createLinearGradient(0, 0, 0, -gy * 1.2);
-    beamGrad.addColorStop(0, s < 2 ? "rgba(56, 189, 248, 0.32)" : "rgba(239, 68, 68, 0.28)");
-    beamGrad.addColorStop(0.6, s < 2 ? "rgba(56, 189, 248, 0.08)" : "rgba(239, 68, 68, 0.06)");
-    beamGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
-    ctx.fillStyle = beamGrad;
+  // Volutes de fumée de champ de bataille derrière la verrière
+  ctx.fillStyle = "rgba(15, 23, 42, 0.45)";
+  for (let sm = 0; sm < 6; sm++) {
+    const smX = (w * 0.12) + ((sm * 160 + now * 0.015) % (w * 0.76));
+    const smY = 25 + Math.sin(sm * 2 + now * 0.001) * 15;
     ctx.beginPath();
-    ctx.moveTo(-18, 0);
-    ctx.lineTo(-85, -gy * 1.15);
-    ctx.lineTo(85, -gy * 1.15);
-    ctx.lineTo(18, 0);
+    ctx.arc(smX, smY, 32 + sm * 8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Châssis métallique en croisillons de la verrière (Industrial Windowpanes)
+  ctx.strokeStyle = "#0f172a";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(w * 0.08, 12, w * 0.84, winH);
+  const paneStep = (w * 0.84) / 7;
+  for (let p = 1; p < 7; p++) {
+    ctx.beginPath();
+    ctx.moveTo(w * 0.08 + p * paneStep, 12);
+    ctx.lineTo(w * 0.08 + p * paneStep, 12 + winH);
+    ctx.stroke();
+  }
+  ctx.beginPath();
+  ctx.moveTo(w * 0.08, 12 + winH * 0.5);
+  ctx.lineTo(w * 0.92, 12 + winH * 0.5);
+  ctx.stroke();
+
+  // Poutres et charpente supérieure en acier rivetée (Trusses)
+  ctx.fillStyle = "#1e293b";
+  ctx.fillRect(0, 0, w, 24);
+  // Bandes de sécurité diagonales jaune & noir sur la poutre maîtresse
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, w, 12);
+  ctx.clip();
+  ctx.fillStyle = "#f59e0b";
+  ctx.fillRect(0, 0, w, 12);
+  ctx.fillStyle = "#0f172a";
+  for (let bz = -20; bz < w + 40; bz += 30) {
+    ctx.beginPath();
+    ctx.moveTo(bz, 0);
+    ctx.lineTo(bz + 14, 0);
+    ctx.lineTo(bz - 2, 12);
+    ctx.lineTo(bz - 16, 12);
     ctx.closePath();
     ctx.fill();
+  }
+  ctx.restore();
+
+  // Rivets industriels sur la traverse
+  ctx.fillStyle = "#64748b";
+  for (let rv = 25; rv < w; rv += 45) {
+    ctx.beginPath();
+    ctx.arc(rv, 18, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Silhouette du Blindé Lourd M4 Grizzly / Mammoth en maintenance en arrière-plan
+  const tankX = w * 0.5;
+  const tankY = gy - 32;
+  ctx.save();
+  // Chenilles du char d'arrière-plan
+  ctx.fillStyle = "#0f172a";
+  ctx.beginPath();
+  ctx.roundRect(tankX - 110, tankY - 14, 220, 30, 6);
+  ctx.fill();
+  // Châssis massif et plaques de blindage
+  ctx.fillStyle = "#1e293b";
+  ctx.beginPath();
+  ctx.moveTo(tankX - 100, tankY - 12);
+  ctx.lineTo(tankX - 85, tankY - 48);
+  ctx.lineTo(tankX + 85, tankY - 48);
+  ctx.lineTo(tankX + 100, tankY - 12);
+  ctx.closePath();
+  ctx.fill();
+  // Tourelle lourde & double canon de 105mm
+  ctx.fillStyle = "#334155";
+  ctx.beginPath();
+  ctx.roundRect(tankX - 55, tankY - 78, 110, 34, [10, 10, 4, 4]);
+  ctx.fill();
+  // Fût de canon pointé vers la gauche
+  ctx.fillStyle = "#1e293b";
+  ctx.fillRect(tankX - 145, tankY - 68, 92, 12);
+  ctx.fillRect(tankX - 152, tankY - 71, 9, 18); // Frein de bouche
+  // Câbles d'alimentation haute tension jaunes et bleus au sol
+  ctx.strokeStyle = "#eab308";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(tankX - 70, tankY - 8);
+  ctx.bezierCurveTo(tankX - 110, tankY + 12, tankX - 150, tankY - 4, tankX - 210, tankY + 14);
+  ctx.stroke();
+  ctx.strokeStyle = "#0284c7";
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(tankX + 65, tankY - 8);
+  ctx.bezierCurveTo(tankX + 105, tankY + 15, tankX + 160, tankY - 2, tankX + 220, tankY + 14);
+  ctx.stroke();
+
+  // Étincelles cinématiques de soudure industrielle (Arc Welding Flash)
+  const isWelding = (Math.floor(now / 1600) % 2 === 0) && (now % 1600 < 550);
+  if (isWelding) {
+    const weldX = tankX + 48;
+    const weldY = tankY - 44;
+    // Halo lumineux dynamique bleu/blanc
+    const weldGrad = ctx.createRadialGradient(weldX, weldY, 4, weldX, weldY, 95);
+    weldGrad.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+    weldGrad.addColorStop(0.35, "rgba(56, 189, 248, 0.65)");
+    weldGrad.addColorStop(0.8, "rgba(2, 132, 199, 0.2)");
+    weldGrad.addColorStop(1, "rgba(2, 132, 199, 0)");
+    ctx.fillStyle = weldGrad;
+    ctx.beginPath();
+    ctx.arc(weldX, weldY, 95, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Éclats d'étincelles qui jaillissent
+    ctx.fillStyle = "#ffffff";
+    for (let spk = 0; spk < 12; spk++) {
+      const spkAngle = (spk * 0.52 + now * 0.05) % (Math.PI * 2);
+      const spkDist = 12 + (spk * 7) % 36;
+      ctx.fillRect(weldX + Math.cos(spkAngle) * spkDist, weldY + Math.sin(spkAngle) * spkDist, 2.5, 2.5);
+    }
+  }
+  ctx.restore();
+
+  // Projecteurs halogènes de chantier montés au plafond (Spotlights)
+  for (let hl = 0; hl < 2; hl++) {
+    const hlX = hl === 0 ? w * 0.28 : w * 0.72;
+    // Faisceau volumétrique jaune chaud
+    ctx.save();
+    const beamGrad = ctx.createLinearGradient(hlX, 24, hlX + (hl === 0 ? 55 : -55), gy);
+    beamGrad.addColorStop(0, "rgba(254, 240, 138, 0.35)");
+    beamGrad.addColorStop(0.5, "rgba(254, 240, 138, 0.12)");
+    beamGrad.addColorStop(1, "rgba(254, 240, 138, 0)");
+    ctx.fillStyle = beamGrad;
+    ctx.beginPath();
+    ctx.moveTo(hlX - 16, 24);
+    ctx.lineTo(hlX - 110, gy);
+    ctx.lineTo(hlX + 110, gy);
+    ctx.lineTo(hlX + 16, 24);
+    ctx.closePath();
+    ctx.fill();
+
+    // Boîtier du projecteur de chantier
+    ctx.fillStyle = "#f59e0b";
+    ctx.fillRect(hlX - 16, 18, 32, 14);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(hlX - 12, 28, 24, 4);
     ctx.restore();
   }
 
-  // Gradins d'arène en arrière-plan avec treillis métallique
-  ctx.fillStyle = "#090d16";
-  ctx.fillRect(0, gy - 55, w, 55);
-  ctx.strokeStyle = "rgba(56, 189, 248, 0.22)";
-  ctx.lineWidth = 1.5;
-  for (let gx = 0; gx < w; gx += 40) {
-    ctx.beginPath();
-    ctx.moveTo(gx, gy - 55);
-    ctx.lineTo(gx + 20, gy);
-    ctx.stroke();
-  }
-
-  // Bannières Holographiques 4K de l'Arène
-  const bannerY = gy - 78;
+  // Bannière Militaire d'Arène 4K
+  const bannerY = gy - 95;
   ctx.save();
-  ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
-  ctx.fillRect(w * 0.22, bannerY, w * 0.56, 20);
-  ctx.strokeStyle = "rgba(245, 158, 11, 0.7)";
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(w * 0.22, bannerY, w * 0.56, 20);
+  ctx.fillStyle = "rgba(15, 23, 42, 0.92)";
+  ctx.fillRect(w * 0.18, bannerY, w * 0.64, 22);
+  ctx.strokeStyle = "#f59e0b";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(w * 0.18, bannerY, w * 0.64, 22);
   ctx.fillStyle = "#fbbf24";
   ctx.font = "900 11px system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.shadowColor = "#f59e0b";
   ctx.shadowBlur = 10;
-  ctx.fillText("⚡ NOVA COMBAT CHAMPIONSHIP // SECTEUR 7 ARENA 4K ⚡", w * 0.5, bannerY + 14);
+  ctx.fillText("⚡ HANGAR D'ASSAUT MILITAIRE // SECTEUR 12 // DUEL DE COMMANDEMENT 4K ⚡", w * 0.5, bannerY + 15);
   ctx.restore();
 
-  // 3. DÉCOR 4K : Sol Tactique Hexagonal en Titane & Dalles de Verre Luminescentes
-  const groundGrad = ctx.createLinearGradient(0, gy, 0, h);
-  groundGrad.addColorStop(0, "#1e293b");
-  groundGrad.addColorStop(0.12, "#0f172a");
-  groundGrad.addColorStop(0.5, "#020617");
-  groundGrad.addColorStop(1, "#000000");
-  ctx.fillStyle = groundGrad;
+  // 3. SOL INDUSTRIEL EN BÉTON ARMÉ & TRACES DE CHENILLES
+  const floorGrad = ctx.createLinearGradient(0, gy, 0, h);
+  floorGrad.addColorStop(0, "#27303f");
+  floorGrad.addColorStop(0.15, "#1e2532");
+  floorGrad.addColorStop(0.65, "#111827");
+  floorGrad.addColorStop(1, "#030712");
+  ctx.fillStyle = floorGrad;
   ctx.fillRect(0, gy, w, h - gy);
 
-  // Ligne de combat laser au sol
-  ctx.strokeStyle = "rgba(56, 189, 248, 0.85)";
-  ctx.lineWidth = 2.5;
-  ctx.shadowColor = "#38bdf8";
-  ctx.shadowBlur = 14;
+  // Zébrures d'avertissement de sécurité (Hazard Stripes) le long du plateau
+  ctx.save();
   ctx.beginPath();
-  ctx.moveTo(0, gy);
-  ctx.lineTo(w, gy);
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-
-  // Dalles hexagonales cybernétiques au sol
-  ctx.strokeStyle = "rgba(56, 189, 248, 0.12)";
-  ctx.lineWidth = 1;
-  const hexSize = 34;
-  for (let hx = 0; hx < w; hx += hexSize * 1.5) {
+  ctx.rect(0, gy, w, 14);
+  ctx.clip();
+  ctx.fillStyle = "#f59e0b";
+  ctx.fillRect(0, gy, w, 14);
+  ctx.fillStyle = "#0f172a";
+  for (let hz = -20; hz < w + 40; hz += 26) {
     ctx.beginPath();
-    ctx.moveTo(hx, gy);
-    ctx.lineTo(hx + hexSize * 0.5, h);
-    ctx.stroke();
+    ctx.moveTo(hz, gy);
+    ctx.lineTo(hz + 14, gy);
+    ctx.lineTo(hz - 2, gy + 14);
+    ctx.lineTo(hz - 16, gy + 14);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Traces de chenilles de chars incrustées dans le sol
+  ctx.fillStyle = "rgba(10, 15, 26, 0.55)";
+  for (let trk = 25; trk < w - 25; trk += 18) {
+    if ((trk > w * 0.22 && trk < w * 0.38) || (trk > w * 0.62 && trk < w * 0.78)) {
+      ctx.fillRect(trk, gy + 18, 12, 6);
+      ctx.fillRect(trk, gy + 32, 12, 6);
+    }
   }
 
-  // 4. SPECTATEURS 4K (HUMAINS À GAUCHE VS EXTRATERRESTRES À DROITE)
+  // Grilles de ventilation au sol & vapeur montante
+  for (let vg = 0; vg < 2; vg++) {
+    const vgX = vg === 0 ? w * 0.16 : w * 0.84;
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(vgX - 25, gy + 20, 50, 12);
+    ctx.strokeStyle = "#475569";
+    ctx.lineWidth = 1.5;
+    for (let vl = -20; vl < 25; vl += 8) {
+      ctx.beginPath();
+      ctx.moveTo(vgX + vl, gy + 20);
+      ctx.lineTo(vgX + vl, gy + 32);
+      ctx.stroke();
+    }
+    // Volutes de vapeur blanche
+    ctx.fillStyle = "rgba(241, 245, 249, 0.18)";
+    for (let vp = 0; vp < 3; vp++) {
+      const vY = gy + 14 - ((now * 0.03 + vp * 16) % 45);
+      const vR = 7 + (gy + 14 - vY) * 0.28;
+      ctx.beginPath();
+      ctx.arc(vgX + Math.sin(vY * 0.1) * 8, vY, vR, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // 4. PLANCHE 1 : FOULE POPULAIRE & SUPPORTERS GOURMANDS (10 SPECTATEURS ULTRA-DÉTAILLÉS)
   const isWinning = versusDuel.phase === "victory" || versusDuel.phase === "ko";
   versusDuel.spectators.forEach((sp) => {
-    const jumpAmp = isWinning && sp.side === "human" ? 16 : 6;
-    const jumpY = sp.baseY - Math.abs(Math.sin(now * 0.007 + sp.phase)) * jumpAmp;
+    const spX = sp.ratioX ? (sp.ratioX * w) : sp.x;
+    const baseAmp = sp.id === "child" ? 14 : 6;
+    const jumpAmp = isWinning ? (baseAmp + 10) : baseAmp;
+    const jumpY = (sp.baseY || (gy - 8)) - Math.abs(Math.sin(now * 0.007 + sp.phase)) * jumpAmp;
 
     ctx.save();
-    ctx.translate(sp.x, jumpY);
+    ctx.translate(spX, jumpY);
+    if (sp.scale) ctx.scale(sp.scale, sp.scale);
 
-    if (sp.side === "human") {
-      // Combinaison spatiale / Marine NOVA 4K
-      ctx.fillStyle = sp.color || "#2563eb";
+    // Ombre portée sous le spectateur
+    ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+    ctx.beginPath();
+    ctx.ellipse(0, 10, 12, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Rendu spécifique selon le personnage de la Planche 1
+    if (sp.id === "fries") {
+      // 1. MANGEUR DE FRITES : Bleus de travail, cornet rouge de frites & ketchup
+      // Corps
+      ctx.fillStyle = "#0284c7";
+      ctx.beginPath();
+      ctx.roundRect(-8, -24, 16, 22, 3);
+      ctx.fill();
+      // Tête & Casquette
+      ctx.fillStyle = "#fed7aa";
+      ctx.beginPath();
+      ctx.arc(0, -29, 6.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#b45309";
+      ctx.fillRect(-7, -35, 14, 5); // Casquette marron
+      // Cornet de frites tenu dans la main gauche
+      ctx.fillStyle = "#ef4444"; // Cornet rouge
+      ctx.beginPath();
+      ctx.moveTo(-14, -14);
+      ctx.lineTo(-7, -14);
+      ctx.lineTo(-9, -4);
+      ctx.lineTo(-12, -4);
+      ctx.closePath();
+      ctx.fill();
+      // Bâtonnets de frites dorées
+      ctx.fillStyle = "#fbbf24";
+      ctx.fillRect(-13, -19, 2.5, 6);
+      ctx.fillRect(-10, -21, 2.5, 8);
+      ctx.fillRect(-7, -18, 2.5, 5);
+      // Goutte de ketchup
+      ctx.fillStyle = "#b91c1c";
+      ctx.beginPath();
+      ctx.arc(-9, -17, 1.8, 0, Math.PI * 2);
+      ctx.fill();
+      // Bras droit portant une frite à la bouche
+      const fryCycle = Math.sin(now * 0.004 + sp.phase);
+      const handY = -22 + fryCycle * 6;
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(6, -18);
+      ctx.lineTo(8, handY);
+      ctx.stroke();
+      ctx.fillStyle = "#fbbf24";
+      ctx.fillRect(7, handY - 4, 2, 5); // Frite tenue
+    } else if (sp.id === "child") {
+      // 2. ENFANT BONDISSANT : Casquette rouge à l'envers, t-shirt Ken, double poings levés
+      // Corps t-shirt bleu
+      ctx.fillStyle = "#2563eb";
       ctx.beginPath();
       ctx.roundRect(-7, -22, 14, 20, 3);
       ctx.fill();
-
-      // Harnais d'armure & épaulettes
-      ctx.fillStyle = "#334155";
-      ctx.fillRect(-8, -20, 16, 4);
-
-      // Casque spatial avec Visière Dorée Réfléchissante 4K
-      ctx.fillStyle = "#1e293b";
+      // Logo étoile sur le t-shirt
+      ctx.fillStyle = "#fbbf24";
       ctx.beginPath();
-      ctx.arc(0, -27, 7, 0, Math.PI * 2);
+      ctx.arc(0, -13, 2.5, 0, Math.PI * 2);
       ctx.fill();
-
-      // Visière or miroitante
-      const visorGrad = ctx.createLinearGradient(-4, -30, 4, -24);
-      visorGrad.addColorStop(0, "#fde047");
-      visorGrad.addColorStop(0.5, "#eab308");
-      visorGrad.addColorStop(1, "#854d0e");
-      ctx.fillStyle = visorGrad;
+      // Tête
+      ctx.fillStyle = "#fed7aa";
       ctx.beginPath();
-      ctx.ellipse(0, -27, 5, 4, 0, 0, Math.PI * 2);
+      ctx.arc(0, -28, 6.5, 0, Math.PI * 2);
       ctx.fill();
-
-      // Bras animés avec gants de protection
+      // Casquette rouge à l'envers (visière pointée vers l'arrière)
+      ctx.fillStyle = "#ef4444";
+      ctx.beginPath();
+      ctx.arc(0, -31, 6.5, Math.PI, 0);
+      ctx.fill();
+      ctx.fillRect(4, -31, 6, 3); // Visière arrière
+      // Double bras levés au ciel avec poings jubilatoires
+      const cheerArm = Math.sin(now * 0.015 + sp.phase) * 4;
+      ctx.strokeStyle = "#fed7aa";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(-6, -18);
+      ctx.lineTo(-12, -36 + cheerArm);
+      ctx.moveTo(6, -18);
+      ctx.lineTo(12, -36 - cheerArm);
+      ctx.stroke();
+      // Poings fermés
+      ctx.fillStyle = "#fed7aa";
+      ctx.beginPath();
+      ctx.arc(-12, -37 + cheerArm, 2.8, 0, Math.PI * 2);
+      ctx.arc(12, -37 - cheerArm, 2.8, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (sp.id === "balloon") {
+      // 3. PETITE FILLE AU BALLON ROUGE 3D : Robe rose, cheveux blonds & ficelle de ballon
+      // Robe rose bonbon
+      ctx.fillStyle = "#ec4899";
+      ctx.beginPath();
+      ctx.moveTo(-7, -8);
+      ctx.lineTo(7, -8);
+      ctx.lineTo(9, 6);
+      ctx.lineTo(-9, 6);
+      ctx.closePath();
+      ctx.fill();
+      // Tête & couettes blondes
+      ctx.fillStyle = "#fed7aa";
+      ctx.beginPath();
+      ctx.arc(0, -15, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#f59e0b"; // Cheveux blonds
+      ctx.beginPath();
+      ctx.arc(-6, -16, 3.5, 0, Math.PI * 2);
+      ctx.arc(6, -16, 3.5, 0, Math.PI * 2);
+      ctx.arc(0, -19, 5, 0, Math.PI * 2);
+      ctx.fill();
+      // Ficelle ondulante du ballon
+      const balSway = Math.sin(now * 0.003 + sp.phase) * 8;
+      const balX = -10 + balSway;
+      const balY = -56;
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(-6, -8);
+      ctx.quadraticCurveTo(-14 + balSway * 0.5, -34, balX, balY + 12);
+      ctx.stroke();
+      // Ballon 3D rouge brillant
+      ctx.save();
+      const balGrad = ctx.createRadialGradient(balX - 3, balY - 3, 2, balX, balY, 13);
+      balGrad.addColorStop(0, "#ffffff"); // Reflet spéculaire
+      balGrad.addColorStop(0.25, "#f87171");
+      balGrad.addColorStop(0.7, "#dc2626");
+      balGrad.addColorStop(1, "#991b1b");
+      ctx.fillStyle = balGrad;
+      ctx.shadowColor = "#ef4444";
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.ellipse(balX, balY, 11, 13, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      // Nœud du ballon
+      ctx.fillStyle = "#b91c1c";
+      ctx.beginPath();
+      ctx.moveTo(balX - 2, balY + 12);
+      ctx.lineTo(balX + 2, balY + 12);
+      ctx.lineTo(balX, balY + 15);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    } else if (sp.id === "soda") {
+      // 4. BUVEUR DE SODA : Veste verte, gobelet rayé avec couvercle & paille jaune coudée
+      // Corps
+      ctx.fillStyle = "#10b981";
+      ctx.beginPath();
+      ctx.roundRect(-8, -24, 16, 22, 3);
+      ctx.fill();
+      // Tête
+      ctx.fillStyle = "#fed7aa";
+      ctx.beginPath();
+      ctx.arc(0, -29, 6.5, 0, Math.PI * 2);
+      ctx.fill();
+      // Gobelet de soda rayé tenu à deux mains
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(-5, -17, 10, 14);
+      // Rayures rouges sur le gobelet
+      ctx.fillStyle = "#e11d48";
+      ctx.fillRect(-5, -14, 10, 3);
+      ctx.fillRect(-5, -8, 10, 3);
+      // Couvercle blanc
+      ctx.fillStyle = "#f1f5f9";
+      ctx.fillRect(-6, -19, 12, 3);
+      // Paille jaune fluo coudée allant à la bouche
+      ctx.strokeStyle = "#facc15";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, -19);
+      ctx.lineTo(1, -26);
+      ctx.lineTo(0, -28); // Dans la bouche
+      ctx.stroke();
+    } else if (sp.id === "flag") {
+      // 5. SUPPORTER AUX 2 DRAPEAUX : Agite vigoureusement deux fanions NOVA (bleu et or)
+      // Corps
+      ctx.fillStyle = "#2563eb";
+      ctx.beginPath();
+      ctx.roundRect(-8, -24, 16, 22, 3);
+      ctx.fill();
+      // Tête & Bandana
+      ctx.fillStyle = "#fed7aa";
+      ctx.beginPath();
+      ctx.arc(0, -29, 6.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#fde047";
+      ctx.fillRect(-7, -33, 14, 4); // Bandana front
+      // Bras agitant les 2 drapeaux
+      const flagWave = Math.sin(now * 0.009 + sp.phase);
+      ctx.strokeStyle = "#94a3b8";
+      ctx.lineWidth = 2;
+      // Hampe drapeau 1 (Gauche - Bleu NOVA)
+      ctx.beginPath();
+      ctx.moveTo(-6, -18);
+      ctx.lineTo(-18 + flagWave * 3, -44);
+      ctx.stroke();
+      ctx.fillStyle = "#1d4ed8";
+      ctx.beginPath();
+      ctx.moveTo(-18 + flagWave * 3, -44);
+      ctx.lineTo(-34 + flagWave * 5, -36);
+      ctx.lineTo(-18 + flagWave * 3, -28);
+      ctx.closePath();
+      ctx.fill();
+      // Hampe drapeau 2 (Droite - Or NOVA)
+      ctx.beginPath();
+      ctx.moveTo(6, -18);
+      ctx.lineTo(18 - flagWave * 3, -44);
+      ctx.stroke();
+      ctx.fillStyle = "#eab308";
+      ctx.beginPath();
+      ctx.moveTo(18 - flagWave * 3, -44);
+      ctx.lineTo(34 - flagWave * 5, -36);
+      ctx.lineTo(18 - flagWave * 3, -28);
+      ctx.closePath();
+      ctx.fill();
+    } else if (sp.id === "burger") {
+      // 6. MANGEUR DE DOUBLE BURGER : Chemise bûcheron, burger géant à double steak & cheddar
+      // Corps costaud
+      ctx.fillStyle = "#991b1b";
+      ctx.beginPath();
+      ctx.roundRect(-10, -24, 20, 22, 4);
+      ctx.fill();
+      // Tête
+      ctx.fillStyle = "#fed7aa";
+      ctx.beginPath();
+      ctx.arc(0, -29, 7, 0, Math.PI * 2);
+      ctx.fill();
+      // Double Burger géant tenu à deux mains
+      const bY = -18;
+      // Pain supérieur brioché
+      ctx.fillStyle = "#d97706";
+      ctx.beginPath();
+      ctx.ellipse(0, bY - 6, 11, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Graines de sésame
+      ctx.fillStyle = "#fef08a";
+      ctx.fillRect(-4, bY - 8, 1.5, 1.5);
+      ctx.fillRect(1, bY - 9, 1.5, 1.5);
+      ctx.fillRect(5, bY - 7, 1.5, 1.5);
+      // Salade verte & Tomate rouge
+      ctx.fillStyle = "#16a34a";
+      ctx.fillRect(-10, bY - 3, 20, 2.5);
+      ctx.fillStyle = "#ef4444";
+      ctx.fillRect(-9, bY - 1, 18, 2);
+      // Double steak haché
+      ctx.fillStyle = "#451a03";
+      ctx.fillRect(-10, bY + 1, 20, 3);
+      // Cheddar fondu qui dégouline
+      ctx.fillStyle = "#fbbf24";
+      ctx.fillRect(-9, bY + 4, 18, 2.5);
+      ctx.beginPath();
+      ctx.moveTo(3, bY + 6);
+      ctx.lineTo(5, bY + 9);
+      ctx.lineTo(7, bY + 6);
+      ctx.fill();
+      // Second steak & pain inférieur
+      ctx.fillStyle = "#451a03";
+      ctx.fillRect(-10, bY + 6, 20, 3);
+      ctx.fillStyle = "#d97706";
+      ctx.fillRect(-10, bY + 9, 20, 3.5);
+    } else if (sp.id === "beer") {
+      // 7. VÉTÉRAN À LA CHOPE DE BIÈRE : Veste militaire, béret vert, chope avec mousse débordante
+      // Veste de treillis militaire
+      ctx.fillStyle = "#166534";
+      ctx.beginPath();
+      ctx.roundRect(-8, -24, 16, 22, 3);
+      ctx.fill();
+      // Tête & Moustache blanche de vétéran
+      ctx.fillStyle = "#fed7aa";
+      ctx.beginPath();
+      ctx.arc(0, -29, 6.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#f1f5f9"; // Moustache guidon
+      ctx.fillRect(-4, -27, 8, 2.5);
+      // Béret militaire vert & insigne or
+      ctx.fillStyle = "#14532d";
+      ctx.beginPath();
+      ctx.ellipse(1, -34, 8, 4, -0.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#fbbf24";
+      ctx.fillRect(-2, -35, 3, 3);
+      // Bras droit levant une grande chope de bière
+      const beerArmSway = Math.sin(now * 0.006 + sp.phase) * 3;
       ctx.strokeStyle = "#cbd5e1";
       ctx.lineWidth = 2.5;
-      const armSway = Math.sin(now * 0.01 + sp.phase) * 5;
       ctx.beginPath();
-      ctx.moveTo(-6, -17);
-      ctx.lineTo(-12, -28 + armSway);
-      ctx.moveTo(6, -17);
-      ctx.lineTo(12, -28 - armSway);
+      ctx.moveTo(6, -18);
+      ctx.lineTo(12, -28 + beerArmSway);
       ctx.stroke();
-
-      // Bannière / Pancarte "NOVA"
-      if (sp.flag) {
-        ctx.fillStyle = "#1e293b";
-        ctx.fillRect(-1, -48, 2, 22);
-        ctx.fillStyle = "rgba(56, 189, 248, 0.95)";
-        ctx.shadowColor = "#38bdf8";
-        ctx.shadowBlur = 8;
-        ctx.beginPath();
-        ctx.roundRect(-14, -46, 28, 13, 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "900 8px system-ui, sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("NOVA", 0, -36);
-      }
-    } else {
-      // Guerrier Extraterrestre / Spectateur Alien Xéno 4K
-      ctx.fillStyle = sp.color || "#4c1d95";
+      // Chope de bière en verre
+      const chX = 14;
+      const chY = -34 + beerArmSway;
+      ctx.fillStyle = "rgba(226, 232, 240, 0.45)"; // Verre transparent
+      ctx.fillRect(chX - 4, chY, 10, 14);
+      // Bière blonde dorée
+      ctx.fillStyle = "#f59e0b";
+      ctx.fillRect(chX - 3, chY + 3, 8, 10);
+      // Mousse blanche crémeuse débordante
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(chX - 2, chY + 1, 4, 0, Math.PI * 2);
+      ctx.arc(chX + 2, chY, 4.5, 0, Math.PI * 2);
+      ctx.arc(chX + 6, chY + 2, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      // Goutte de mousse qui tombe
+      ctx.fillRect(chX + 5, chY + 6, 2, 3);
+    } else if (sp.id === "sign") {
+      // 8. PORTEUR DE PANCARTE "K.O. KEN WIN !" : Bras tendus portant un grand panneau
+      // Corps
+      ctx.fillStyle = "#f59e0b";
+      ctx.beginPath();
+      ctx.roundRect(-8, -24, 16, 22, 3);
+      ctx.fill();
+      // Tête
+      ctx.fillStyle = "#fed7aa";
+      ctx.beginPath();
+      ctx.arc(0, -29, 6.5, 0, Math.PI * 2);
+      ctx.fill();
+      // Deux montants en bois portant la pancarte
+      const sY = -50 + Math.sin(now * 0.008 + sp.phase) * 4;
+      ctx.strokeStyle = "#78350f";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(-12, -18);
+      ctx.lineTo(-12, sY + 18);
+      ctx.moveTo(12, -18);
+      ctx.lineTo(12, sY + 18);
+      ctx.stroke();
+      // Pancarte en carton robuste
+      ctx.fillStyle = "#b45309";
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(-24, sY, 48, 18, 3);
+      ctx.fill();
+      ctx.stroke();
+      // Inscription "★ K.O. KEN WIN ! ★"
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "900 7.5px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("★ K.O. KEN WIN ! ★", 0, sY + 12);
+    } else if (sp.id === "popcorn") {
+      // 9. PILOTE AU POP-CORN : Blouson d'aviateur, lunettes d'aviateur, pot de pop-corn rayé
+      // Blouson de cuir marron & col en peau de mouton blanche
+      ctx.fillStyle = "#78350f";
+      ctx.beginPath();
+      ctx.roundRect(-8, -24, 16, 22, 3);
+      ctx.fill();
+      ctx.fillStyle = "#f8fafc"; // Col en mouton retourné
+      ctx.fillRect(-7, -26, 14, 4);
+      // Tête & Lunettes de soleil d'aviateur
+      ctx.fillStyle = "#fed7aa";
+      ctx.beginPath();
+      ctx.arc(0, -30, 6.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#0f172a"; // Verres noirs
+      ctx.fillRect(-5, -31, 4, 3);
+      ctx.fillRect(1, -31, 4, 3);
+      // Seau de pop-corn rayé rouge et blanc
+      const pcX = 0;
+      const pcY = -15;
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.moveTo(pcX - 6, pcY);
+      ctx.lineTo(pcX + 6, pcY);
+      ctx.lineTo(pcX + 5, pcY + 14);
+      ctx.lineTo(pcX - 5, pcY + 14);
+      ctx.closePath();
+      ctx.fill();
+      // Rayures rouges verticales
+      ctx.fillStyle = "#dc2626";
+      ctx.fillRect(pcX - 3.5, pcY, 2.5, 14);
+      ctx.fillRect(pcX + 1.5, pcY, 2.5, 14);
+      // Pop-corn doré soufflé débordant
+      ctx.fillStyle = "#fef08a";
+      ctx.beginPath();
+      ctx.arc(pcX - 3, pcY - 2, 3, 0, Math.PI * 2);
+      ctx.arc(pcX + 1, pcY - 4, 3.5, 0, Math.PI * 2);
+      ctx.arc(pcX + 4, pcY - 1, 3, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (sp.id === "megaphone") {
+      // 10. SUPPORTER AU MÉGAPHONE : Sweat à capuche orange, mégaphone industriel & ondes sonores
+      // Sweat orange vif
+      ctx.fillStyle = "#ea580c";
       ctx.beginPath();
       ctx.roundRect(-8, -24, 16, 22, 4);
       ctx.fill();
-
-      // Plaques d'exosquelette violettes
-      ctx.fillStyle = "#7e22ce";
-      ctx.fillRect(-6, -19, 12, 3);
-      ctx.fillRect(-6, -13, 12, 3);
-
-      // Tête Xénomorphe / Reptilienne avec Crête
-      ctx.fillStyle = sp.skin || "#15803d";
+      // Tête
+      ctx.fillStyle = "#fed7aa";
       ctx.beginPath();
-      ctx.ellipse(0, -30, 8, 10, 0, 0, Math.PI * 2);
+      ctx.arc(0, -29, 6.5, 0, Math.PI * 2);
       ctx.fill();
-
-      // Crête dorsale luminescente verte
-      ctx.fillStyle = "#22c55e";
+      // Mégaphone orange de chantier orienté vers l'arène (gauche)
+      ctx.fillStyle = "#f97316";
       ctx.beginPath();
-      ctx.moveTo(0, -40);
-      ctx.lineTo(-3, -33);
-      ctx.lineTo(3, -33);
+      ctx.moveTo(-5, -23);
+      ctx.lineTo(-18, -28);
+      ctx.lineTo(-18, -18);
       ctx.closePath();
       ctx.fill();
-
-      // Yeux multiples rouges cybernétiques
-      ctx.fillStyle = "#ef4444";
-      ctx.shadowColor = "#ef4444";
-      ctx.shadowBlur = 6;
-      ctx.beginPath();
-      ctx.arc(-3.5, -30, 1.8, 0, Math.PI * 2);
-      ctx.arc(3.5, -30, 1.8, 0, Math.PI * 2);
-      ctx.arc(0, -33, 1.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-
-      // Bras xénomorphes avec griffes cybernétiques
-      ctx.strokeStyle = sp.skin || "#15803d";
-      ctx.lineWidth = 2.5;
-      const xArmSway = Math.cos(now * 0.009 + sp.phase) * 6;
-      ctx.beginPath();
-      ctx.moveTo(-7, -18);
-      ctx.lineTo(-14, -26 + xArmSway);
-      ctx.moveTo(7, -18);
-      ctx.lineTo(14, -26 - xArmSway);
-      ctx.stroke();
-
-      // Bannière de guerre Xéno
-      if (sp.flag) {
-        ctx.fillStyle = "#334155";
-        ctx.fillRect(-1, -48, 2, 22);
-        ctx.fillStyle = "rgba(239, 68, 68, 0.9)";
-        ctx.shadowColor = "#ef4444";
-        ctx.shadowBlur = 8;
+      // Pavillon & Poignée noire
+      ctx.fillStyle = "#1e293b";
+      ctx.fillRect(-19, -29, 2.5, 12);
+      ctx.fillRect(-8, -19, 3, 5);
+      // Ondes sonores concentriques animées pulsant vers le combat
+      const megaPulse = (now * 0.008) % 3;
+      ctx.strokeStyle = "rgba(249, 115, 22, 0.75)";
+      ctx.lineWidth = 1.8;
+      for (let s = 1; s <= 2; s++) {
+        const rad = 6 + ((megaPulse + s) % 3) * 7;
         ctx.beginPath();
-        ctx.roundRect(-14, -46, 28, 13, 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "900 8px system-ui, sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("XÉNO", 0, -36);
+        ctx.arc(-22, -23, rad, Math.PI * 0.7, Math.PI * 1.3);
+        ctx.stroke();
       }
     }
     ctx.restore();
