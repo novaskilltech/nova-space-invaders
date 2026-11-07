@@ -1239,10 +1239,14 @@ canvas {
     overflow: hidden;
   }
 
-  .ships-container,
-  .tank-grid-5 {
-    grid-template-columns: repeat(3, 1fr) !important;
+  .ships-container {
+    grid-template-columns: repeat(3, 1fr);
     gap: 6px;
+  }
+
+  .tank-grid-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 6px !important;
   }
 
   .ship-card,
@@ -1374,17 +1378,14 @@ canvas {
     display: none !important;
   }
 
-  /* Blindés 5 colonnes -> 2 colonnes avec 5ème centrée */
-  .ships-container,
-  .tank-grid-5 {
+  .ships-container {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 5px !important;
   }
-  .tank-card:last-child {
-    grid-column: span 2 !important;
-    max-width: 180px !important;
-    justify-self: center !important;
-    width: 100% !important;
+
+  .tank-grid-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 4px !important;
   }
 
   .ship-card, .tank-card {
@@ -1639,6 +1640,25 @@ canvas {
   grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
   gap: 8px !important;
   width: 100% !important;
+}
+
+.tank-grid-5 .tank-card:last-child {
+  grid-column: auto !important;
+  max-width: none !important;
+  justify-self: auto !important;
+  width: 100% !important;
+}
+
+@media (max-width: 480px) {
+  .tank-grid-5 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 5px !important;
+  }
+  .tank-grid-5 .tank-card:last-child {
+    grid-column: span 2 !important;
+    max-width: 180px !important;
+    justify-self: center !important;
+  }
 }
 
 .ship-card,

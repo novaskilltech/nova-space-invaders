@@ -16,34 +16,43 @@ window.onerror = function(msg, url, line, col, error) {
 };
 
 function playSound(type) {
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  }
-  const osc = audioCtx.createOscillator();
-  const gainNode = audioCtx.createGain();
-  
-  osc.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
-  
-  const now = audioCtx.currentTime;
-  
-  if (type === 'shoot') {
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(880, now);
-    osc.frequency.exponentialRampToValueAtTime(110, now + 0.1);
-    gainNode.gain.setValueAtTime(0.05, now);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-    osc.start(now);
-    osc.stop(now + 0.1);
-  } else if (type === 'explosion') {
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(100, now);
-    osc.frequency.exponentialRampToValueAtTime(10, now + 0.2);
-    gainNode.gain.setValueAtTime(0.1, now);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-    osc.start(now);
-    osc.stop(now + 0.2);
-  } else if (type === 'powerup') {
+  try {
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    
+    const now = audioCtx.currentTime;
+    
+    if (type === 'shoot') {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(880, now);
+      osc.frequency.exponentialRampToValueAtTime(110, now + 0.1);
+      gainNode.gain.setValueAtTime(0.05, now);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      osc.start(now);
+      osc.stop(now + 0.1);
+    } else if (type === 'explosion') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(100, now);
+      osc.frequency.exponentialRampToValueAtTime(10, now + 0.2);
+      gainNode.gain.setValueAtTime(0.1, now);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+      osc.start(now);
+      osc.stop(now + 0.2);
+    } else if (type === 'hit' || type === 'deflect') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(920, now);
+      osc.frequency.exponentialRampToValueAtTime(240, now + 0.08);
+      gainNode.gain.setValueAtTime(0.08, now);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+      osc.start(now);
+      osc.stop(now + 0.08);
+    } else if (type === 'powerup') {
     osc.type = 'sine';
     osc.frequency.setValueAtTime(440, now);
     osc.frequency.setValueAtTime(660, now + 0.1);
@@ -121,6 +130,9 @@ function playSound(type) {
     gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
     osc.start(now);
     osc.stop(now + 0.65);
+  }
+  } catch (audioErr) {
+    // Évite tout blocage en cas de limitation audio du navigateur
   }
 }
 
@@ -511,6 +523,7 @@ const state = {
   enemyShots: [],
   shots: [],
   particles: [],
+  floatingTexts: [],
   images: {},
   boss: null,
   teaseBoss: null,
@@ -1099,6 +1112,7 @@ function initGame() {
   state.shots = [];
   state.enemyShots = [];
   state.particles = [];
+  state.floatingTexts = [];
   state.boss = null;
   state.playerInvulnerableUntil = 0;
   state.powerups = [];
@@ -1185,6 +1199,45 @@ function syncUi() {
   const mobShieldCount = document.getElementById("mobShieldCount");
   if (shieldCount) shieldCount.textContent = String(player.shieldsLeft ?? 3);
   if (mobShieldCount) mobShieldCount.textContent = String(player.shieldsLeft ?? 3);
+}
+
+function createFloatingText(text, x, y, color = "#ffffff") {
+  if (!state.floatingTexts) state.floatingTexts = [];
+  state.floatingTexts.push({
+    text: String(text),
+    x: Number(x) || (canvas.width / 2),
+    y: Number(y) || (canvas.height / 2),
+    color: color || "#ffffff",
+    vy: -45,
+    life: 1.15,
+    maxLife: 1.15,
+    opacity: 1
+  });
+}
+
+function updateFloatingTexts(dt) {
+  if (!state.floatingTexts || state.floatingTexts.length === 0) return;
+  state.floatingTexts.forEach((ft) => {
+    ft.y += ft.vy * dt;
+    ft.life -= dt;
+    ft.opacity = Math.max(0, ft.life / ft.maxLife);
+  });
+  state.floatingTexts = state.floatingTexts.filter((ft) => ft.life > 0);
+}
+
+function drawFloatingTexts() {
+  if (!state.floatingTexts || state.floatingTexts.length === 0) return;
+  ctx.save();
+  state.floatingTexts.forEach((ft) => {
+    ctx.font = "900 13px system-ui, -apple-system, sans-serif";
+    ctx.textAlign = "center";
+    ctx.globalAlpha = ft.opacity;
+    ctx.shadowColor = ft.color;
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = ft.color;
+    ctx.fillText(ft.text, ft.x, ft.y);
+  });
+  ctx.restore();
 }
 
 function activateShield() {
@@ -1660,7 +1713,12 @@ function handlePlayerHit() {
   if ((player.shieldActiveTime || 0) > 0) return;
   state.lives -= 1;
   state.flawless = false;
-  addExplosion(player.x + player.width / 2, player.y + player.height / 2, "#ff6474");
+  try {
+    addExplosion(player.x + player.width / 2, player.y + player.height / 2, "#ff6474");
+  } catch (expErr) {
+    console.warn("Player hit explosion error", expErr);
+  }
+  
   if (state.lives <= 0) {
     endGame(
       "Mission perdue",
@@ -1671,7 +1729,7 @@ function handlePlayerHit() {
 
   resetPlayer();
   state.enemyShots = [];
-  state.playerInvulnerableUntil = performance.now() + player.invul;
+  state.playerInvulnerableUntil = performance.now() + (player.invul || 1400);
   keys.clear(); // Évite les touches bloquées après un choc
   syncUi();
 }
@@ -2536,8 +2594,10 @@ function resolvePlayerCollisions(timestamp) {
     state.enemyShots.forEach((shot) => {
       if (rectsOverlap(shot, player)) {
         shot.hit = true;
-        addExplosion(shot.x + shot.width / 2, shot.y + shot.height / 2, "#38bdf8");
-        playSound("hit");
+        try {
+          addExplosion(shot.x + shot.width / 2, shot.y + shot.height / 2, "#38bdf8");
+          playSound("hit");
+        } catch (e) {}
         createFloatingText("DEFLECT !", shot.x, shot.y, "#7dd3fc");
       }
     });
@@ -2552,13 +2612,15 @@ function resolvePlayerCollisions(timestamp) {
 
   let playerWasHit = false;
 
-  state.enemyShots.forEach((shot) => {
-    if (!playerWasHit && rectsOverlap(shot, player)) {
+  for (let i = 0; i < state.enemyShots.length; i++) {
+    const shot = state.enemyShots[i];
+    if (!shot.hit && rectsOverlap(shot, player)) {
       shot.hit = true;
       playerWasHit = true;
       handlePlayerHit();
+      break;
     }
-  });
+  }
   state.enemyShots = state.enemyShots.filter((shot) => !shot.hit);
 
   if (!playerWasHit && state.boss && rectsOverlap(state.boss, player)) {
@@ -2566,13 +2628,15 @@ function resolvePlayerCollisions(timestamp) {
     handlePlayerHit();
   }
 
-  if (!playerWasHit) {
-    enemies.forEach((enemy) => {
-      if (!playerWasHit && rectsOverlap(enemy, player)) {
+  if (!playerWasHit && Array.isArray(enemies)) {
+    for (let i = 0; i < enemies.length; i++) {
+      const enemy = enemies[i];
+      if (!enemy.dead && rectsOverlap(enemy, player)) {
         playerWasHit = true;
         handlePlayerHit();
+        break;
       }
-    });
+    }
   }
 }
 
@@ -2644,6 +2708,7 @@ function update(delta, timestamp) {
   }
 
   updateParticles(delta);
+  updateFloatingTexts(dt);
   resolveShotCollisions();
   resolvePowerupCollisions();
   resolvePlayerCollisions(timestamp);
@@ -3854,6 +3919,7 @@ function draw() {
 
   drawBomberSquadron();
   drawParticles();
+  drawFloatingTexts();
 }
 
 function loop(timestamp) {
@@ -3866,8 +3932,13 @@ function loop(timestamp) {
     delta = 16;
   }
   state.lastFrame = timestamp;
-  update(delta, timestamp);
-  draw();
+
+  try {
+    update(delta, timestamp);
+    draw();
+  } catch (loopErr) {
+    console.error("Frame loop recovery:", loopErr);
+  }
 
   if (state.running && !state.paused) {
     requestAnimationFrame(loop);
@@ -5107,7 +5178,7 @@ function launchGameFromPortal(gameMode) {
   setGameMode(gameMode);
   showOverlay(
     gameMode === "tank" ? "MISSION BLINDÉE // NOVA TANK ASSAULT" : "CHAMP DE TIR 3D // MISSION NOVA",
-    gameMode === "tank" ? "Choisis ton Thème Terrestre, ton Blindé et ton Armement !" : "Choisis ton Biome 3D, ton Vaisseau et ton Armement !",
+    gameMode === "tank" ? "Choisis ton Théâtre d'Opérations, ton Blindé et ton Armement !" : "Choisis ton Biome 3D, ton Vaisseau et ton Armement !",
     gameMode === "tank" ? "LANCER L'ASSAUT BLINDÉ" : "DÉMARRER LA MISSION 3D"
   );
   syncUi();
