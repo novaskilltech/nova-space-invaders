@@ -18,7 +18,7 @@
   <meta name="twitter:description" content="2 Jeux en 1 : Défendez l'espace dans NOVA Space Invaders 3D ou prenez les commandes d'un blindé à tourelle 360° dans NOVA Tank Assault !">
   <meta name="twitter:image" content="https://nova-space-invaders.vercel.app/og-image.png">
 
-  <link rel="stylesheet" href="styles.css?v=46">
+  <link rel="stylesheet" href="styles.css?v=47">
 </head>
 <body data-biome="campagne" data-game="space">
   <!-- =========================================================
@@ -36,6 +36,8 @@
           <a href="#bentoCatalog" class="portal-nav-link">Catalogue Bento</a>
           <a href="#descSpaceInvaders" class="portal-nav-link">Space Invaders 3D</a>
           <a href="#descTankAssault" class="portal-nav-link">Tank Assault 360°</a>
+          <a href="#descNovaFighter" class="portal-nav-link">🥊 Duel Street Fighter</a>
+          <a href="#descDefense" class="portal-nav-link">🛡️ Bouclier & Défense</a>
         </nav>
       </header>
 
@@ -95,11 +97,43 @@
           </div>
         </article>
 
+        <!-- Carte Bento Principale 3 : DUEL 2D STREET FIGHTER (CLIMAX POST-BOSS) -->
+        <article class="bento-card bento-featured bento-duel" onclick="document.getElementById('descNovaFighter').scrollIntoView({ behavior: 'smooth' });">
+          <img src="duel_street_fighter_showcase.svg" alt="Duel 2D Street Fighter Ken Masters vs Commandant Xéno" class="bento-bg">
+          <div class="bento-overlay bento-overlay-red"></div>
+          <div class="bento-content">
+            <div class="bento-top-row">
+              <span class="bento-pill bento-pill-red">NOUVEAU GAMEPLAY • COMBAT 2D</span>
+              <span class="bento-status bento-status-red">CLIMAX POST-BOSS EN ARÈNE</span>
+            </div>
+            <div class="bento-main-info">
+              <h2>🥊 LE DUEL 2D STREET FIGHTER // KEN MASTERS</h2>
+              <p>À chaque Boss terrassé, descends de ton blindé ou de ton vaisseau ! Incarne <strong>Ken Masters</strong> en tenue rouge et affronte le <strong>Commandant Xéno</strong> au corps-à-corps dans une arène 2D rythmée par la foule : Hadoukens dévastateurs, coups de poing, coups de pied, sabre laser alien et cinématique de K.O. pour un bonus de <strong>+50 000 PTS</strong> !</p>
+              <div class="bento-actions">
+                <button class="bento-play-btn bento-play-red" data-launch-game="tank">▶ COMBATTRE EN MODE TANK</button>
+                <button class="bento-play-btn" data-launch-game="space">🚀 COMBATTRE EN MODE SPATIAL</button>
+                <a href="#descNovaFighter" class="bento-info-link" onclick="event.stopPropagation();">Voir la fiche du duel ↓</a>
+              </div>
+            </div>
+          </div>
+        </article>
+
         <!-- Bento Slot 3 : Arsenal Partagé -->
         <div class="bento-card bento-small bento-arsenal">
           <div class="bento-small-icon">⚡</div>
           <h3>Arsenal Cross-Play (8 Armes)</h3>
           <p>Twin Gatling, Triple Harpon, Cryo-Faisceau, Canon Plasma, Railgun Tesla, Torpille HE et Cluster Bomb disponibles dans chaque jeu.</p>
+        </div>
+
+        <!-- Bento Slot 4 : Bouclier & Bullet Cancellation -->
+        <div class="bento-card bento-small bento-shield" onclick="document.getElementById('descDefense').scrollIntoView({ behavior: 'smooth' });">
+          <img src="shield_defense_showcase.svg" alt="Bouclier et Interception" class="bento-bg" style="opacity: 0.35;">
+          <div class="bento-overlay"></div>
+          <div class="bento-content" style="position: relative; z-index: 2;">
+            <div class="bento-small-icon">🛡️</div>
+            <h3>Bouclier 3s & Interception Tir vs Tir</h3>
+            <p>Neutralise les missiles ennemis en plein vol et active un dôme énergétique de 3s (3 charges/partie) avec la touche [X] !</p>
+          </div>
         </div>
 
         <!-- Bento Slot 4 : Support Aérien & Boss -->
@@ -143,6 +177,7 @@
               <li><strong>5 Vaisseaux & 8 Armes au choix</strong> : Personnalise indépendamment ton chasseur (Nova, Viper, Goliath, Phantom, Orion) et ton armement principal.</li>
               <li><strong>Comm-Link Interactif</strong> : Boîte de dialogue radio en temps réel entre ton pilote et les Seigneurs Ennemis avec réponses tactiques.</li>
               <li><strong>Contrôles Hybrides</strong> : Jouable à une main à la souris (déplacement + clic + molette d'armes), au clavier ou au tactile sur mobile.</li>
+              <li><strong>Climax Post-Boss & Défense Active</strong> : Élimine le Boss pour déclencher le duel 2D Ken Masters façon Street Fighter et utilise le bouclier 3s (`[X]`) pour repousser les tirs les plus denses !</li>
             </ul>
             <button class="bento-play-btn" data-launch-game="space">🚀 LANCER NOVA SPACE INVADERS 3D</button>
           </div>
@@ -168,8 +203,61 @@
               <li><strong>Tourelle Rotative 360° + Canon Frontal</strong> : Pendant que le véhicule avance, oriente ton canon dans toutes les directions pour détruire les tourelles et embuscades sur les bas-côtés.</li>
               <li><strong>Bonus sur la Route & Bombardiers Alliés</strong> : Roule sur les caisses de ravitaillement posées sur la chaussée et appelle une escadrille de 3 bombardiers lourds (`[B]`) pour larguer un tapis de bombes.</li>
               <li><strong>4 Thèmes & 5 Niveaux avec Boss</strong> : Seconde Guerre Mondiale, Campagne du Désert, Invasion Extraterrestre et Jungle Predator (avec chasseurs camouflés et viseur tri-laser).</li>
+              <li><strong>Duel au Corps-à-Corps Post-Boss</strong> : Dès que le Boss d'un niveau s'effondre, ton pilote descend du char en kimono rouge pour affronter le chef alien en duel 2D Street Fighter avec Hadoukens et +50 000 pts bonus !</li>
             </ul>
             <button class="bento-play-btn bento-play-amber" data-launch-game="tank">🛡️ LANCER NOVA TANK ASSAULT 360°</button>
+          </div>
+        </section>
+
+        <!-- Section Descriptive Climax : DUEL STREET FIGHTER POST-BOSS -->
+        <section id="descNovaFighter" class="game-detail-section fighter-detail-section">
+          <div class="detail-visual">
+            <img src="duel_street_fighter_showcase.svg" alt="Showcase Duel 2D Street Fighter Ken Masters" class="detail-bg-img" style="border: 2px solid rgba(239, 68, 68, 0.45); box-shadow: 0 12px 35px rgba(239, 68, 68, 0.35);">
+            <div class="detail-Visual-badges">
+              <span>🥋 Ken Masters</span>
+              <span>⚡ Hadouken</span>
+              <span>⚔️ Sabre Laser</span>
+              <span>🏆 +50 000 Pts</span>
+            </div>
+          </div>
+          <div class="detail-text">
+            <div class="detail-tag detail-tag-red">FEATURE MAJEURE • TOUS MODES</div>
+            <h3>🥊 NOVA FIGHTER // Le Duel 2D Street Fighter Post-Boss</h3>
+            <p>La bataille ne s'arrête pas à la destruction du Boss mécanique ! Dès que le mastodonte explose, le <strong>Commandant Xéno</strong> s'éjecte de son cockpit et le joueur descend de son véhicule pour un <strong>affrontement au corps-à-corps en vue 2D latérale</strong>.</p>
+            <ul class="detail-features">
+              <li><strong>Combattant Ken Masters</strong> : Incarne le célèbre guerrier en kimono rouge et cheveux blonds. Décoche des coups de poing rapides (`[A]`), des coups de pied circulaires (`[Z]`) et saute par-dessus les tirs (`[↑]`).</li>
+              <li><strong>Boules d'Énergie HADOUKEN (`[E]`)</strong> : Projette des sphères de plasma bleu incandescent qui traversent l'arène et peuvent neutraliser les lasers ennemis en plein vol !</li>
+              <li><strong>Commandant Xéno & Sabre Laser</strong> : L'ennemi riposte à distance avec son fusil blaster et dégaine un sabre laser écarlate étincelant en combat rapproché.</li>
+              <li><strong>Public en Délire & Cinématique de K.O.</strong> : Soldats humains à gauche et créatures xénos à droite acclament chaque frappe. Le K.O. final déclenche une pluie de confettis et un bonus massif de <strong>+50 000 points</strong> !</li>
+            </ul>
+            <div class="bento-actions">
+              <button class="bento-play-btn bento-play-red" data-launch-game="tank">🥊 COMBATTRE (MODE TANK)</button>
+              <button class="bento-play-btn" data-launch-game="space">🚀 COMBATTRE (MODE SPATIAL)</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section Descriptive : BOUCLIER D'URGENCE & BULLET CANCELLATION -->
+        <section id="descDefense" class="game-detail-section detail-reverse defense-detail-section">
+          <div class="detail-visual">
+            <img src="shield_defense_showcase.svg" alt="Showcase Bouclier et Interception de Tirs" class="detail-bg-img" style="border: 2px solid rgba(56, 189, 248, 0.45); box-shadow: 0 12px 35px rgba(56, 189, 248, 0.35);">
+            <div class="detail-Visual-badges">
+              <span>🛡️ Bouclier 3s</span>
+              <span>💥 Tir vs Tir</span>
+              <span>⚡ 3 Charges</span>
+              <span>🎯 +50 Pts</span>
+            </div>
+          </div>
+          <div class="detail-text">
+            <div class="detail-tag detail-tag-cyan">SYSTÈME DE DÉFENSE TACTIQUE</div>
+            <h3>🛡️ Dôme d'Énergie 3s & Interception Bullet Cancellation</h3>
+            <p>Une physique d'impact avancée pour récompenser les tirs réflexes et offrir une survie héroïque lors des pluies de projectiles les plus intenses.</p>
+            <ul class="detail-features">
+              <li><strong>Interception Tir contre Tir</strong> : Si ton tir croise un projectile ou missile ennemi, les deux s'annulent mutuellement dans une gerbe d'étincelles avec un bonus de score immédiat (+50 pts) !</li>
+              <li><strong>Bouclier d'Urgence Invulnérable (`[X]` ou `[C]`)</strong> : Déploie instantanément une sphère de force hexagonale cyan pendant <strong>3 secondes</strong> (3 activations par partie). Dévie 100 % des impacts.</li>
+              <li><strong>Contrôles Dédiés Mobile & Desktop</strong> : Bouton d'activation direct sur le HUD desktop et sur le dock tactile mobile pour déclencher le dôme en une fraction de seconde.</li>
+            </ul>
+            <button class="bento-play-btn" data-launch-game="space">🛡️ TESTER LE BOUCLIER EN JEU</button>
           </div>
         </section>
       </div>
@@ -539,6 +627,6 @@
     </div>
   </main>
 
-  <script src="game.js?v=46"></script>
+  <script src="game.js?v=47"></script>
 </body>
 </html>

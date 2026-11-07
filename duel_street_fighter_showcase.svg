@@ -1,0 +1,262 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675">
+  <defs>
+    <!-- Filtres lueur néon -->
+    <filter id="glow-cyan" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur1" />
+      <feGaussianBlur stdDeviation="20" result="blur2" />
+      <feMerge>
+        <feMergeNode in="blur2" />
+        <feMergeNode in="blur1" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <filter id="glow-red" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur1" />
+      <feGaussianBlur stdDeviation="22" result="blur2" />
+      <feMerge>
+        <feMergeNode in="blur2" />
+        <feMergeNode in="blur1" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <filter id="glow-gold" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="10" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <!-- Dégradés de fond et d'énergie -->
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#060913" />
+      <stop offset="55%" stop-color="#1e1035" />
+      <stop offset="85%" stop-color="#3b0764" />
+      <stop offset="100%" stop-color="#180424" />
+    </linearGradient>
+
+    <linearGradient id="groundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="12%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+
+    <radialGradient id="hadoukenGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="25%" stop-color="#e0f2fe" />
+      <stop offset="55%" stop-color="#38bdf8" />
+      <stop offset="80%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#0369a1" stop-opacity="0" />
+    </radialGradient>
+
+    <linearGradient id="hpPlayerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ef4444" />
+      <stop offset="35%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#22c55e" />
+    </linearGradient>
+
+    <linearGradient id="hpEnemyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#22c55e" />
+      <stop offset="65%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#ef4444" />
+    </linearGradient>
+
+    <linearGradient id="saberGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="40%" stop-color="#fca5a5" />
+      <stop offset="100%" stop-color="#dc2626" />
+    </linearGradient>
+  </defs>
+
+  <!-- FOND D'ARÈNE 2D STREET FIGHTER -->
+  <rect x="0" y="0" width="1200" height="520" fill="url(#skyGrad)" />
+  
+  <!-- Épave de char Boss détruit en arrière-plan -->
+  <path d="M 420 520 L 480 430 L 580 410 L 680 435 L 750 520 Z" fill="#0f172a" opacity="0.85" />
+  <circle cx="530" cy="425" r="30" fill="#1e293b" />
+  <!-- Flammes et fumée de l'épave -->
+  <circle cx="490" cy="410" r="18" fill="#f97316" opacity="0.35" filter="url(#glow-gold)" />
+  <circle cx="560" cy="390" r="22" fill="#ef4444" opacity="0.3" filter="url(#glow-red)" />
+
+  <!-- Sol et Grille Néon de l'Arène -->
+  <rect x="0" y="520" width="1200" height="155" fill="url(#groundGrad)" />
+  <line x1="0" y1="520" x2="1200" y2="520" stroke="#38bdf8" stroke-width="3" opacity="0.6" filter="url(#glow-cyan)" />
+  <line x1="100" y1="520" x2="0" y2="675" stroke="#38bdf8" stroke-width="1" opacity="0.2" />
+  <line x1="300" y1="520" x2="220" y2="675" stroke="#38bdf8" stroke-width="1" opacity="0.2" />
+  <line x1="500" y1="520" x2="460" y2="675" stroke="#38bdf8" stroke-width="1" opacity="0.2" />
+  <line x1="700" y1="520" x2="740" y2="675" stroke="#38bdf8" stroke-width="1" opacity="0.2" />
+  <line x1="900" y1="520" x2="980" y2="675" stroke="#38bdf8" stroke-width="1" opacity="0.2" />
+  <line x1="1100" y1="520" x2="1200" y2="675" stroke="#38bdf8" stroke-width="1" opacity="0.2" />
+
+  <!-- SPECTATEURS HUMAINS (À GAUCHE) -->
+  <g id="human-crowd" opacity="0.9">
+    <!-- Soldat 1 -->
+    <rect x="50" y="470" width="16" height="36" rx="4" fill="#10b981" />
+    <circle cx="58" cy="458" r="8" fill="#fed7aa" />
+    <rect x="50" y="452" width="16" height="6" fill="#f59e0b" />
+    <!-- Soldat 2 avec bras levés -->
+    <rect x="85" y="460" width="18" height="38" rx="4" fill="#0284c7" />
+    <circle cx="94" cy="448" r="9" fill="#fed7aa" />
+    <path d="M 85 470 L 72 445" stroke="#fed7aa" stroke-width="3.5" stroke-linecap="round" />
+    <path d="M 103 470 L 116 445" stroke="#fed7aa" stroke-width="3.5" stroke-linecap="round" />
+    <!-- Banderole NOVA -->
+    <rect x="110" y="420" width="60" height="24" rx="4" fill="#fbbf24" filter="url(#glow-gold)" />
+    <text x="140" y="437" font-family="Arial, sans-serif" font-weight="900" font-size="12" fill="#000000" text-anchor="middle">NOVA !</text>
+    <line x1="110" y1="420" x2="110" y2="480" stroke="#94a3b8" stroke-width="2.5" />
+    <!-- Soldat 3 -->
+    <rect x="180" y="468" width="16" height="36" rx="4" fill="#10b981" />
+    <circle cx="188" cy="456" r="8" fill="#fed7aa" />
+  </g>
+
+  <!-- SPECTATEURS EXTRATERRESTRES (À DROITE) -->
+  <g id="alien-crowd" opacity="0.9">
+    <!-- Alien 1 -->
+    <rect x="1000" y="465" width="18" height="38" rx="4" fill="#7e22ce" />
+    <ellipse cx="1009" cy="452" rx="9" ry="12" fill="#22c55e" />
+    <circle cx="1006" cy="450" r="2.5" fill="#ef4444" />
+    <circle cx="1012" cy="450" r="2.5" fill="#ef4444" />
+    <!-- Alien 2 -->
+    <rect x="1040" y="460" width="20" height="40" rx="4" fill="#a855f7" />
+    <ellipse cx="1050" cy="446" rx="10" ry="13" fill="#15803d" />
+    <path d="M 1040 472 L 1025 448" stroke="#15803d" stroke-width="4" stroke-linecap="round" />
+    <path d="M 1060 472 L 1075 448" stroke="#15803d" stroke-width="4" stroke-linecap="round" />
+    <!-- Alien 3 avec bannière Xéno -->
+    <rect x="1110" y="468" width="18" height="38" rx="4" fill="#dc2626" />
+    <ellipse cx="1119" cy="455" rx="9" ry="11" fill="#22c55e" />
+    <rect x="1080" y="420" width="55" height="24" rx="4" fill="#7e22ce" />
+    <text x="1107" y="437" font-family="Arial, sans-serif" font-weight="900" font-size="11" fill="#4ade80" text-anchor="middle">XÉNO</text>
+  </g>
+
+  <!-- COMBATTANT GAUCHE : KEN MASTERS (JOUEUR) -->
+  <g id="ken-masters" transform="translate(340, 520)">
+    <!-- Ombre au sol -->
+    <ellipse cx="0" cy="8" rx="45" ry="14" fill="#000000" opacity="0.6" />
+
+    <!-- Jambes et Pantalon Gi Rouge Karaté -->
+    <rect x="-35" y="-75" width="26" height="75" rx="5" fill="#dc2626" />
+    <rect x="5" y="-75" width="26" height="75" rx="5" fill="#dc2626" />
+    <!-- Pieds nus avec bandages blancs -->
+    <rect x="-37" y="-12" width="28" height="14" rx="3" fill="#fed7aa" />
+    <rect x="5" y="-12" width="28" height="14" rx="3" fill="#fed7aa" />
+    <rect x="-35" y="-8" width="24" height="6" fill="#f8fafc" />
+    <rect x="7" y="-8" width="24" height="6" fill="#f8fafc" />
+
+    <!-- Veste de Gi Rouge sans manches -->
+    <rect x="-35" y="-145" width="70" height="78" rx="6" fill="#ef4444" />
+    <!-- Torse musclé et encolure en V -->
+    <path d="M -16 -145 L 16 -145 L 0 -105 Z" fill="#fed7aa" />
+    <line x1="0" y1="-105" x2="0" y2="-75" stroke="#e0a96d" stroke-width="3" />
+
+    <!-- Ceinture Noire avec pans noués -->
+    <rect x="-38" y="-78" width="76" height="16" rx="3" fill="#0f172a" />
+    <rect x="-8" y="-62" width="8" height="36" fill="#0f172a" rx="2" />
+    <rect x="4" y="-62" width="8" height="44" fill="#0f172a" rx="2" />
+
+    <!-- Bras et Gants Marrons (Posture Hadouken tendue vers l'avant) -->
+    <rect x="10" y="-135" width="75" height="24" rx="6" fill="#fed7aa" />
+    <rect x="70" y="-140" width="30" height="32" rx="6" fill="#78350f" stroke="#451a03" stroke-width="2" />
+    <!-- Effet de vitesse sur les mains -->
+    <path d="M 40 -145 L 75 -145 L 60 -115 Z" fill="#ffea00" opacity="0.4" />
+
+    <!-- Tête et Visage de Ken -->
+    <circle cx="0" cy="-165" r="22" fill="#fed7aa" />
+    <!-- Bandeau / sourcils déterminés -->
+    <rect x="-18" y="-172" width="12" height="4" fill="#b45309" />
+    <rect x="2" y="-172" width="12" height="4" fill="#b45309" />
+
+    <!-- Chevelure Blonde Ébouriffée Culte -->
+    <path d="M -24 -170 L -34 -195 L -16 -185 L 0 -205 L 16 -185 L 34 -195 L 24 -170 Z" fill="#fbbf24" stroke="#f59e0b" stroke-width="2" />
+  </g>
+
+  <!-- LA BOULE D'ÉNERGIE : HADOUKEN (GÉANTE ET RAYONNANTE) -->
+  <g id="hadouken-fireball" transform="translate(560, 395)">
+    <!-- Aura de dispersion géante -->
+    <circle cx="0" cy="0" r="95" fill="url(#hadoukenGrad)" opacity="0.6" filter="url(#glow-cyan)" />
+    <!-- Noyau plasma haute énergie -->
+    <circle cx="0" cy="0" r="55" fill="url(#hadoukenGrad)" filter="url(#glow-cyan)" />
+    <circle cx="0" cy="0" r="28" fill="#ffffff" filter="url(#glow-cyan)" />
+
+    <!-- Arcs électriques et vortex de flammes cyan -->
+    <path d="M -90 -20 Q -40 -60 20 -40 Q 80 -20 110 0 Q 70 35 10 45 Q -60 55 -90 10 Z" fill="none" stroke="#7dd3fc" stroke-width="4" filter="url(#glow-cyan)" />
+    <path d="M -110 5 Q -60 -40 30 -30 Q 90 -10 130 5" fill="none" stroke="#ffffff" stroke-width="3" />
+    
+    <!-- Traînée de vitesse rétrograde -->
+    <polygon points="-50,-25 -140,-40 -110,-10 -160,0 -110,10 -140,40 -50,25" fill="#38bdf8" opacity="0.5" filter="url(#glow-cyan)" />
+
+    <!-- Bulle Comic HADOUKEN ! -->
+    <rect x="-80" y="-115" width="160" height="38" rx="10" fill="#0284c7" stroke="#38bdf8" stroke-width="2.5" filter="url(#glow-cyan)" />
+    <text x="0" y="-90" font-family="'Impact', Arial Black, sans-serif" font-size="22" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="2">HADOUKEN !</text>
+  </g>
+
+  <!-- COMBATTANT DROITE : COMMANDANT XÉNO (BOSS) -->
+  <g id="alien-warlord" transform="translate(860, 520)">
+    <!-- Ombre au sol -->
+    <ellipse cx="0" cy="8" rx="45" ry="14" fill="#000000" opacity="0.6" />
+
+    <!-- Jambes Cyber-Armure Sombre avec Inserts Violets -->
+    <rect x="-32" y="-80" width="26" height="80" rx="5" fill="#1e1b4b" stroke="#6b21a8" stroke-width="2" />
+    <rect x="8" y="-80" width="26" height="80" rx="5" fill="#1e1b4b" stroke="#6b21a8" stroke-width="2" />
+    <!-- Bottes exosquelette à griffes -->
+    <rect x="-38" y="-14" width="34" height="16" rx="4" fill="#0f172a" />
+    <rect x="6" y="-14" width="34" height="16" rx="4" fill="#0f172a" />
+
+    <!-- Plastron de Combat Xéno -->
+    <rect x="-36" y="-155" width="72" height="80" rx="8" fill="#0f172a" stroke="#a855f7" stroke-width="2.5" />
+    <!-- Coeur Fusion Vert Néon -->
+    <circle cx="0" cy="-115" r="14" fill="#22c55e" filter="url(#glow-cyan)" />
+    <circle cx="0" cy="-115" r="6" fill="#ffffff" />
+
+    <!-- Tête Bio-Mécanique Xéno -->
+    <ellipse cx="0" cy="-180" rx="22" ry="26" fill="#15803d" />
+    <!-- Visière Tri-Laser Rouge Predator / Alien -->
+    <rect x="-14" y="-188" width="28" height="10" rx="3" fill="#ef4444" filter="url(#glow-red)" />
+    <!-- Cornes / Crête d'élite -->
+    <polygon points="-12,-202 0,-225 12,-202" fill="#0f172a" stroke="#a855f7" stroke-width="2" />
+
+    <!-- Fusil Laser Carbine dans la main gauche -->
+    <rect x="-55" y="-130" width="40" height="14" rx="3" fill="#334155" />
+    <rect x="-65" y="-133" width="12" height="20" rx="2" fill="#22c55e" filter="url(#glow-cyan)" />
+
+    <!-- SABRE LASER ÉCARLATE DÉPLOYÉ (MAIN DROITE) -->
+    <g id="lightsaber" transform="translate(-10, -120) rotate(-35)">
+      <!-- Poignée chromée -->
+      <rect x="-6" y="-15" width="12" height="30" rx="3" fill="#64748b" stroke="#000000" stroke-width="1.5" />
+      <rect x="-8" y="-20" width="16" height="6" fill="#334155" />
+      <!-- Lame Plasma Rouge Flamboyante -->
+      <rect x="-5" y="-150" width="10" height="130" rx="5" fill="url(#saberGrad)" filter="url(#glow-red)" />
+      <rect x="-2" y="-150" width="4" height="130" rx="2" fill="#ffffff" />
+    </g>
+  </g>
+
+  <!-- TOP BARRE : HUD STREET FIGHTER V (HEALTH BARS & TIMER) -->
+  <g id="street-fighter-hud">
+    <!-- Barre Ken Masters (Gauche) -->
+    <rect x="50" y="30" width="420" height="28" rx="4" fill="#0f172a" stroke="#fbbf24" stroke-width="3" />
+    <rect x="54" y="34" width="370" height="20" fill="url(#hpPlayerGrad)" />
+    <text x="52" y="24" font-family="'Impact', Arial Black, sans-serif" font-size="18" fill="#ffffff" letter-spacing="1">KEN MASTERS (NOVA COMMANDER)</text>
+    <text x="440" y="50" font-family="Arial, sans-serif" font-weight="900" font-size="14" fill="#ffffff">92%</text>
+
+    <!-- Timer Central Rond Arcade -->
+    <circle cx="600" cy="44" r="34" fill="#090d16" stroke="#fbbf24" stroke-width="4" filter="url(#glow-gold)" />
+    <text x="600" y="54" font-family="'Impact', Arial Black, sans-serif" font-size="30" fill="#fbbf24" text-anchor="middle">58</text>
+
+    <!-- Barre Commandant Xéno (Droite) -->
+    <rect x="730" y="30" width="420" height="28" rx="4" fill="#0f172a" stroke="#ef4444" stroke-width="3" />
+    <rect x="850" y="34" width="296" height="20" fill="url(#hpEnemyGrad)" />
+    <text x="1150" y="24" font-family="'Impact', Arial Black, sans-serif" font-size="18" fill="#ffffff" text-anchor="end" letter-spacing="1">COMMANDANT XÉNO (WARLORD)</text>
+    <text x="760" y="50" font-family="Arial, sans-serif" font-weight="900" font-size="14" fill="#ffffff">74%</text>
+
+    <!-- Badge FIGHT ! au centre -->
+    <g transform="translate(600, 105)">
+      <text x="0" y="0" font-family="'Impact', Arial Black, sans-serif" font-size="34" font-weight="900" fill="#ef4444" text-anchor="middle" filter="url(#glow-red)" letter-spacing="4">ROUND 1 • FIGHT !</text>
+    </g>
+  </g>
+
+  <!-- BANDEAU BAS : TOUCHES DE CONTRÔLE -->
+  <g id="controls-banner" transform="translate(600, 645)">
+    <rect x="-350" y="-20" width="700" height="36" rx="18" fill="rgba(15, 23, 42, 0.9)" stroke="rgba(255, 255, 255, 0.2)" />
+    <text x="0" y="4" font-family="Arial, sans-serif" font-weight="800" font-size="13" fill="#f8fafc" text-anchor="middle">
+      👊 [A] POING  •  🦵 [Z] PIED  •  ⚡ [E] HADOUKEN  •  ⬆️ [HAUT] SAUT  •  VICTOIRE : +50 000 PTS
+    </text>
+  </g>
+</svg>

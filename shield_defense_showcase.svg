@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675">
+  <defs>
+    <!-- Filtres lueur néon -->
+    <filter id="glow-cyan" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur1" />
+      <feGaussianBlur stdDeviation="22" result="blur2" />
+      <feMerge>
+        <feMergeNode in="blur2" />
+        <feMergeNode in="blur1" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <filter id="glow-gold" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur1" />
+      <feGaussianBlur stdDeviation="20" result="blur2" />
+      <feMerge>
+        <feMergeNode in="blur2" />
+        <feMergeNode in="blur1" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <radialGradient id="shieldSphereGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.05" />
+      <stop offset="65%" stop-color="#0284c7" stop-opacity="0.22" />
+      <stop offset="92%" stop-color="#38bdf8" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#bae6fd" stop-opacity="0.95" />
+    </radialGradient>
+
+    <linearGradient id="tankArmorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569" />
+      <stop offset="50%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+
+    <linearGradient id="bgWarzoneGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#020617" />
+      <stop offset="50%" stop-color="#0f172a" />
+      <stop offset="85%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#090d16" />
+    </linearGradient>
+  </defs>
+
+  <!-- FOND DU THÉÂTRE DE GUERRE -->
+  <rect x="0" y="0" width="1200" height="675" fill="url(#bgWarzoneGrad)" />
+
+  <!-- Éléments de grille tactique radar -->
+  <g opacity="0.15">
+    <circle cx="600" cy="360" r="150" fill="none" stroke="#38bdf8" stroke-width="1.5" />
+    <circle cx="600" cy="360" r="280" fill="none" stroke="#38bdf8" stroke-width="1.5" />
+    <circle cx="600" cy="360" r="420" fill="none" stroke="#38bdf8" stroke-width="1.5" />
+    <line x1="600" y1="0" x2="600" y2="675" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="8 6" />
+    <line x1="0" y1="360" x2="1200" y2="360" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="8 6" />
+  </g>
+
+  <!-- BLINDÉ D'ASSAUT LOURD AU CENTRE -->
+  <g id="heavy-tank" transform="translate(600, 360)">
+    <!-- Ombre du tank -->
+    <ellipse cx="0" cy="35" rx="140" ry="50" fill="#000000" opacity="0.75" />
+
+    <!-- Chenilles latérales -->
+    <rect x="-135" y="-30" width="270" height="26" rx="8" fill="#0f172a" stroke="#334155" stroke-width="3" />
+    <rect x="-135" y="16" width="270" height="26" rx="8" fill="#0f172a" stroke="#334155" stroke-width="3" />
+    <!-- Galets de roulement -->
+    <circle cx="-90" cy="-17" r="8" fill="#475569" />
+    <circle cx="-45" cy="-17" r="8" fill="#475569" />
+    <circle cx="0" cy="-17" r="8" fill="#475569" />
+    <circle cx="45" cy="-17" r="8" fill="#475569" />
+    <circle cx="90" cy="-17" r="8" fill="#475569" />
+    <circle cx="-90" cy="29" r="8" fill="#475569" />
+    <circle cx="-45" cy="29" r="8" fill="#475569" />
+    <circle cx="0" cy="29" r="8" fill="#475569" />
+    <circle cx="45" cy="29" r="8" fill="#475569" />
+    <circle cx="90" cy="29" r="8" fill="#475569" />
+
+    <!-- Châssis blindé lourd -->
+    <rect x="-110" y="-22" width="220" height="56" rx="10" fill="url(#tankArmorGrad)" stroke="#64748b" stroke-width="2.5" />
+    <!-- Blindage réactif ERA -->
+    <rect x="-95" y="-14" width="28" height="18" rx="2" fill="#334155" />
+    <rect x="-60" y="-14" width="28" height="18" rx="2" fill="#334155" />
+    <rect x="32" y="-14" width="28" height="18" rx="2" fill="#334155" />
+    <rect x="67" y="-14" width="28" height="18" rx="2" fill="#334155" />
+
+    <!-- Tourelle rotative et double canon lourd -->
+    <rect x="0" y="-10" width="135" height="10" rx="3" fill="#1e293b" stroke="#64748b" stroke-width="2" />
+    <rect x="0" y="2" width="135" height="10" rx="3" fill="#1e293b" stroke="#64748b" stroke-width="2" />
+    <circle cx="-10" cy="3" r="38" fill="#334155" stroke="#94a3b8" stroke-width="3" />
+    <circle cx="-10" cy="3" r="16" fill="#1e293b" />
+    <!-- Viseur laser tourelle -->
+    <circle cx="10" cy="-8" r="4" fill="#38bdf8" filter="url(#glow-cyan)" />
+  </g>
+
+  <!-- DÔME ÉNERGÉTIQUE DU BOUCLIER D'URGENCE (HEXAGONES ET LUEUR CYAN) -->
+  <g id="shield-dome" transform="translate(600, 360)">
+    <!-- Sphère rayonnante -->
+    <circle cx="0" cy="0" r="220" fill="url(#shieldSphereGrad)" filter="url(#glow-cyan)" />
+    <circle cx="0" cy="0" r="220" fill="none" stroke="#bae6fd" stroke-width="4" filter="url(#glow-cyan)" />
+    <circle cx="0" cy="0" r="212" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="14 10" />
+
+    <!-- Maillage Hexagonal Futuriste -->
+    <!-- Hexagone 1 -->
+    <polygon points="0,-180 40,-155 40,-115 0,-90 -40,-115 -40,-155" fill="none" stroke="#38bdf8" stroke-width="2" opacity="0.75" />
+    <!-- Hexagone 2 -->
+    <polygon points="120,-110 160,-85 160,-45 120,-20 80,-45 80,-85" fill="none" stroke="#38bdf8" stroke-width="2" opacity="0.75" />
+    <!-- Hexagone 3 -->
+    <polygon points="-120,-110 -80,-85 -80,-45 -120,-20 -160,-45 -160,-85" fill="none" stroke="#38bdf8" stroke-width="2" opacity="0.75" />
+    <!-- Hexagone 4 -->
+    <polygon points="120,90 160,115 160,155 120,180 80,155 80,115" fill="none" stroke="#38bdf8" stroke-width="2" opacity="0.75" />
+    <!-- Hexagone 5 -->
+    <polygon points="-120,90 -80,115 -80,155 -120,180 -160,155 -160,115" fill="none" stroke="#38bdf8" stroke-width="2" opacity="0.75" />
+  </g>
+
+  <!-- INTERCEPTION DE MISSILES ET TIRS ENNEMIS EN PLEIN VOL -->
+  <!-- Impact 1 (En haut à gauche) : Missile dévié par le dôme -->
+  <g id="interception-top-left" transform="translate(425, 205)">
+    <!-- Gerbe d'explosion de l'impact -->
+    <circle cx="0" cy="0" r="32" fill="#f59e0b" opacity="0.6" filter="url(#glow-gold)" />
+    <circle cx="0" cy="0" r="16" fill="#ffffff" filter="url(#glow-gold)" />
+    <polygon points="0,-45 12,-15 45,0 15,12 0,45 -12,15 -45,0 -15,-12" fill="#fbbf24" />
+    <!-- Éclats de missile brisé -->
+    <line x1="-35" y1="-25" x2="-65" y2="-45" stroke="#ef4444" stroke-width="4" stroke-linecap="round" />
+    <line x1="-25" y1="15" x2="-55" y2="35" stroke="#64748b" stroke-width="4" stroke-linecap="round" />
+    <!-- Badge DEFLECT ! -->
+    <rect x="-85" y="-55" width="115" height="26" rx="6" fill="#0284c7" stroke="#38bdf8" stroke-width="2" />
+    <text x="-27" y="-38" font-family="Arial, sans-serif" font-weight="900" font-size="12" fill="#ffffff" text-anchor="middle">DEFLECT !</text>
+  </g>
+
+  <!-- Impact 2 (En haut à droite) : Obus Pak-40 neutralisé -->
+  <g id="interception-top-right" transform="translate(775, 205)">
+    <circle cx="0" cy="0" r="28" fill="#38bdf8" opacity="0.7" filter="url(#glow-cyan)" />
+    <circle cx="0" cy="0" r="14" fill="#ffffff" />
+    <polygon points="0,-35 10,-10 35,0 10,10 0,35 -10,10 -35,0 -10,-10" fill="#bae6fd" />
+    <!-- Badge INTERCEPTÉ ! -->
+    <rect x="-30" y="-55" width="135" height="26" rx="6" fill="#0f172a" stroke="#22c55e" stroke-width="2" filter="url(#glow-cyan)" />
+    <text x="37" y="-38" font-family="Arial, sans-serif" font-weight="900" font-size="12" fill="#4ade80" text-anchor="middle">INTERCEPTÉ ! +50</text>
+  </g>
+
+  <!-- INTERCEPTION TIR CONTRE TIR (BULLET CANCELLATION) -->
+  <g id="bullet-vs-bullet" transform="translate(180, 240)">
+    <!-- Tir Joueur (Bleu) -->
+    <line x1="0" y1="0" x2="60" y2="0" stroke="#38bdf8" stroke-width="8" stroke-linecap="round" filter="url(#glow-cyan)" />
+    <!-- Tir Ennemi (Rouge) arrivant en sens inverse -->
+    <line x1="120" y1="0" x2="60" y2="0" stroke="#ef4444" stroke-width="8" stroke-linecap="round" filter="url(#glow-cyan)" />
+    <!-- Point d'impact d'annulation -->
+    <circle cx="60" cy="0" r="18" fill="#ffffff" filter="url(#glow-gold)" />
+    <text x="60" y="-22" font-family="Arial, sans-serif" font-weight="900" font-size="12" fill="#fbbf24" text-anchor="middle">TIR VS TIR = ANNULATION</text>
+  </g>
+
+  <!-- TOP BARRE : INFORMATIONS TACTIQUES -->
+  <g id="tactical-hud">
+    <rect x="50" y="30" width="380" height="42" rx="10" fill="rgba(15, 23, 42, 0.9)" stroke="#38bdf8" stroke-width="2.5" filter="url(#glow-cyan)" />
+    <text x="70" y="56" font-family="Arial, sans-serif" font-weight="900" font-size="16" fill="#38bdf8">🛡️ BOUCLIER INVULNÉRABLE (3 SECONDES)</text>
+
+    <!-- Statut des 3 charges -->
+    <g transform="translate(370, 51)">
+      <circle cx="-35" cy="0" r="8" fill="#38bdf8" filter="url(#glow-cyan)" />
+      <circle cx="-15" cy="0" r="8" fill="#38bdf8" filter="url(#glow-cyan)" />
+      <circle cx="5" cy="0" r="8" fill="#38bdf8" filter="url(#glow-cyan)" />
+    </g>
+
+    <rect x="770" y="30" width="380" height="42" rx="10" fill="rgba(15, 23, 42, 0.9)" stroke="#fbbf24" stroke-width="2.5" filter="url(#glow-gold)" />
+    <text x="960" y="56" font-family="Arial, sans-serif" font-weight="900" font-size="16" fill="#fbbf24" text-anchor="middle">⚡ BULLET CANCELLATION ACTIVE</text>
+  </g>
+
+  <!-- BANDEAU BAS : EXPLICATION DES COMMANDES -->
+  <g id="controls-banner" transform="translate(600, 635)">
+    <rect x="-420" y="-20" width="840" height="38" rx="19" fill="rgba(15, 23, 42, 0.95)" stroke="rgba(255, 255, 255, 0.2)" />
+    <text x="0" y="5" font-family="Arial, sans-serif" font-weight="800" font-size="13" fill="#f8fafc" text-anchor="middle">
+      🛡️ TOUCHE [X] OU [C] : BOUCLIER 3 SECONDES (3 CHARGES / PARTIE)  •  💥 TIR JOUEUR VS TIR ENNEMI : NEUTRALISATION MUTUELLE
+    </text>
+  </g>
+</svg>

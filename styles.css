@@ -2570,6 +2570,38 @@ canvas {
   border-color: rgba(245, 158, 11, 0.55);
 }
 
+.bento-pill-red {
+  background: rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.55);
+}
+
+.bento-status-red {
+  color: #f87171;
+}
+
+.bento-play-red {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  color: #ffffff;
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45);
+}
+
+.bento-overlay-red {
+  background: linear-gradient(180deg, rgba(20, 6, 12, 0.4) 0%, rgba(15, 6, 15, 0.94) 85%);
+}
+
+.detail-tag-red {
+  background: rgba(239, 68, 68, 0.22);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.detail-tag-cyan {
+  background: rgba(14, 165, 233, 0.22);
+  color: #7dd3fc;
+  border-color: rgba(14, 165, 233, 0.5);
+}
+
 .bento-status {
   font-size: 0.68rem;
   font-weight: 700;
