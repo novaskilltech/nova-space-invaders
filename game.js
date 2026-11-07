@@ -4728,150 +4728,389 @@ function drawVersusDuel() {
 
   ctx.save();
 
+  // 1. DÉCOR 4K : Ciel Cosmique Profond & Nébuleuse Spatiale
   const skyGrad = ctx.createLinearGradient(0, 0, 0, gy);
-  skyGrad.addColorStop(0, "#090d16");
-  skyGrad.addColorStop(0.65, "#1e1b4b");
-  skyGrad.addColorStop(1, "#311042");
+  skyGrad.addColorStop(0, "#030712");
+  skyGrad.addColorStop(0.35, "#0b0f19");
+  skyGrad.addColorStop(0.7, "#1e1138");
+  skyGrad.addColorStop(1, "#2e0854");
   ctx.fillStyle = skyGrad;
   ctx.fillRect(0, 0, w, h);
 
-  ctx.fillStyle = "rgba(15, 23, 42, 0.75)";
+  // Étoiles scintillantes lointaines
+  ctx.fillStyle = "#ffffff";
+  for (let i = 0; i < 45; i++) {
+    const starX = (i * 97 + 13) % w;
+    const starY = (i * 53 + 7) % (gy * 0.75);
+    const starAlpha = 0.3 + 0.7 * Math.abs(Math.sin(now * 0.002 + i * 1.7));
+    ctx.globalAlpha = starAlpha;
+    ctx.fillRect(starX, starY, (i % 3 === 0) ? 2 : 1, (i % 3 === 0) ? 2 : 1);
+  }
+  ctx.globalAlpha = 1;
+
+  // Planète Gazeuse Géante à Anneaux 4K à l'horizon cosmique
+  const planetX = w * 0.52;
+  const planetY = gy * 0.32;
+  const planetR = Math.min(85, gy * 0.28);
+  const planetGrad = ctx.createRadialGradient(planetX - planetR * 0.35, planetY - planetR * 0.35, planetR * 0.1, planetX, planetY, planetR);
+  planetGrad.addColorStop(0, "#cbd5e1");
+  planetGrad.addColorStop(0.4, "#6366f1");
+  planetGrad.addColorStop(0.8, "#312e81");
+  planetGrad.addColorStop(1, "#0f172a");
+  ctx.fillStyle = planetGrad;
   ctx.beginPath();
-  ctx.moveTo(w * 0.38, gy);
-  ctx.lineTo(w * 0.45, gy - 65);
-  ctx.lineTo(w * 0.58, gy - 55);
-  ctx.lineTo(w * 0.65, gy);
-  ctx.closePath();
+  ctx.arc(planetX, planetY, planetR, 0, Math.PI * 2);
   ctx.fill();
 
+  // Anneaux de la planète
+  ctx.save();
+  ctx.translate(planetX, planetY);
+  ctx.rotate(-0.4);
+  ctx.strokeStyle = "rgba(199, 210, 254, 0.45)";
+  ctx.lineWidth = 3.5;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, planetR * 2.3, planetR * 0.55, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(129, 140, 248, 0.25)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, planetR * 2.6, planetR * 0.62, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+
+  // 2. DÉCOR 4K : Arène Cyber-Colisée / Piliers et Gradins
+  // Projecteurs d'arène volumétriques rotatifs
+  for (let s = 0; s < 4; s++) {
+    const sBaseX = (w * 0.12) + s * (w * 0.25);
+    const sAngle = Math.sin(now * 0.0012 + s * 1.5) * 0.35;
+    ctx.save();
+    ctx.translate(sBaseX, gy - 25);
+    ctx.rotate(sAngle);
+    const beamGrad = ctx.createLinearGradient(0, 0, 0, -gy * 1.2);
+    beamGrad.addColorStop(0, s < 2 ? "rgba(56, 189, 248, 0.32)" : "rgba(239, 68, 68, 0.28)");
+    beamGrad.addColorStop(0.6, s < 2 ? "rgba(56, 189, 248, 0.08)" : "rgba(239, 68, 68, 0.06)");
+    beamGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
+    ctx.fillStyle = beamGrad;
+    ctx.beginPath();
+    ctx.moveTo(-18, 0);
+    ctx.lineTo(-85, -gy * 1.15);
+    ctx.lineTo(85, -gy * 1.15);
+    ctx.lineTo(18, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Gradins d'arène en arrière-plan avec treillis métallique
+  ctx.fillStyle = "#090d16";
+  ctx.fillRect(0, gy - 55, w, 55);
+  ctx.strokeStyle = "rgba(56, 189, 248, 0.22)";
+  ctx.lineWidth = 1.5;
+  for (let gx = 0; gx < w; gx += 40) {
+    ctx.beginPath();
+    ctx.moveTo(gx, gy - 55);
+    ctx.lineTo(gx + 20, gy);
+    ctx.stroke();
+  }
+
+  // Bannières Holographiques 4K de l'Arène
+  const bannerY = gy - 78;
+  ctx.save();
+  ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+  ctx.fillRect(w * 0.22, bannerY, w * 0.56, 20);
+  ctx.strokeStyle = "rgba(245, 158, 11, 0.7)";
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(w * 0.22, bannerY, w * 0.56, 20);
+  ctx.fillStyle = "#fbbf24";
+  ctx.font = "900 11px system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.shadowColor = "#f59e0b";
+  ctx.shadowBlur = 10;
+  ctx.fillText("⚡ NOVA COMBAT CHAMPIONSHIP // SECTEUR 7 ARENA 4K ⚡", w * 0.5, bannerY + 14);
+  ctx.restore();
+
+  // 3. DÉCOR 4K : Sol Tactique Hexagonal en Titane & Dalles de Verre Luminescentes
   const groundGrad = ctx.createLinearGradient(0, gy, 0, h);
   groundGrad.addColorStop(0, "#1e293b");
-  groundGrad.addColorStop(0.15, "#0f172a");
-  groundGrad.addColorStop(1, "#020617");
+  groundGrad.addColorStop(0.12, "#0f172a");
+  groundGrad.addColorStop(0.5, "#020617");
+  groundGrad.addColorStop(1, "#000000");
   ctx.fillStyle = groundGrad;
   ctx.fillRect(0, gy, w, h - gy);
 
-  ctx.strokeStyle = "rgba(56, 189, 248, 0.4)";
-  ctx.lineWidth = 2;
+  // Ligne de combat laser au sol
+  ctx.strokeStyle = "rgba(56, 189, 248, 0.85)";
+  ctx.lineWidth = 2.5;
+  ctx.shadowColor = "#38bdf8";
+  ctx.shadowBlur = 14;
   ctx.beginPath();
-  ctx.moveTo(0, gy + 1);
-  ctx.lineTo(w, gy + 1);
+  ctx.moveTo(0, gy);
+  ctx.lineTo(w, gy);
   ctx.stroke();
+  ctx.shadowBlur = 0;
 
+  // Dalles hexagonales cybernétiques au sol
+  ctx.strokeStyle = "rgba(56, 189, 248, 0.12)";
+  ctx.lineWidth = 1;
+  const hexSize = 34;
+  for (let hx = 0; hx < w; hx += hexSize * 1.5) {
+    ctx.beginPath();
+    ctx.moveTo(hx, gy);
+    ctx.lineTo(hx + hexSize * 0.5, h);
+    ctx.stroke();
+  }
+
+  // 4. SPECTATEURS 4K (HUMAINS À GAUCHE VS EXTRATERRESTRES À DROITE)
   const isWinning = versusDuel.phase === "victory" || versusDuel.phase === "ko";
   versusDuel.spectators.forEach((sp) => {
-    const jumpAmp = isWinning && sp.side === "human" ? 14 : 6;
+    const jumpAmp = isWinning && sp.side === "human" ? 16 : 6;
     const jumpY = sp.baseY - Math.abs(Math.sin(now * 0.007 + sp.phase)) * jumpAmp;
 
     ctx.save();
     ctx.translate(sp.x, jumpY);
 
     if (sp.side === "human") {
-      ctx.fillStyle = sp.color;
-      ctx.fillRect(-6, -20, 12, 18);
-      ctx.fillStyle = "#fed7aa";
+      // Combinaison spatiale / Marine NOVA 4K
+      ctx.fillStyle = sp.color || "#2563eb";
       ctx.beginPath();
-      ctx.arc(0, -26, 6, 0, Math.PI * 2);
+      ctx.roundRect(-7, -22, 14, 20, 3);
       ctx.fill();
-      ctx.fillStyle = sp.hair;
-      ctx.fillRect(-6, -30, 12, 5);
-      ctx.strokeStyle = "#fed7aa";
-      ctx.lineWidth = 2.5;
+
+      // Harnais d'armure & épaulettes
+      ctx.fillStyle = "#334155";
+      ctx.fillRect(-8, -20, 16, 4);
+
+      // Casque spatial avec Visière Dorée Réfléchissante 4K
+      ctx.fillStyle = "#1e293b";
       ctx.beginPath();
-      ctx.moveTo(-6, -16);
-      ctx.lineTo(-11, -28 + Math.sin(now * 0.01 + sp.phase) * 4);
-      ctx.moveTo(6, -16);
-      ctx.lineTo(11, -28 - Math.sin(now * 0.01 + sp.phase) * 4);
+      ctx.arc(0, -27, 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Visière or miroitante
+      const visorGrad = ctx.createLinearGradient(-4, -30, 4, -24);
+      visorGrad.addColorStop(0, "#fde047");
+      visorGrad.addColorStop(0.5, "#eab308");
+      visorGrad.addColorStop(1, "#854d0e");
+      ctx.fillStyle = visorGrad;
+      ctx.beginPath();
+      ctx.ellipse(0, -27, 5, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Bras animés avec gants de protection
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 2.5;
+      const armSway = Math.sin(now * 0.01 + sp.phase) * 5;
+      ctx.beginPath();
+      ctx.moveTo(-6, -17);
+      ctx.lineTo(-12, -28 + armSway);
+      ctx.moveTo(6, -17);
+      ctx.lineTo(12, -28 - armSway);
       ctx.stroke();
+
+      // Bannière / Pancarte "NOVA"
       if (sp.flag) {
-        ctx.fillStyle = "#fbbf24";
-        ctx.fillRect(-12, -44, 24, 12);
-        ctx.fillStyle = "#000000";
-        ctx.font = "bold 8px sans-serif";
+        ctx.fillStyle = "#1e293b";
+        ctx.fillRect(-1, -48, 2, 22);
+        ctx.fillStyle = "rgba(56, 189, 248, 0.95)";
+        ctx.shadowColor = "#38bdf8";
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.roundRect(-14, -46, 28, 13, 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "900 8px system-ui, sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText("NOVA", 0, -35);
+        ctx.fillText("NOVA", 0, -36);
       }
     } else {
-      ctx.fillStyle = sp.color;
-      ctx.fillRect(-7, -22, 14, 20);
-      ctx.fillStyle = sp.skin;
+      // Guerrier Extraterrestre / Spectateur Alien Xéno 4K
+      ctx.fillStyle = sp.color || "#4c1d95";
       ctx.beginPath();
-      ctx.ellipse(0, -28, 7, 9, 0, 0, Math.PI * 2);
+      ctx.roundRect(-8, -24, 16, 22, 4);
       ctx.fill();
-      ctx.fillStyle = "#ef4444";
-      ctx.fillRect(-4, -29, 2.5, 2.5);
-      ctx.fillRect(1.5, -29, 2.5, 2.5);
-      ctx.strokeStyle = sp.skin;
-      ctx.lineWidth = 2.5;
+
+      // Plaques d'exosquelette violettes
+      ctx.fillStyle = "#7e22ce";
+      ctx.fillRect(-6, -19, 12, 3);
+      ctx.fillRect(-6, -13, 12, 3);
+
+      // Tête Xénomorphe / Reptilienne avec Crête
+      ctx.fillStyle = sp.skin || "#15803d";
       ctx.beginPath();
-      ctx.moveTo(-6, -16);
-      ctx.lineTo(-13, -24 + Math.cos(now * 0.008 + sp.phase) * 5);
-      ctx.moveTo(6, -16);
-      ctx.lineTo(13, -24 - Math.cos(now * 0.008 + sp.phase) * 5);
+      ctx.ellipse(0, -30, 8, 10, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Crête dorsale luminescente verte
+      ctx.fillStyle = "#22c55e";
+      ctx.beginPath();
+      ctx.moveTo(0, -40);
+      ctx.lineTo(-3, -33);
+      ctx.lineTo(3, -33);
+      ctx.closePath();
+      ctx.fill();
+
+      // Yeux multiples rouges cybernétiques
+      ctx.fillStyle = "#ef4444";
+      ctx.shadowColor = "#ef4444";
+      ctx.shadowBlur = 6;
+      ctx.beginPath();
+      ctx.arc(-3.5, -30, 1.8, 0, Math.PI * 2);
+      ctx.arc(3.5, -30, 1.8, 0, Math.PI * 2);
+      ctx.arc(0, -33, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Bras xénomorphes avec griffes cybernétiques
+      ctx.strokeStyle = sp.skin || "#15803d";
+      ctx.lineWidth = 2.5;
+      const xArmSway = Math.cos(now * 0.009 + sp.phase) * 6;
+      ctx.beginPath();
+      ctx.moveTo(-7, -18);
+      ctx.lineTo(-14, -26 + xArmSway);
+      ctx.moveTo(7, -18);
+      ctx.lineTo(14, -26 - xArmSway);
       ctx.stroke();
+
+      // Bannière de guerre Xéno
+      if (sp.flag) {
+        ctx.fillStyle = "#334155";
+        ctx.fillRect(-1, -48, 2, 22);
+        ctx.fillStyle = "rgba(239, 68, 68, 0.9)";
+        ctx.shadowColor = "#ef4444";
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.roundRect(-14, -46, 28, 13, 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "900 8px system-ui, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("XÉNO", 0, -36);
+      }
     }
     ctx.restore();
   });
 
+  // 5. COMBATTANTS 4K : KEN MASTERS VS COMMANDANT XÉNO
   drawKenMasters(versusDuel.player, now);
   drawAlienWarlord(versusDuel.enemy, now);
 
+  // 6. TIRS ET PROJECTILES 4K (HADOUKEN 4K & BLASTER LASER ALIEN 4K)
   versusDuel.projectiles.forEach((proj) => {
     ctx.save();
     if (proj.type === "hadouken") {
-      const grad = ctx.createRadialGradient(proj.x, proj.y, 4, proj.x, proj.y, proj.radius);
-      grad.addColorStop(0, "#ffffff");
-      grad.addColorStop(0.3, "#38bdf8");
-      grad.addColorStop(0.8, "#0284c7");
-      grad.addColorStop(1, "rgba(2, 132, 199, 0)");
+      // HADOUKEN 4K : Orbe d'énergie Ki multi-couches avec cœur blanc, plasma cyan, arcs électriques et traînée cométaire
+      const r = proj.radius;
+      const px = proj.x;
+      const py = proj.y;
+
+      // Projection lumineuse bleue au sol sous le Hadouken
+      ctx.fillStyle = "rgba(56, 189, 248, 0.22)";
+      ctx.beginPath();
+      ctx.ellipse(px, gy + 4, r * 1.8, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Traînée cométaire Ki (Comet Tail)
+      const tailLen = 65;
+      const tailGrad = ctx.createLinearGradient(px - proj.vx * 0.12, py, px, py);
+      tailGrad.addColorStop(0, "rgba(2, 132, 199, 0)");
+      tailGrad.addColorStop(0.4, "rgba(14, 165, 233, 0.35)");
+      tailGrad.addColorStop(1, "rgba(56, 189, 248, 0.95)");
+      ctx.fillStyle = tailGrad;
+      ctx.beginPath();
+      ctx.moveTo(px, py - r * 0.85);
+      ctx.lineTo(px - Math.sign(proj.vx) * tailLen, py);
+      ctx.lineTo(px, py + r * 0.85);
+      ctx.closePath();
+      ctx.fill();
+
+      // Boule de plasma concentrique 4K
+      const hGrad = ctx.createRadialGradient(px, py, r * 0.15, px, py, r * 1.25);
+      hGrad.addColorStop(0, "#ffffff");
+      hGrad.addColorStop(0.25, "#bae6fd");
+      hGrad.addColorStop(0.55, "#38bdf8");
+      hGrad.addColorStop(0.85, "#0284c7");
+      hGrad.addColorStop(1, "rgba(2, 132, 199, 0)");
 
       ctx.shadowColor = "#38bdf8";
-      ctx.shadowBlur = 24;
-      ctx.fillStyle = grad;
+      ctx.shadowBlur = 32;
+      ctx.fillStyle = hGrad;
       ctx.beginPath();
-      ctx.arc(proj.x, proj.y, proj.radius + Math.sin(now * 0.03) * 3, 0, Math.PI * 2);
+      ctx.arc(px, py, r * 1.2 + Math.sin(now * 0.035) * 2.5, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = "rgba(56, 189, 248, 0.4)";
-      ctx.beginPath();
-      ctx.ellipse(proj.x - proj.vx * 0.04, proj.y, proj.radius * 1.5, proj.radius * 0.6, 0, 0, Math.PI * 2);
-      ctx.fill();
+      // Arcs électriques rotatifs dans l'orbe
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
+      ctx.lineWidth = 2;
+      for (let a = 0; a < 3; a++) {
+        const rot = (now * 0.015) + (a * Math.PI * 2 / 3);
+        ctx.beginPath();
+        ctx.arc(px, py, r * 0.75, rot, rot + 0.85);
+        ctx.stroke();
+      }
     } else {
+      // TIR BLASTER PLASMA ALIEN 4K : Faisceau d'énergie émeraude fuselé avec halo thermique
+      const r = proj.radius;
+      const px = proj.x;
+      const py = proj.y;
+
+      // Traînée laser vert
+      ctx.strokeStyle = "rgba(34, 197, 94, 0.4)";
+      ctx.lineWidth = r * 1.2;
+      ctx.beginPath();
+      ctx.moveTo(px - proj.vx * 0.06, py);
+      ctx.lineTo(px, py);
+      ctx.stroke();
+
+      // Ovale de plasma émeraude incandescent
       ctx.shadowColor = "#22c55e";
-      ctx.shadowBlur = 18;
+      ctx.shadowBlur = 24;
       ctx.fillStyle = "#86efac";
       ctx.beginPath();
-      ctx.ellipse(proj.x, proj.y, proj.radius * 1.6, proj.radius * 0.6, 0, 0, Math.PI * 2);
+      ctx.ellipse(px, py, r * 2.2, r * 0.75, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Cœur blanc pur à ultra-haute température
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.ellipse(px, py, r * 1.2, r * 0.4, 0, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
   });
 
+  // Particules d'impacts cinématiques & étincelles
   versusDuel.particles.forEach((pt) => {
     ctx.save();
     ctx.fillStyle = pt.color;
     ctx.shadowColor = pt.color;
-    ctx.shadowBlur = 8;
+    ctx.shadowBlur = 10;
     ctx.beginPath();
     ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   });
 
+  // Confettis de Victoire 4K
   versusDuel.confetti.forEach((c) => {
     ctx.save();
     ctx.translate(c.x, c.y);
     ctx.rotate(c.rot);
     ctx.fillStyle = c.color;
+    ctx.shadowColor = c.color;
+    ctx.shadowBlur = 4;
     ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
     ctx.restore();
   });
 
+  // Flash d'impact blanc cinématique
   if (versusDuel.flashTimer > 0) {
     ctx.fillStyle = `rgba(255, 255, 255, ${Math.min(1, versusDuel.flashTimer * 2.5)})`;
     ctx.fillRect(0, 0, w, h);
   }
 
+  // HUD Street Fighter
   drawStreetFighterHUD(now);
   ctx.restore();
 }
@@ -4881,9 +5120,10 @@ function drawKenMasters(p, now) {
   ctx.translate(p.x, p.y);
   ctx.scale(p.facing, 1);
 
-  ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+  // 1. Ombre portée 4K avec estompage progressif
+  ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
   ctx.beginPath();
-  ctx.ellipse(0, 4, 22, 7, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 4, 26, 8, 0, 0, Math.PI * 2);
   ctx.fill();
 
   const isPunch = p.state === "punch";
@@ -4891,77 +5131,274 @@ function drawKenMasters(p, now) {
   const isHadouken = p.state === "hadouken";
   const isWin = p.state === "win";
 
-  ctx.fillStyle = "#dc2626";
+  // 2. JAMBES & PANTALON DU GI ROUGE (PLIS & TEXTURE 4K)
+  const redGiBase = "#dc2626";
+  const redGiShadow = "#991b1b";
+  const redGiLight = "#ef4444";
+
   if (isKick) {
-    ctx.fillRect(-10, -32, 10, 32);
-    ctx.save();
-    ctx.translate(0, -32);
-    ctx.rotate(-0.8);
-    ctx.fillRect(0, -6, 42, 12);
+    // Jambe d'appui fléchie au sol
+    ctx.fillStyle = redGiShadow;
+    ctx.beginPath();
+    ctx.roundRect(-12, -34, 14, 34, [4, 4, 2, 2]);
+    ctx.fill();
+    // Pied d'appui
     ctx.fillStyle = "#fed7aa";
-    ctx.fillRect(38, -8, 10, 14);
+    ctx.fillRect(-14, -4, 16, 6);
+
+    // Jambe de frappe détendue à l'horizontale (Coup de pied fouetté 4K)
+    ctx.save();
+    ctx.translate(2, -36);
+    ctx.rotate(-0.85);
+
+    // Sillage d'air tranchant supersonique
+    ctx.strokeStyle = "rgba(56, 189, 248, 0.45)";
+    ctx.lineWidth = 4;
+    ctx.shadowColor = "#38bdf8";
+    ctx.shadowBlur = 14;
+    ctx.beginPath();
+    ctx.arc(20, -10, 45, -0.6, 0.6);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Pantalon jambe tendue
+    ctx.fillStyle = redGiBase;
+    ctx.beginPath();
+    ctx.roundRect(0, -8, 48, 15, 4);
+    ctx.fill();
+
+    // Pied nu en extension complète
+    ctx.fillStyle = "#fed7aa";
+    ctx.beginPath();
+    ctx.roundRect(46, -10, 14, 18, 4);
+    ctx.fill();
     ctx.restore();
   } else {
-    ctx.fillRect(-14, -32, 11, 32);
-    ctx.fillRect(3, -32, 11, 32);
+    // Posture de combat normale / saut
+    // Jambe arrière
+    ctx.fillStyle = redGiShadow;
+    ctx.beginPath();
+    ctx.roundRect(-16, -34, 13, 34, [4, 4, 2, 2]);
+    ctx.fill();
     ctx.fillStyle = "#fed7aa";
-    ctx.fillRect(-15, -4, 13, 6);
-    ctx.fillRect(2, -4, 13, 6);
+    ctx.fillRect(-17, -4, 14, 6);
+
+    // Jambe avant
+    ctx.fillStyle = redGiBase;
+    ctx.beginPath();
+    ctx.roundRect(2, -34, 13, 34, [4, 4, 2, 2]);
+    ctx.fill();
+    ctx.fillStyle = "#fed7aa";
+    ctx.fillRect(1, -4, 14, 6);
   }
 
-  ctx.fillStyle = "#ef4444";
-  ctx.fillRect(-15, -60, 30, 32);
+  // Bandages blancs aux chevilles
+  ctx.fillStyle = "#f8fafc";
+  ctx.fillRect(-15, -9, 12, 3);
+  if (!isKick) ctx.fillRect(3, -9, 12, 3);
 
-  ctx.fillStyle = "#fed7aa";
+  // 3. TORSE & HAUT DU GI ROUGE (ANATOMIE MUSCULAIRE 4K)
+  // Veste de Gi rouge écarlate
+  ctx.fillStyle = redGiBase;
   ctx.beginPath();
-  ctx.moveTo(-7, -60);
-  ctx.lineTo(7, -60);
-  ctx.lineTo(0, -42);
+  ctx.roundRect(-16, -64, 32, 32, 5);
+  ctx.fill();
+
+  // Épaulières du Gi
+  ctx.fillStyle = redGiLight;
+  ctx.fillRect(-17, -64, 6, 14);
+  ctx.fillRect(11, -64, 6, 14);
+
+  // Décolleté en V : Torse athlétique musclé de Ken (Pectoraux sculptés)
+  const chestGrad = ctx.createLinearGradient(0, -64, 0, -42);
+  chestGrad.addColorStop(0, "#fed7aa");
+  chestGrad.addColorStop(0.7, "#f59e0b");
+  chestGrad.addColorStop(1, "#b45309");
+  ctx.fillStyle = chestGrad;
+  ctx.beginPath();
+  ctx.moveTo(-8, -64);
+  ctx.lineTo(8, -64);
+  ctx.lineTo(0, -44);
   ctx.closePath();
   ctx.fill();
 
+  // Ligne de séparation des pectoraux
+  ctx.strokeStyle = "#9a3412";
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(0, -62);
+  ctx.lineTo(0, -48);
+  ctx.stroke();
+
+  // 4. CEINTURE NOIRE 4K (BLACK BELT) & PANS FLOTTANTS
   ctx.fillStyle = "#0f172a";
-  ctx.fillRect(-16, -34, 32, 7);
-  ctx.fillRect(-4, -28, 4, 14);
-  ctx.fillRect(1, -28, 4, 18);
+  ctx.fillRect(-17, -36, 34, 8);
+  // Nœud central de ceinture
+  ctx.fillStyle = "#1e293b";
+  ctx.fillRect(-4, -36, 8, 8);
+  // Broderie dorée kanji sur la ceinture
+  ctx.fillStyle = "#f59e0b";
+  ctx.fillRect(-12, -34, 5, 4);
 
-  ctx.fillStyle = "#fed7aa";
+  // Pans de ceinture noirs avec physique de flottement
+  const beltSway = Math.sin(now * 0.008) * 4;
+  ctx.fillStyle = "#0f172a";
   ctx.beginPath();
-  ctx.arc(0, -68, 9, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "#fbbf24";
-  ctx.beginPath();
-  ctx.moveTo(-11, -70);
-  ctx.lineTo(-14, -80);
-  ctx.lineTo(-7, -76);
-  ctx.lineTo(0, -84);
-  ctx.lineTo(7, -76);
-  ctx.lineTo(14, -80);
-  ctx.lineTo(11, -70);
+  ctx.moveTo(-4, -30);
+  ctx.lineTo(-4 + beltSway, -12);
+  ctx.lineTo(0 + beltSway, -12);
+  ctx.lineTo(0, -30);
   ctx.closePath();
   ctx.fill();
 
+  ctx.beginPath();
+  ctx.moveTo(1, -30);
+  ctx.lineTo(1 - beltSway * 0.8, -16);
+  ctx.lineTo(5 - beltSway * 0.8, -16);
+  ctx.lineTo(5, -30);
+  ctx.closePath();
+  ctx.fill();
+
+  // 5. TÊTE & CHEVELURE BLONDE ICONIQUE DE KEN 4K
+  // Visage
   ctx.fillStyle = "#fed7aa";
+  ctx.beginPath();
+  ctx.arc(0, -72, 10, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Sourcils et regard déterminé
+  ctx.fillStyle = "#b45309";
+  ctx.fillRect(2, -74, 5, 2);
+  ctx.fillStyle = "#0284c7"; // Yeux bleus de Ken
+  ctx.fillRect(4, -72, 2.5, 2.5);
+
+  // Chevelure blonde volumineuse 4K (mèches superposées)
+  ctx.fillStyle = "#facc15";
+  ctx.shadowColor = "#eab308";
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.moveTo(-12, -74);
+  ctx.lineTo(-17, -86);
+  ctx.lineTo(-9, -82);
+  ctx.lineTo(0, -92);
+  ctx.lineTo(9, -83);
+  ctx.lineTo(16, -88);
+  ctx.lineTo(13, -73);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Reflets blonds clairs sur le dessus
+  ctx.fillStyle = "#fef08a";
+  ctx.beginPath();
+  ctx.moveTo(-7, -80);
+  ctx.lineTo(0, -89);
+  ctx.lineTo(7, -81);
+  ctx.closePath();
+  ctx.fill();
+
+  // Lanières du bandeau rouge flottant à l'arrière
+  const bandSway = Math.sin(now * 0.009) * 5;
+  ctx.strokeStyle = "#ef4444";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-8, -72);
+  ctx.lineTo(-18 + bandSway, -74);
+  ctx.lineTo(-24 + bandSway * 1.2, -68);
+  ctx.stroke();
+
+  // 6. BRAS, GANTS DE COMBAT & ACTIONS (PUNCH / HADOUKEN / WIN)
+  const skinTone = "#fed7aa";
+  const gloveLeather = "#78350f";
+  const gloveMetal = "#f59e0b";
+
   if (isPunch) {
-    ctx.fillRect(4, -58, 38, 10);
-    ctx.fillStyle = "#78350f";
-    ctx.fillRect(38, -61, 14, 14);
-    ctx.fillStyle = "rgba(255, 234, 0, 0.4)";
-    ctx.fillRect(14, -63, 26, 18);
+    // Coup de poing direct fulgurant (Dragon Fist)
+    // Bras tendu
+    ctx.fillStyle = skinTone;
+    ctx.beginPath();
+    ctx.roundRect(4, -62, 42, 12, 4);
+    ctx.fill();
+
+    // Gant de combat cuir & renfort métal doré
+    ctx.fillStyle = gloveLeather;
+    ctx.beginPath();
+    ctx.roundRect(42, -65, 16, 16, 4);
+    ctx.fill();
+    ctx.fillStyle = gloveMetal;
+    ctx.fillRect(52, -64, 4, 14);
+
+    // Onde de choc d'énergie dorée de la frappe
+    ctx.fillStyle = "rgba(251, 191, 36, 0.45)";
+    ctx.shadowColor = "#f59e0b";
+    ctx.shadowBlur = 18;
+    ctx.beginPath();
+    ctx.ellipse(32, -56, 28, 16, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
   } else if (isHadouken) {
-    ctx.fillRect(4, -54, 32, 11);
-    ctx.fillStyle = "#78350f";
-    ctx.fillRect(32, -56, 13, 15);
+    // Pose Hadouken : deux mains projetées vers l'avant avec orbe d'énergie
+    ctx.fillStyle = skinTone;
+    ctx.beginPath();
+    ctx.roundRect(4, -58, 34, 12, 4);
+    ctx.fill();
+
+    ctx.fillStyle = gloveLeather;
+    ctx.beginPath();
+    ctx.roundRect(34, -61, 15, 17, 4);
+    ctx.fill();
+    ctx.fillStyle = gloveMetal;
+    ctx.fillRect(44, -59, 4, 13);
+
+    // Halo de concentration d'énergie Ki entre les paumes
+    ctx.fillStyle = "rgba(56, 189, 248, 0.65)";
+    ctx.shadowColor = "#38bdf8";
+    ctx.shadowBlur = 24;
+    ctx.beginPath();
+    ctx.arc(46, -53, 14, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
   } else if (isWin) {
-    ctx.fillRect(4, -88, 10, 32);
-    ctx.fillStyle = "#78350f";
-    ctx.fillRect(3, -96, 12, 12);
+    // Pose de Victoire : poing levé vers le ciel avec halo solaire triomphant
+    ctx.fillStyle = skinTone;
+    ctx.beginPath();
+    ctx.roundRect(4, -94, 12, 34, 4);
+    ctx.fill();
+
+    ctx.fillStyle = gloveLeather;
+    ctx.beginPath();
+    ctx.roundRect(2, -104, 15, 15, 4);
+    ctx.fill();
+    ctx.fillStyle = gloveMetal;
+    ctx.fillRect(3, -103, 13, 4);
+
+    // Rayons dorés de la gloire
+    ctx.strokeStyle = "rgba(251, 191, 36, 0.75)";
+    ctx.lineWidth = 2;
+    ctx.shadowColor = "#fbbf24";
+    ctx.shadowBlur = 16;
+    for (let r = 0; r < 6; r++) {
+      const rayAngle = (now * 0.003) + (r * Math.PI / 3);
+      ctx.beginPath();
+      ctx.moveTo(9, -96);
+      ctx.lineTo(9 + Math.cos(rayAngle) * 26, -96 + Math.sin(rayAngle) * 26);
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
   } else {
-    ctx.fillRect(6, -56, 16, 9);
-    ctx.fillRect(16, -64, 9, 14);
-    ctx.fillStyle = "#78350f";
-    ctx.fillRect(14, -68, 12, 12);
+    // Garde de combat standard (Ken Fighting Stance)
+    ctx.fillStyle = skinTone;
+    ctx.beginPath();
+    ctx.roundRect(6, -60, 18, 11, 4);
+    ctx.roundRect(16, -68, 11, 16, 4);
+    ctx.fill();
+
+    ctx.fillStyle = gloveLeather;
+    ctx.beginPath();
+    ctx.roundRect(14, -73, 14, 14, 4);
+    ctx.fill();
+    ctx.fillStyle = gloveMetal;
+    ctx.fillRect(22, -72, 4, 12);
   }
 
   ctx.restore();
@@ -4972,9 +5409,10 @@ function drawAlienWarlord(e, now) {
   ctx.translate(e.x, e.y);
   ctx.scale(e.facing, 1);
 
-  ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+  // 1. Ombre portée 4K au sol
+  ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
   ctx.beginPath();
-  ctx.ellipse(0, 4, 24, 8, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 4, 28, 9, 0, 0, Math.PI * 2);
   ctx.fill();
 
   const isSlash = e.state === "slash";
@@ -4982,61 +5420,188 @@ function drawAlienWarlord(e, now) {
   const isKo = e.state === "ko";
 
   if (isKo) {
+    // Commandant Xéno vaincu à terre avec fumée et étincelles
     ctx.rotate(Math.PI / 2);
-    ctx.translate(20, -10);
+    ctx.translate(22, -12);
+
+    // Fumée d'armure endommagée
+    ctx.fillStyle = "rgba(168, 85, 247, 0.35)";
+    ctx.beginPath();
+    ctx.arc(-10, -50, 12 + Math.sin(now * 0.01) * 4, 0, Math.PI * 2);
+    ctx.fill();
   }
 
-  ctx.fillStyle = "#1e1b4b";
-  ctx.fillRect(-15, -34, 12, 34);
-  ctx.fillRect(3, -34, 12, 34);
-  ctx.fillStyle = "#a855f7";
-  ctx.fillRect(-13, -18, 8, 3);
-  ctx.fillRect(5, -18, 8, 3);
+  // 2. JAMBES & BOTTES D'ARMURE EXOSQUELETTE 4K
+  ctx.fillStyle = "#1e1b4b"; // Indigo très sombre
+  ctx.beginPath();
+  ctx.roundRect(-16, -36, 13, 36, [4, 4, 2, 2]);
+  ctx.roundRect(3, -36, 13, 36, [4, 4, 2, 2]);
+  ctx.fill();
 
+  // Genouillères et plaques d'armure violettes
+  ctx.fillStyle = "#7e22ce";
+  ctx.fillRect(-15, -20, 11, 4);
+  ctx.fillRect(4, -20, 11, 4);
+
+  // Griffes mécaniques aux pieds
+  ctx.fillStyle = "#334155";
+  ctx.fillRect(-18, -4, 16, 6);
+  ctx.fillRect(2, -4, 16, 6);
+
+  // 3. CUIRASSE BIOMÉCANIQUE & RÉACTEUR DORSAL
   ctx.fillStyle = "#0f172a";
-  ctx.fillRect(-18, -64, 36, 34);
+  ctx.beginPath();
+  ctx.roundRect(-20, -68, 40, 36, 6);
+  ctx.fill();
 
+  // Plaques pectorales en titane sombre
+  ctx.fillStyle = "#1e293b";
+  ctx.fillRect(-16, -64, 14, 18);
+  ctx.fillRect(2, -64, 14, 18);
+
+  // Réacteur de puissance dorsal / Coeur Plasma Vert Émeraude 4K
   ctx.fillStyle = "#22c55e";
   ctx.shadowColor = "#22c55e";
-  ctx.shadowBlur = 10;
+  ctx.shadowBlur = 14;
   ctx.beginPath();
-  ctx.arc(0, -48, 5, 0, Math.PI * 2);
+  ctx.arc(0, -52, 6, 0, Math.PI * 2);
+  ctx.fill();
+  // Cœur blanc réacteur
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(0, -52, 2.5, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
 
+  // Conduits d'énergie pulsants le long du thorax
+  ctx.strokeStyle = "rgba(34, 197, 94, 0.85)";
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.moveTo(-12, -46);
+  ctx.lineTo(-4, -50);
+  ctx.moveTo(12, -46);
+  ctx.lineTo(4, -50);
+  ctx.stroke();
+
+  // 4. CASQUE XÉNOMORPHE & CRÊTE CYBERNÉTIQUE 4K
+  // Tête reptilienne blindée
   ctx.fillStyle = "#15803d";
   ctx.beginPath();
-  ctx.ellipse(0, -74, 10, 13, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, -78, 12, 15, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#ef4444";
-  ctx.fillRect(1, -77, 5, 4);
 
+  // Crête xéno allongée en arrière
+  ctx.fillStyle = "#0f172a";
+  ctx.beginPath();
+  ctx.moveTo(-8, -82);
+  ctx.lineTo(-24, -92);
+  ctx.lineTo(-6, -72);
+  ctx.closePath();
+  ctx.fill();
+
+  // Visière Tri-Laser Rouge Écarlate de Visée 4K
+  ctx.fillStyle = "#ef4444";
+  ctx.shadowColor = "#ef4444";
+  ctx.shadowBlur = 12;
+  ctx.beginPath();
+  ctx.arc(3, -80, 2.2, 0, Math.PI * 2);
+  ctx.arc(7, -83, 2, 0, Math.PI * 2);
+  ctx.arc(8, -77, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Faisceaux laser de visée projetés vers l'avant
+  if (!isKo) {
+    ctx.strokeStyle = "rgba(239, 68, 68, 0.4)";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(8, -79);
+    ctx.lineTo(120, -79);
+    ctx.stroke();
+  }
+  ctx.shadowBlur = 0;
+
+  // 5. ARMES 4K : SABRE LASER PLASMA ET FUSIL BLASTER LOURD
   if (isSlash) {
+    // ATTAQUE AU SABRE LASER (CRIMSON PLASMA SABER 4K)
     ctx.save();
-    ctx.translate(14, -50);
-    ctx.rotate(-0.4);
+    ctx.translate(14, -54);
+    ctx.rotate(-0.35);
+
+    // Garde et poignée du sabre laser en titane
+    ctx.fillStyle = "#475569";
+    ctx.fillRect(-4, -5, 10, 10);
+    ctx.fillStyle = "#94a3b8";
+    ctx.fillRect(4, -3, 8, 6);
+
+    // LAME PLASMA 4K : Cœur blanc incandescent, manteau rouge carmin et halo thermique
     ctx.shadowColor = "#ef4444";
-    ctx.shadowBlur = 24;
+    ctx.shadowBlur = 28;
+
+    // Halo extérieur rouge rubis
+    ctx.fillStyle = "rgba(239, 68, 68, 0.85)";
+    ctx.beginPath();
+    ctx.roundRect(10, -7, 62, 14, 5);
+    ctx.fill();
+
+    // Lame laser centrale
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, -4, 52, 6);
-    ctx.fillStyle = "#ef4444";
-    ctx.fillRect(0, -6, 52, 10);
+    ctx.beginPath();
+    ctx.roundRect(12, -4, 58, 8, 3);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Arc d'énergie tranchante dans l'air
+    ctx.strokeStyle = "rgba(244, 63, 94, 0.65)";
+    ctx.lineWidth = 4;
+    ctx.shadowColor = "#f43f5e";
+    ctx.shadowBlur = 16;
+    ctx.beginPath();
+    ctx.arc(10, 0, 68, -0.7, 0.5);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
     ctx.restore();
   } else {
-    ctx.fillStyle = "#64748b";
-    ctx.fillRect(-22, -38, 5, 18);
+    // Sabre laser rengainé à la hanche (fourreau cybernétique avec émetteur lumineux)
+    ctx.fillStyle = "#334155";
+    ctx.fillRect(-22, -42, 6, 20);
     ctx.fillStyle = "#ef4444";
-    ctx.fillRect(-22, -26, 5, 4);
+    ctx.shadowColor = "#ef4444";
+    ctx.shadowBlur = 8;
+    ctx.fillRect(-22, -44, 6, 3);
+    ctx.shadowBlur = 0;
   }
 
   if (isShoot) {
-    ctx.fillStyle = "#334155";
-    ctx.fillRect(4, -56, 36, 9);
+    // TIR AU FUSIL BLASTER LOURD (HEAVY PLASMA CARBINE 4K)
+    ctx.fillStyle = "#1e293b";
+    ctx.beginPath();
+    ctx.roundRect(4, -60, 42, 11, 3);
+    ctx.fill();
+
+    // Chambre à plasma vert luminescente
     ctx.fillStyle = "#22c55e";
-    ctx.fillRect(38, -58, 6, 13);
+    ctx.shadowColor = "#22c55e";
+    ctx.shadowBlur = 10;
+    ctx.fillRect(16, -58, 12, 7);
+
+    // Bouche du canon & Éclair de tir
+    ctx.fillStyle = "#475569";
+    ctx.fillRect(44, -62, 8, 15);
+    ctx.fillStyle = "#86efac";
+    ctx.shadowColor = "#22c55e";
+    ctx.shadowBlur = 24;
+    ctx.beginPath();
+    ctx.arc(52, -55, 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
   } else {
+    // Fusil blaster tenu en position d'attente
     ctx.fillStyle = "#334155";
-    ctx.fillRect(2, -48, 16, 7);
+    ctx.beginPath();
+    ctx.roundRect(4, -52, 22, 9, 3);
+    ctx.fill();
+    ctx.fillStyle = "#22c55e";
+    ctx.fillRect(10, -50, 6, 5);
   }
 
   ctx.restore();
