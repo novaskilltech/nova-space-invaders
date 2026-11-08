@@ -696,6 +696,14 @@ async function bootstrapAssets() {
   state.images.tank_enemy_predator = await loadImage("tank_enemy_predator_4k.png" + v);
   state.images.tank_bomber = await loadImage("tank_bomber_4k.png" + v);
   state.images.tank_boss = await loadImage("tank_boss_4k.png" + v);
+
+  // ======================================================
+  // ASSETS 64-BIT RETRO DÉDIÉS — METAL SLUG 1 REMAKE
+  // ======================================================
+  state.images.slug_bg = await loadImage("slug_bg_mission1_64bit.jpg" + v);
+  state.images.slug_vehicles = await loadImage("slug_vehicules_64bit.jpg" + v);
+  state.images.slug_characters = await loadImage("slug_personnages_64bit.jpg" + v);
+  state.images.slug_weapons = await loadImage("slug_armes_64bit.jpg" + v);
   draw();
 }
 
@@ -6290,6 +6298,25 @@ function initSlugMission(missionNum) {
 
   const gy = canvas.height - 85;
   slugGame.active = true;
+
+  // Préchargement garanti des planches 64-bit Neo-Geo
+  if (!state.images.slug_bg) {
+    state.images.slug_bg = new Image();
+    state.images.slug_bg.src = "slug_bg_mission1_64bit.jpg?v=54";
+  }
+  if (!state.images.slug_vehicles) {
+    state.images.slug_vehicles = new Image();
+    state.images.slug_vehicles.src = "slug_vehicules_64bit.jpg?v=54";
+  }
+  if (!state.images.slug_characters) {
+    state.images.slug_characters = new Image();
+    state.images.slug_characters.src = "slug_personnages_64bit.jpg?v=54";
+  }
+  if (!state.images.slug_weapons) {
+    state.images.slug_weapons = new Image();
+    state.images.slug_weapons.src = "slug_armes_64bit.jpg?v=54";
+  }
+
   slugGame.mission = missionNum || 1;
   slugGame.scrollX = 0;
   slugGame.groundY = gy;
@@ -6964,57 +6991,75 @@ function drawSlugMission(w, h, now) {
 
   ctx.save();
 
-  // 1. PARALLAX COUCHE 0 : Ciel Crépusculaire Tropical & Montagnes Lointaines
-  const skyGrad = ctx.createLinearGradient(0, 0, 0, gy);
-  skyGrad.addColorStop(0, "#082f49");
-  skyGrad.addColorStop(0.4, "#0c4a6e");
-  skyGrad.addColorStop(0.75, "#14532d");
-  skyGrad.addColorStop(1, "#1e3a5f");
-  ctx.fillStyle = skyGrad;
-  ctx.fillRect(0, 0, w, h);
+  // 1. DÉCOR 64-BIT RETRO AUTHENTIQUE : Planche 4 (Ciel Crépusculaire, Cascades, Jungle tropicale & Huttes sur pilotis)
+  const bgImg = state.images.slug_bg;
+  if (bgImg && bgImg.complete && bgImg.naturalWidth > 0) {
+    // Parallaxe 0.38x fluide sur le paysage peint 64-bit Neo-Geo
+    const scale = Math.max(h / bgImg.height, w / bgImg.width);
+    const renderW = bgImg.width * scale;
+    const renderH = bgImg.height * scale;
+    const offX = (sx * 0.38) % renderW;
 
-  // Montagnes escarpées brumeuses (Parallaxe 0.12x)
-  ctx.fillStyle = "rgba(12, 74, 110, 0.45)";
-  ctx.beginPath();
-  ctx.moveTo(0, gy - 120);
-  for (let mx = 0; mx <= w; mx += 80) {
-    const mHeight = 120 + Math.sin((mx + sx * 0.12) * 0.008) * 45;
-    ctx.lineTo(mx, gy - mHeight);
-  }
-  ctx.lineTo(w, gy);
-  ctx.lineTo(0, gy);
-  ctx.closePath();
-  ctx.fill();
+    ctx.drawImage(bgImg, -offX, 0, renderW, renderH);
+    if (-offX + renderW < w) {
+      ctx.drawImage(bgImg, -offX + renderW, 0, renderW, renderH);
+    }
+  } else {
+    // PARALLAX COUCHE 0 : Ciel Crépusculaire Tropical & Montagnes Lointaines (Fallback)
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, gy);
+    skyGrad.addColorStop(0, "#082f49");
+    skyGrad.addColorStop(0.4, "#0c4a6e");
+    skyGrad.addColorStop(0.75, "#14532d");
+    skyGrad.addColorStop(1, "#1e3a5f");
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, w, h);
 
-  // 2. PARALLAX COUCHE 1 : Jungle Tropicale & Cascades Fluviales (Parallaxe 0.35x)
-  ctx.fillStyle = "#14532d";
-  for (let jx = -60; jx < w + 80; jx += 95) {
-    const worldJX = jx - (sx * 0.35) % 95;
-    // Arbre géant de jungle
+    // Montagnes escarpées brumeuses (Parallaxe 0.12x)
+    ctx.fillStyle = "rgba(12, 74, 110, 0.45)";
     ctx.beginPath();
-    ctx.arc(worldJX + 45, gy - 85, 42, 0, Math.PI * 2);
+    ctx.moveTo(0, gy - 120);
+    for (let mx = 0; mx <= w; mx += 80) {
+      const mHeight = 120 + Math.sin((mx + sx * 0.12) * 0.008) * 45;
+      ctx.lineTo(mx, gy - mHeight);
+    }
+    ctx.lineTo(w, gy);
+    ctx.lineTo(0, gy);
+    ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = "#166534";
-    ctx.fillRect(worldJX + 38, gy - 75, 14, 75);
+
+    // PARALLAX COUCHE 1 : Jungle Tropicale & Cascades Fluviales (Parallaxe 0.35x)
     ctx.fillStyle = "#14532d";
+    for (let jx = -60; jx < w + 80; jx += 95) {
+      const worldJX = jx - (sx * 0.35) % 95;
+      ctx.beginPath();
+      ctx.arc(worldJX + 45, gy - 85, 42, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#166534";
+      ctx.fillRect(worldJX + 38, gy - 75, 14, 75);
+      ctx.fillStyle = "#14532d";
+    }
   }
 
-  // 3. PARALLAX COUCHE 2 : Sol Fluvial, Pontons en Bois, Tranchées & Sable (1.0x)
+  // 2. PARALLAX COUCHE 2 : Sol Fluvial, Pontons en Bois d'Appui & Clous d'Acier (1.0x)
   const riverGrad = ctx.createLinearGradient(0, gy, 0, h);
-  riverGrad.addColorStop(0, "#365314");
-  riverGrad.addColorStop(0.2, "#1c1917");
+  riverGrad.addColorStop(0, "rgba(54, 83, 20, 0.88)");
+  riverGrad.addColorStop(0.2, "rgba(28, 25, 23, 0.95)");
   riverGrad.addColorStop(0.6, "#0f172a");
   riverGrad.addColorStop(1, "#020617");
   ctx.fillStyle = riverGrad;
   ctx.fillRect(0, gy, w, h - gy);
 
-  // Pontons en bois et traverses
+  // Pontons en bois 64-bit avec rainures et têtes de clous
   ctx.fillStyle = "#78350f";
-  ctx.fillRect(0, gy, w, 12);
+  ctx.fillRect(0, gy, w, 14);
   ctx.fillStyle = "#451a03";
   for (let bx = -40; bx < w + 40; bx += 32) {
     const plankX = bx - (sx % 32);
-    ctx.fillRect(plankX, gy, 2.5, 12);
+    ctx.fillRect(plankX, gy, 2.5, 14);
+    ctx.fillStyle = "#94a3b8"; // Clous métalliques
+    ctx.fillRect(plankX + 1, gy + 3, 1.2, 1.2);
+    ctx.fillRect(plankX + 1, gy + 10, 1.2, 1.2);
+    ctx.fillStyle = "#451a03";
   }
 
   // 4. ENTITÉS DU JEU (Rendu avec décalage de caméra -sx)
@@ -7400,27 +7445,140 @@ function drawRebelInfantry(en, now) {
   ctx.translate(en.x, en.y);
   ctx.scale(en.facing, 1);
 
-  // Corps uniforme vert armée
-  ctx.fillStyle = "#166534";
-  ctx.fillRect(-6, -22, 12, 14);
-  // Casque militaire en acier
-  ctx.fillStyle = "#14532d";
+  // Ombre portée au sol
+  ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
   ctx.beginPath();
-  ctx.arc(0, -26, 6.5, Math.PI, 0);
+  ctx.ellipse(0, 2, 14, 5, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillRect(-7, -26, 14, 2.5);
-  // Visage
+
+  const isShooting = en.shootTimer < 0.25;
+  const isPanic = en.state === "panic";
+  const runCycle = Math.sin(now * 0.015 + (en.id ? en.id.charCodeAt(en.id.length - 1) : 0)) * 5;
+
+  // Jambes & Bottes d'assaut 64-bit avec guêtres
+  ctx.fillStyle = "#14532d";
+  ctx.fillRect(-6 + runCycle, -14, 5, 14);
+  ctx.fillRect(1 - runCycle, -14, 5, 14);
+  // Bottes de cuir noir et semelles crantées
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(-7 + runCycle, -4, 7, 5);
+  ctx.fillRect(0 - runCycle, -4, 7, 5);
+
+  // Torse uniforme Feldgrau / Vert Armée Rebelle avec cartouchières
+  const torsoGrad = ctx.createLinearGradient(-8, -32, 8, -14);
+  torsoGrad.addColorStop(0, "#166534");
+  torsoGrad.addColorStop(0.6, "#14532d");
+  torsoGrad.addColorStop(1, "#052e16");
+  ctx.fillStyle = torsoGrad;
+  ctx.beginPath();
+  ctx.roundRect(-8, -30, 16, 17, 3);
+  ctx.fill();
+
+  // Bretelles de suspension tactiques et ceinturon cuir
+  ctx.fillStyle = "#451a03";
+  ctx.fillRect(-8, -17, 16, 3.5);
+  ctx.fillStyle = "#cbd5e1"; // Boucle ceinturon
+  ctx.fillRect(-2, -17.5, 4, 4.5);
+  // Cartouchières doubles sur la poitrine
+  ctx.fillStyle = "#78350f";
+  ctx.fillRect(-6, -26, 4, 6);
+  ctx.fillRect(2, -26, 4, 6);
+
+  // Tête & Visage expressif de soldat rebelle
   ctx.fillStyle = "#fed7aa";
-  ctx.fillRect(-4, -24, 8, 4);
+  ctx.beginPath();
+  ctx.arc(0, -36, 6, 0, Math.PI * 2);
+  ctx.fill();
 
-  // Fusil de combat
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(0, -18, 16, 4);
+  // Yeux et bouche expressifs
+  ctx.fillStyle = "#0f172a";
+  if (isPanic) {
+    // Yeux exorbités de panique !
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(1, -38, 4, 4);
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(2, -37, 2, 2);
+    // Bouche grande ouverte criant
+    ctx.fillStyle = "#7f1d1d";
+    ctx.beginPath();
+    ctx.arc(2, -33, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (isShooting) {
+    // Grimace de tir déterminé
+    ctx.fillRect(1, -38, 4, 1.5);
+    ctx.fillRect(1, -34, 3, 1.5);
+  } else {
+    // Regard militaire standard
+    ctx.fillRect(1, -37, 3, 2);
+  }
 
-  // Jambes
-  ctx.fillStyle = "#166534";
-  ctx.fillRect(-5, -8, 4, 8);
-  ctx.fillRect(1, -8, 4, 8);
+  // Casque militaire en acier Stahlhelm M35 64-bit avec bord évasé et reflet métallique
+  const helmGrad = ctx.createRadialGradient(-1, -44, 2, 0, -40, 10);
+  helmGrad.addColorStop(0, "#22c55e");
+  helmGrad.addColorStop(0.35, "#15803d");
+  helmGrad.addColorStop(0.8, "#14532d");
+  helmGrad.addColorStop(1, "#052e16");
+  ctx.fillStyle = helmGrad;
+  ctx.beginPath();
+  ctx.arc(0, -40, 7.5, Math.PI * 0.9, Math.PI * 2.1);
+  ctx.fill();
+  // Visière et couvre-nuque évasé du Stahlhelm
+  ctx.fillRect(-9, -40, 18, 3.5);
+  ctx.fillStyle = "#0f172a"; // Jugulaire cuir
+  ctx.fillRect(-1, -35, 1.5, 5);
+
+  // Armement selon le rôle (Rifle / Grenade / Shield)
+  if (en.type === "shield") {
+    // Bouclier anti-émeute blindé lourd avec fente de visée
+    const shieldGrad = ctx.createLinearGradient(6, -42, 18, -2);
+    shieldGrad.addColorStop(0, "#64748b");
+    shieldGrad.addColorStop(0.5, "#334155");
+    shieldGrad.addColorStop(1, "#0f172a");
+    ctx.fillStyle = shieldGrad;
+    ctx.beginPath();
+    ctx.roundRect(6, -40, 10, 40, 3);
+    ctx.fill();
+    // Fente de visée blindée
+    ctx.fillStyle = "#38bdf8";
+    ctx.fillRect(8, -34, 6, 2.5);
+    // Rivets d'acier renforcés
+    ctx.fillStyle = "#cbd5e1";
+    ctx.fillRect(7, -38, 2, 2);
+    ctx.fillRect(7, -6, 2, 2);
+  } else if (en.type === "grenadier") {
+    // Grenade à manche Stielhandgranate 24 prête à être lancée !
+    ctx.fillStyle = "#fed7aa"; // Bras levé
+    ctx.fillRect(-2, -34, 6, 12);
+    // Manche en bois
+    ctx.fillStyle = "#78350f";
+    ctx.fillRect(4, -48, 3, 16);
+    // Tête explosive métallique de grenade
+    ctx.fillStyle = "#15803d";
+    ctx.fillRect(2, -54, 7, 7);
+  } else {
+    // Fusil de combat avec crosse en bois et culasse acier
+    ctx.fillStyle = "#fed7aa"; // Bras tenant l'arme
+    ctx.fillRect(0, -28, 10, 5);
+    // Crosse en noyer
+    ctx.fillStyle = "#78350f";
+    ctx.fillRect(-4, -25, 8, 4);
+    // Boîtier et canon d'acier bleui
+    ctx.fillStyle = "#1e293b";
+    ctx.fillRect(4, -26, 22, 4);
+    ctx.fillRect(24, -25, 3, 2);
+
+    // Muzzle flash cinématique lors du tir
+    if (isShooting) {
+      ctx.fillStyle = "#fbbf24";
+      ctx.beginPath();
+      ctx.arc(28, -24, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(28, -24, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
 
   ctx.restore();
 }
@@ -7430,20 +7588,87 @@ function drawGiridaTank(t, now) {
   ctx.translate(t.x, t.y);
   ctx.scale(t.facing, 1);
 
-  // Chenilles
+  // Ombre portée lourde au sol
+  ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
+  ctx.beginPath();
+  ctx.ellipse(0, 3, 38, 8, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Chenilles métalliques avec patins de caoutchouc
+  ctx.fillStyle = "#090d16";
+  ctx.beginPath();
+  ctx.roundRect(-36, -16, 72, 17, 7);
+  ctx.fill();
+
+  // 4 Galets de roulement crantés du char Girida-O
+  for (let gx = -24; gx <= 24; gx += 16) {
+    const wheelGrad = ctx.createRadialGradient(gx, -8, 1, gx, -8, 6);
+    wheelGrad.addColorStop(0, "#78350f");
+    wheelGrad.addColorStop(0.6, "#451a03");
+    wheelGrad.addColorStop(1, "#0f172a");
+    ctx.fillStyle = wheelGrad;
+    ctx.beginPath();
+    ctx.arc(gx, -8, 5.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#facc15"; // Moyeu en bronze
+    ctx.beginPath();
+    ctx.arc(gx, -8, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Châssis blindé lourd brun/kaki militaire 64-bit
+  const bodyGrad = ctx.createLinearGradient(-30, -36, 30, -14);
+  bodyGrad.addColorStop(0, "#92400e");
+  bodyGrad.addColorStop(0.4, "#78350f");
+  bodyGrad.addColorStop(0.8, "#451a03");
+  bodyGrad.addColorStop(1, "#1c1917");
+  ctx.fillStyle = bodyGrad;
+  ctx.beginPath();
+  ctx.roundRect(-30, -36, 60, 22, [8, 8, 3, 3]);
+  ctx.fill();
+
+  // Emblème Rebelle peint sur le flanc (croix jaune et crâne)
+  ctx.fillStyle = "#facc15";
+  ctx.fillRect(-8, -30, 16, 2.5);
+  ctx.fillRect(-2, -34, 4, 10);
+
+  // Tourelle hémisphérique rotative & Viseur optique
+  const turretGrad = ctx.createRadialGradient(2, -38, 2, 2, -38, 16);
+  turretGrad.addColorStop(0, "#a16207");
+  turretGrad.addColorStop(0.5, "#78350f");
+  turretGrad.addColorStop(1, "#292524");
+  ctx.fillStyle = turretGrad;
+  ctx.beginPath();
+  ctx.arc(4, -38, 14, Math.PI, 0);
+  ctx.fill();
+
+  // Coupole du commandant avec fente d'observation
+  ctx.fillStyle = "#1e293b";
+  ctx.fillRect(-2, -54, 10, 4);
+  ctx.fillStyle = "#38bdf8";
+  ctx.fillRect(1, -53, 4, 2);
+
+  // Canon anti-blindé 75mm long à frein de bouche imposant
+  const barrelGrad = ctx.createLinearGradient(12, -42, 44, -36);
+  barrelGrad.addColorStop(0, "#451a03");
+  barrelGrad.addColorStop(0.5, "#1c1917");
+  barrelGrad.addColorStop(1, "#44403c");
+  ctx.fillStyle = barrelGrad;
+  ctx.fillRect(12, -42, 32, 7);
+  // Frein de bouche à évents multiples
   ctx.fillStyle = "#0f172a";
-  ctx.fillRect(-32, -12, 64, 12);
-  // Châssis marron militaire
-  ctx.fillStyle = "#78350f";
+  ctx.fillRect(40, -44, 6, 11);
+  ctx.fillStyle = "#f59e0b";
+  ctx.fillRect(42, -43, 2, 9);
+
+  // Pot d'échappement arrière avec fumée diesel animée
+  ctx.fillStyle = "#1c1917";
+  ctx.fillRect(-34, -28, 6, 8);
+  const dieselSmoke = Math.sin(now * 0.02) * 2;
+  ctx.fillStyle = "rgba(100, 116, 139, 0.45)";
   ctx.beginPath();
-  ctx.roundRect(-26, -28, 52, 18, 4);
+  ctx.arc(-38 + dieselSmoke, -30, 5, 0, Math.PI * 2);
   ctx.fill();
-  // Tourelle & Canon
-  ctx.fillStyle = "#451a03";
-  ctx.beginPath();
-  ctx.arc(-2, -32, 10, Math.PI, 0);
-  ctx.fill();
-  ctx.fillRect(4, -35, 26, 6);
 
   ctx.restore();
 }
@@ -7451,17 +7676,92 @@ function drawGiridaTank(t, now) {
 function drawFlyingTara(pl, now) {
   ctx.save();
   ctx.translate(pl.x, pl.y);
-  // Fuselage avion rebelle
+
+  // Ombre portée aérienne projetée sur le sol
+  const shadowY = slugGame.groundY - pl.y;
+  ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+  ctx.beginPath();
+  ctx.ellipse(0, shadowY, 28, 7, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Fuselage d'avion rebelle 64-bit vert militaire avec dégradé aérodynamique
+  const fuseGrad = ctx.createLinearGradient(0, -12, 0, 12);
+  fuseGrad.addColorStop(0, "#22c55e");
+  fuseGrad.addColorStop(0.4, "#15803d");
+  fuseGrad.addColorStop(0.85, "#166534");
+  fuseGrad.addColorStop(1, "#052e16");
+  ctx.fillStyle = fuseGrad;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 28, 9, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Capot moteur jaune moutarde distinctif SNK
+  ctx.fillStyle = "#eab308";
+  ctx.beginPath();
+  ctx.arc(-22, 0, 8.5, Math.PI * 0.5, Math.PI * 1.5);
+  ctx.fill();
+
+  // Hélice bipale en rotation ultra-rapide (disque de flou semi-transparent)
+  ctx.fillStyle = "rgba(250, 204, 21, 0.4)";
+  ctx.beginPath();
+  ctx.ellipse(-29, 0, 3, 18, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Pale brillante traversante
+  const propAngle = (now * 0.04) % (Math.PI * 2);
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-29, -Math.sin(propAngle) * 14);
+  ctx.lineTo(-29, Math.sin(propAngle) * 14);
+  ctx.stroke();
+
+  // Verrière de cockpit en goutte d'eau avec pilote casqué
+  const glassGrad = ctx.createLinearGradient(-4, -12, 10, -2);
+  glassGrad.addColorStop(0, "rgba(224, 242, 254, 0.95)");
+  glassGrad.addColorStop(0.5, "rgba(56, 189, 248, 0.85)");
+  glassGrad.addColorStop(1, "rgba(14, 116, 144, 0.9)");
+  ctx.fillStyle = glassGrad;
+  ctx.beginPath();
+  ctx.ellipse(2, -5, 11, 6, -0.15, 0, Math.PI * 2);
+  ctx.fill();
+  // Pilote rebelle avec lunettes d'aviateur dans le cockpit
+  ctx.fillStyle = "#fed7aa";
+  ctx.beginPath();
+  ctx.arc(3, -4, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#0f172a"; // Lunettes
+  ctx.fillRect(1, -5, 4, 1.8);
+
+  // Aile principale monoplan avec feux de navigation
+  ctx.fillStyle = "#14532d";
+  ctx.beginPath();
+  ctx.moveTo(-10, 0);
+  ctx.lineTo(-4, -16);
+  ctx.lineTo(8, -16);
+  ctx.lineTo(14, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  // Bombe largable sous le ventre
+  ctx.fillStyle = "#1e293b";
+  ctx.beginPath();
+  ctx.ellipse(-2, 11, 7, 3.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#facc15"; // Anneau jaune de sécurité
+  ctx.fillRect(-3, 8.5, 2, 5);
+
+  // Empennage arrière et bande d'identification jaune
   ctx.fillStyle = "#15803d";
   ctx.beginPath();
-  ctx.ellipse(0, 0, 24, 7, 0, 0, Math.PI * 2);
+  ctx.moveTo(20, -2);
+  ctx.lineTo(28, -14);
+  ctx.lineTo(31, -14);
+  ctx.lineTo(26, 0);
+  ctx.closePath();
   ctx.fill();
-  // Aile
-  ctx.fillStyle = "#166534";
-  ctx.fillRect(-8, -12, 16, 24);
-  // Hélice avant
-  ctx.fillStyle = "#facc15";
-  ctx.fillRect(-26, -10 + Math.sin(now * 0.05) * 4, 2, 20);
+  ctx.fillStyle = "#eab308";
+  ctx.fillRect(23, -8, 3, 8);
+
   ctx.restore();
 }
 
@@ -7469,44 +7769,118 @@ function drawSlugPOW(pow, now) {
   ctx.save();
   ctx.translate(pow.x, pow.y);
 
+  // Ombre portée au sol
+  ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+  ctx.beginPath();
+  ctx.ellipse(0, 2, 12, 4.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
   if (pow.saluting) {
-    // Otage debout faisant le salut militaire !
-    ctx.fillStyle = "#1e3a5f"; // Pantalon bleu usé
-    ctx.fillRect(-5, -12, 10, 12);
-    // Torse nu
+    // Otage P.O.W. libéré exécutant le salut militaire légendaire de Metal Slug !
+    // Saut de joie animé
+    const hopY = -Math.abs(Math.sin(now * 0.008) * 8);
+    ctx.translate(0, hopY);
+
+    // Pantalon bleu indigo déchiré / bermuda usé
+    const pantsGrad = ctx.createLinearGradient(-6, -14, 6, 0);
+    pantsGrad.addColorStop(0, "#1d4ed8");
+    pantsGrad.addColorStop(0.6, "#1e3a8a");
+    pantsGrad.addColorStop(1, "#0f172a");
+    ctx.fillStyle = pantsGrad;
+    ctx.fillRect(-6, -14, 12, 11);
+    // Jambes nues & pieds nus
     ctx.fillStyle = "#fed7aa";
-    ctx.fillRect(-6, -24, 12, 12);
-    // Longue barbe blanche
-    ctx.fillStyle = "#f1f5f9";
+    ctx.fillRect(-5, -4, 4, 5);
+    ctx.fillRect(1, -4, 4, 5);
+
+    // Torse nu hâlé par la captivité avec muscles dessinés
+    ctx.fillStyle = "#fed7aa";
     ctx.beginPath();
-    ctx.arc(0, -22, 6, 0, Math.PI);
+    ctx.roundRect(-7, -27, 14, 14, 2);
     ctx.fill();
-    // Tête & Cheveux longs
+
+    // Barbe blanche mythique extra-longue et soyeuse descendant sous la ceinture
+    const beardGrad = ctx.createLinearGradient(0, -26, 0, -6);
+    beardGrad.addColorStop(0, "#ffffff");
+    beardGrad.addColorStop(0.7, "#f1f5f9");
+    beardGrad.addColorStop(1, "#cbd5e1");
+    ctx.fillStyle = beardGrad;
+    ctx.beginPath();
+    ctx.moveTo(-6, -26);
+    ctx.quadraticCurveTo(-8, -14, -4, -6);
+    ctx.quadraticCurveTo(0, -2, 4, -6);
+    ctx.quadraticCurveTo(8, -14, 6, -26);
+    ctx.closePath();
+    ctx.fill();
+
+    // Tête avec cheveux blancs ébouriffés
     ctx.fillStyle = "#fed7aa";
     ctx.beginPath();
-    ctx.arc(0, -28, 5.5, 0, Math.PI * 2);
+    ctx.arc(0, -32, 6.5, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "#f1f5f9";
-    ctx.fillRect(-6, -33, 12, 4);
-    // Bras en salut militaire
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(-7, -38, 14, 5); // Tignasse ébouriffée
+
+    // Yeux plissés de gratitude et grand sourire
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(-3, -33, 2, 1.5);
+    ctx.fillRect(1, -33, 2, 1.5);
+    ctx.fillStyle = "#dc2626";
+    ctx.fillRect(-1.5, -30, 3, 1.5);
+
+    // Bras droit impeccablement tendu en salut militaire au front !
     ctx.fillStyle = "#fed7aa";
-    ctx.fillRect(4, -28, 7, 3);
+    ctx.fillRect(4, -34, 8, 3.5);
+    ctx.fillRect(10, -38, 3.5, 7);
+
+    // Étoiles de remerciement scintillantes "THANK YOU!"
+    if (Math.floor(now / 200) % 2 === 0) {
+      ctx.fillStyle = "#fbbf24";
+      ctx.font = "900 10px 'Impact', system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("THANK YOU!", 0, -44);
+    }
   } else {
-    // Otage ligoté à genoux
-    ctx.fillStyle = "#1e3a5f";
-    ctx.fillRect(-6, -8, 12, 8);
-    // Torse ligoté par cordes
+    // Otage P.O.W. ligoté à genoux en attente de secours
+    const wriggle = Math.sin(now * 0.01) * 1.5;
+    ctx.translate(wriggle, 0);
+
+    // Bermuda bleu déchiré
+    ctx.fillStyle = "#1d4ed8";
+    ctx.fillRect(-7, -10, 14, 10);
+
+    // Torse nu ligoté par de grosses cordes de chanvre
     ctx.fillStyle = "#fed7aa";
-    ctx.fillRect(-5, -18, 10, 10);
-    ctx.strokeStyle = "#ca8a04"; // Cordes
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(-5, -16, 10, 6);
-    // Tête baissée
+    ctx.fillRect(-6, -22, 12, 13);
+    // Cordes de chanvre épaisses avec nœuds
+    ctx.strokeStyle = "#ca8a04";
+    ctx.lineWidth = 2.2;
+    ctx.strokeRect(-6, -19, 12, 7);
+
+    // Longue barbe blanche
+    ctx.fillStyle = "#f8fafc";
     ctx.beginPath();
-    ctx.arc(0, -22, 5, 0, Math.PI * 2);
+    ctx.moveTo(-5, -20);
+    ctx.lineTo(0, -9);
+    ctx.lineTo(5, -20);
+    ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = "#f1f5f9";
-    ctx.fillRect(-5, -24, 10, 5); // Barbe
+
+    // Tête baissée avec cheveux longs
+    ctx.fillStyle = "#fed7aa";
+    ctx.beginPath();
+    ctx.arc(0, -26, 5.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#f8fafc";
+    ctx.fillRect(-6, -30, 12, 4);
+
+    // Bulle de supplication clignotante "HELP!"
+    if (Math.floor(now / 350) % 2 === 0) {
+      ctx.fillStyle = "#ef4444";
+      ctx.font = "900 10px 'Impact', system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("HELP!", 0, -34);
+    }
   }
 
   ctx.restore();
@@ -7515,18 +7889,86 @@ function drawSlugPOW(pow, now) {
 function drawSlugPickup(pu, now) {
   ctx.save();
   ctx.translate(pu.x, pu.y);
-  // Boîte métallique
-  ctx.fillStyle = "#ca8a04";
-  ctx.fillRect(-10, -10, 20, 14);
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(-10, -10, 20, 14);
-  // Lettre de l'arme
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "900 10px system-ui, sans-serif";
-  ctx.textAlign = "center";
-  const label = pu.type === "hmg" ? "H" : (pu.type === "shotgun" ? "S" : (pu.type === "bomb" ? "B" : "🍗"));
-  ctx.fillText(label, 0, 1);
+
+  // Flottement léger cinématique
+  const bobY = Math.sin(now * 0.007) * 3;
+  ctx.translate(0, bobY);
+
+  if (pu.type === "chicken") {
+    // Poulet rôti doré succulent sur plat d'argent 64-bit
+    ctx.fillStyle = "#cbd5e1"; // Plat d'argent
+    ctx.beginPath();
+    ctx.ellipse(0, 4, 14, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Volaille dorée rôtie au four
+    const chickenGrad = ctx.createRadialGradient(-2, -3, 2, 0, 0, 10);
+    chickenGrad.addColorStop(0, "#fbbf24");
+    chickenGrad.addColorStop(0.5, "#d97706");
+    chickenGrad.addColorStop(1, "#78350f");
+    ctx.fillStyle = chickenGrad;
+    ctx.beginPath();
+    ctx.ellipse(0, -1, 11, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Cuisse dorée
+    ctx.fillRect(6, -6, 6, 4);
+    ctx.fillStyle = "#ffffff"; // Manchon en papier blanc
+    ctx.fillRect(10, -7, 4, 6);
+
+    // Texte bonus scintillant
+    ctx.fillStyle = "#facc15";
+    ctx.font = "900 9px 'Impact', system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("1000 PTS", 0, -11);
+  } else {
+    // Caisse de munitions en bois renforcé 64-bit avec coins d'acier rivetés
+    const crateGrad = ctx.createLinearGradient(-13, -13, 13, 13);
+    crateGrad.addColorStop(0, "#92400e");
+    crateGrad.addColorStop(0.5, "#78350f");
+    crateGrad.addColorStop(1, "#451a03");
+    ctx.fillStyle = crateGrad;
+    ctx.fillRect(-13, -11, 26, 18);
+
+    // Planches de bois veinées
+    ctx.strokeStyle = "#451a03";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-13, -2);
+    ctx.lineTo(13, -2);
+    ctx.stroke();
+
+    // Renforts d'angles en acier rivetés
+    ctx.strokeStyle = "#94a3b8";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(-13, -11, 26, 18);
+    ctx.fillStyle = "#cbd5e1";
+    ctx.fillRect(-12, -10, 2, 2);
+    ctx.fillRect(10, -10, 2, 2);
+    ctx.fillRect(-12, 5, 2, 2);
+    ctx.fillRect(10, 5, 2, 2);
+
+    // Badge stencil d'identification lumineux
+    let badgeColor = "#22c55e";
+    let badgeLetter = "H";
+    if (pu.type === "shotgun") {
+      badgeColor = "#38bdf8";
+      badgeLetter = "S";
+    } else if (pu.type === "bomb") {
+      badgeColor = "#f59e0b";
+      badgeLetter = "💣";
+    }
+
+    ctx.fillStyle = badgeColor;
+    ctx.beginPath();
+    ctx.arc(0, -2, 7, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#0f172a";
+    ctx.font = "900 9px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(badgeLetter, 0, -1);
+  }
+
   ctx.restore();
 }
 
@@ -7535,58 +7977,147 @@ function drawBossTetsuyuki(b, now) {
   ctx.translate(b.x, b.y);
 
   if (b.hitFlash > 0) {
-    ctx.filter = "brightness(2.0)";
+    ctx.filter = "brightness(2.2) saturate(0.4)";
   }
 
-  // Épave de bombardier quadrimoteur transformée en forteresse
-  ctx.fillStyle = "#334155";
+  // 1. ÉPAVE DE BOMBARDIER QUADRIMOTEUR TETSUYUKI (Planche 4)
+  // Fuselage d'acier écrasé dans la berge boueuse avec dégradé d'armure lourde
+  const hullGrad = ctx.createLinearGradient(0, 0, b.width, b.height);
+  hullGrad.addColorStop(0, "#475569");
+  hullGrad.addColorStop(0.3, "#334155");
+  hullGrad.addColorStop(0.7, "#1e293b");
+  hullGrad.addColorStop(1, "#090d16");
+  ctx.fillStyle = hullGrad;
+
+  // Profil géant du bombardier écrasé
   ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.lineTo(b.width * 0.8, -40);
-  ctx.lineTo(b.width, 20);
-  ctx.lineTo(b.width * 0.9, b.height);
-  ctx.lineTo(10, b.height);
+  ctx.moveTo(0, 35);
+  ctx.lineTo(b.width * 0.25, -25);
+  ctx.lineTo(b.width * 0.7, -45);
+  ctx.lineTo(b.width * 0.95, 10);
+  ctx.lineTo(b.width, b.height);
+  ctx.lineTo(0, b.height);
   ctx.closePath();
   ctx.fill();
 
-  // Plaques d'acier rouillé & rivets
-  ctx.fillStyle = "#78350f";
-  ctx.fillRect(15, 20, 70, 35);
-  ctx.fillRect(95, 10, 65, 45);
+  // Plaques d'armure renforcée rivetées et coulures de rouille orange
+  ctx.fillStyle = "#92400e";
+  ctx.fillRect(20, 25, 75, 40);
+  ctx.fillRect(110, 15, 80, 50);
+  ctx.strokeStyle = "#ca8a04";
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(20, 25, 75, 40);
+  ctx.strokeRect(110, 15, 80, 50);
 
-  // Réacteur d'aile brisé avec fumée
+  // Rivets d'acier tout le long des longerons
+  ctx.fillStyle = "#94a3b8";
+  for (let rx = 24; rx < b.width * 0.9; rx += 16) {
+    ctx.fillRect(rx, 28, 2, 2);
+    ctx.fillRect(rx, 62, 2, 2);
+  }
+
+  // 2. RÉACTEURS D'AILES BRISÉS & MOTEURS EN FEU
+  // Réacteur gauche fumant
   ctx.fillStyle = "#0f172a";
   ctx.beginPath();
-  ctx.arc(50, 65, 22, 0, Math.PI * 2);
+  ctx.arc(60, 80, 26, 0, Math.PI * 2);
   ctx.fill();
-
-  // Tourelle de canon principale rotative
-  ctx.fillStyle = "#1e293b";
+  ctx.fillStyle = "#f97316"; // Lueur incandescente interne
   ctx.beginPath();
-  ctx.arc(110, -10, 26, 0, Math.PI * 2);
+  ctx.arc(60, 80, 14, 0, Math.PI * 2);
   ctx.fill();
-  // Fût de canon pointé vers la gauche
-  ctx.fillRect(45, -16, 65, 12);
-  ctx.fillRect(40, -19, 8, 18);
 
-  // Barre de Vie du Boss TETSUYUKI
-  ctx.restore();
+  // Volutes de fumée noire épaisse & gerbes d'étincelles
+  const smokeOsc = Math.sin(now * 0.015) * 8;
+  ctx.fillStyle = "rgba(30, 41, 59, 0.75)";
+  ctx.beginPath();
+  ctx.arc(55 + smokeOsc, 40, 18, 0, Math.PI * 2);
+  ctx.arc(45 + smokeOsc * 1.5, 10, 24, 0, Math.PI * 2);
+  ctx.fill();
+  // Étincelles
+  if (Math.floor(now / 120) % 2 === 0) {
+    ctx.fillStyle = "#facc15";
+    ctx.fillRect(68 + Math.random() * 8, 70 - Math.random() * 12, 3, 3);
+  }
+
+  // 3. TOURELLE DE CANON GÉANTE TETSUYUKI (Rotative, articulée, visant le joueur)
+  const turretCenterX = 135;
+  const turretCenterY = -12;
+  const tAngle = b.turretAngle || -Math.PI * 0.75;
+
   ctx.save();
-  const barW = Math.min(320, canvas.width * 0.45);
-  const barX = canvas.width / 2 - barW / 2;
-  const barY = 48;
-  ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
-  ctx.fillRect(barX, barY, barW, 14);
-  ctx.strokeStyle = "#ef4444";
-  ctx.strokeRect(barX, barY, barW, 14);
-  const hpRatio = Math.max(0, b.hp / b.maxHp);
-  ctx.fillStyle = "#ef4444";
-  ctx.fillRect(barX, barY, barW * hpRatio, 14);
+  ctx.translate(turretCenterX, turretCenterY);
 
+  // Dôme blindé hémisphérique de la tourelle
+  const domeGrad = ctx.createRadialGradient(0, 0, 3, 0, 0, 32);
+  domeGrad.addColorStop(0, "#64748b");
+  domeGrad.addColorStop(0.6, "#334155");
+  domeGrad.addColorStop(1, "#0f172a");
+  ctx.fillStyle = domeGrad;
+  ctx.beginPath();
+  ctx.arc(0, 0, 30, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#94a3b8";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Fût de canon lourd géant 203mm orienté vers le joueur
+  ctx.rotate(tAngle);
+  const barrelGrad = ctx.createLinearGradient(0, -10, 85, 10);
+  barrelGrad.addColorStop(0, "#1e293b");
+  barrelGrad.addColorStop(0.5, "#475569");
+  barrelGrad.addColorStop(1, "#0f172a");
+  ctx.fillStyle = barrelGrad;
+  ctx.fillRect(15, -9, 78, 18);
+  // Manchon de renfort et bouche crénelée
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(80, -12, 16, 24);
+  ctx.fillStyle = "#f59e0b";
+  ctx.fillRect(94, -10, 4, 20);
+
+  ctx.restore();
+
+  // Poste de DCA secondaire sur l'avant
+  ctx.fillStyle = "#1e293b";
+  ctx.fillRect(15, -8, 22, 14);
+  ctx.fillRect(-5, -6, 22, 5);
+
+  ctx.restore();
+
+  // 4. BARRE DE VIE ÉPIQUE RETRO DU BOSS TETSUYUKI (HUD supérieur)
+  ctx.save();
+  const barW = Math.min(380, canvas.width * 0.55);
+  const barX = canvas.width / 2 - barW / 2;
+  const barY = 46;
+
+  // Cadre blindé néon
+  ctx.fillStyle = "rgba(15, 23, 42, 0.9)";
+  ctx.fillRect(barX - 4, barY - 4, barW + 8, 24);
+  ctx.strokeStyle = "#ef4444";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(barX - 4, barY - 4, barW + 8, 24);
+
+  // Remplissage dynamique avec dégradé rouge sang / orange
+  const hpRatio = Math.max(0, b.hp / b.maxHp);
+  const hpGrad = ctx.createLinearGradient(barX, barY, barX + barW, barY);
+  hpGrad.addColorStop(0, "#ef4444");
+  hpGrad.addColorStop(0.6, "#f97316");
+  hpGrad.addColorStop(1, "#facc15");
+  ctx.fillStyle = hpGrad;
+  ctx.fillRect(barX, barY, barW * hpRatio, 16);
+
+  // Hachures d'avertissement de danger
+  ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+  for (let hx = 0; hx < barW * hpRatio; hx += 14) {
+    ctx.fillRect(barX + hx, barY, 6, 16);
+  }
+
+  // Titre Arcade
   ctx.fillStyle = "#ffffff";
-  ctx.font = "900 11px system-ui, sans-serif";
+  ctx.font = "900 12px 'Impact', system-ui, sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("BOSS : TETSUYUKI // FORTERESSE FLUVIALE", canvas.width / 2, barY - 4);
+  ctx.fillText("BOSS : TETSUYUKI // CRASHED BOMBER FORTRESS", canvas.width / 2, barY - 8);
+
   ctx.restore();
 }
 
