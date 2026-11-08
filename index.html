@@ -38,7 +38,8 @@
           <a href="#descSpaceInvaders" class="portal-nav-link">Space Invaders 3D</a>
           <a href="#descTankAssault" class="portal-nav-link">Tank Assault 360°</a>
           <a href="#descMetalSlug" class="portal-nav-link">🎖️ Metal Slug 1</a>
-          <a href="#descNovaFighter" class="portal-nav-link">🥊 Duel Street Fighter</a>
+          <a href="#descCyberDojo" class="portal-nav-link">🥋 Cyber Dojo (1v1)</a>
+          <a href="#descNovaFighter" class="portal-nav-link">🥊 Duel Post-Boss</a>
           <a href="#descDefense" class="portal-nav-link">🛡️ Bouclier & Défense</a>
         </nav>
       </header>
@@ -223,6 +224,30 @@
               <div class="bento-actions">
                 <button class="bento-play-btn bento-play-slug" data-launch-game="slug">▶ JOUER À METAL SLUG (MISSION 1)</button>
                 <a href="#descMetalSlug" class="bento-info-link" onclick="event.stopPropagation();">Voir la fiche ↓</a>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Carte Bento Principale 5 : JEU #4 - NOVA CYBER DOJO 128-BIT (BEST OF 3) -->
+        <article class="bento-card bento-featured bento-dojo" data-launch-game="dojo">
+          <img src="cyber_dojo_bg.jpg" alt="Nova Cyber Dojo 128-bit" class="bento-bg" style="opacity: 0.65;">
+          <div class="bento-overlay"></div>
+          <div class="bento-content">
+            <div class="bento-top-row">
+              <span class="bento-pill bento-pill-dojo">JEU #4 • VERSUS FIGHTING 128-BIT</span>
+              <span class="bento-status bento-status-dojo">ARCADE SOLO • BEST OF 3</span>
+            </div>
+            <div class="bento-main-info">
+              <div class="bento-floating-sprites">
+                <img src="dojo_sprite_ken.png" alt="Ken Masters" class="bento-sprite" style="height: 60px; filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.8));">
+                <img src="dojo_sprite_shadow_ken.png" alt="Shadow Ken" class="bento-sprite" style="height: 60px; filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.8));">
+              </div>
+              <h2>🥋 NOVA CYBER DOJO 128-BIT // KEN MASTERS VS SHADOW KEN</h2>
+              <p>Jeu de combat 2D rétro arcade inspiré de <em>Street Fighter Alpha</em> et <em>Capcom vs SNK</em>. Incarne <strong>Ken Masters</strong> en match officiel <strong>Best of 3 Rounds</strong> face à son doppelgänger <strong>Shadow Ken</strong> : Hadouken plasma, Shoryuken de flammes, Tatsumaki, Garde active [Q/←] et jauge de Ki 100% pour déclencher le titanesque <strong>Super Shinryuken</strong> !</p>
+              <div class="bento-actions">
+                <button class="bento-play-btn bento-play-dojo" data-launch-game="dojo">▶ ENTRER DANS LE DOJO (BEST OF 3)</button>
+                <a href="#descCyberDojo" class="bento-info-link" onclick="event.stopPropagation();">Voir la fiche & coups ↓</a>
               </div>
             </div>
           </div>
@@ -768,11 +793,20 @@
         <button id="btnSlugJump" class="ctrl-btn" style="background: #1d4ed8; border: 2px solid #60a5fa; color: #ffffff;" title="Sauter / Entrer dans le Tank">⬆️ SAUT</button>
         <button id="btnSlugBomb" class="ctrl-btn" style="background: #b45309; border: 2px solid #fbbf24; color: #ffffff;" title="Lancer Grenade / Obus">💣 BOMB</button>
       </div>
+
+      <!-- Commandes Tactiles Dédiées : NOVA CYBER DOJO (Combat 1v1) -->
+      <div id="dojoMobileControls" class="dojo-mobile-controls" style="display: none; gap: 8px;">
+        <button id="btnDojoPunch" class="ctrl-btn" style="background: #dc2626; border: 2px solid #f87171; color: #fff; font-weight: 900;" title="Poing [J]">👊 P</button>
+        <button id="btnDojoKick" class="ctrl-btn" style="background: #ea580c; border: 2px solid #fb923c; color: #fff; font-weight: 900;" title="Pied [K]">🦵 K</button>
+        <button id="btnDojoHadouken" class="ctrl-btn" style="background: #0284c7; border: 2px solid #38bdf8; color: #fff; font-weight: 900;" title="Hadouken [L]">⚡ HADO</button>
+        <button id="btnDojoShoryu" class="ctrl-btn" style="background: #7c3aed; border: 2px solid #c084fc; color: #fff; font-weight: 900;" title="Shoryuken [U]">🔥 SHORYU</button>
+        <button id="btnDojoSuper" class="ctrl-btn" style="background: #d97706; border: 2px solid #facc15; color: #fff; font-weight: 900;" title="Super Shinryuken [Espace]">⭐ SUPER</button>
+      </div>
       <div class="mobile-hint" id="mobileHintText">Glisse sur l'écran pour viser/tirer à 360°</div>
       <button id="btnFire" class="ctrl-btn fire-btn">FIRE</button>
     </div>
   </main>
 
-  <script src="game.js?v=55"></script>
+  <script src="game.js?v=56"></script>
 </body>
 </html>

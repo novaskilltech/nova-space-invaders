@@ -1147,7 +1147,9 @@ function initGame() {
   player.weaponTime = 0;
   resetPlayer();
 
-  if (selectedGameMode === "slug") {
+  if (selectedGameMode === "dojo") {
+    initCyberDojoMatch();
+  } else if (selectedGameMode === "slug") {
     initSlugMission(1);
   } else if (selectedGameMode === "tank") {
     initTankLevel(state.wave);
@@ -1179,6 +1181,8 @@ function syncUi() {
 
   if (slugMobile) {
     slugMobile.style.display = (selectedGameMode === "slug" && state.running && !state.paused) ? "flex" : "none";
+    const dojoMobile = document.getElementById("dojoMobileControls");
+    if (dojoMobile) dojoMobile.style.display = (selectedGameMode === "dojo" && state.running && !state.paused) ? "flex" : "none";
   }
 
   if (selectedGameMode === "slug") {
@@ -4245,7 +4249,9 @@ const slugConfigPanel = document.getElementById("slugConfigPanel");
 const weaponSelectionPanel = document.getElementById("weaponSelection");
 
 function setGameMode(mode) {
-  if (mode === "slug") {
+  if (mode === "dojo") {
+    selectedGameMode = "dojo";
+  } else if (mode === "slug") {
     selectedGameMode = "slug";
   } else if (mode === "tank") {
     selectedGameMode = "tank";
@@ -4257,11 +4263,19 @@ function setGameMode(mode) {
   if (spaceConfigPanel) spaceConfigPanel.style.display = selectedGameMode === "space" ? "flex" : "none";
   if (tankConfigPanel) tankConfigPanel.style.display = selectedGameMode === "tank" ? "flex" : "none";
   if (slugConfigPanel) slugConfigPanel.style.display = selectedGameMode === "slug" ? "flex" : "none";
+  if (weaponSelectionPanel) weaponSelectionPanel.style.display = (selectedGameMode === "slug" || selectedGameMode === "dojo") ? "none" : "block";
   if (weaponSelectionPanel) weaponSelectionPanel.style.display = selectedGameMode === "slug" ? "none" : "block";
 
   const waveInput = document.getElementById("startWaveInput");
   const waveInputLabel = document.getElementById("waveInputLabel");
-  if (selectedGameMode === "slug") {
+  if (selectedGameMode === "dojo") {
+    if (waveInput) {
+      waveInput.max = "1";
+      waveInput.value = "1";
+    }
+    if (waveInputLabel) waveInputLabel.textContent = "Match :";
+    if (ui.startButton && !state.running) ui.startButton.textContent = "ENTRER DANS LE DOJO (BEST OF 3)";
+  } else if (selectedGameMode === "slug") {
     if (waveInput) {
       waveInput.max = "1";
       waveInput.value = "1";
@@ -8375,7 +8389,13 @@ function launchGameFromPortal(gameMode) {
     novaGamesPortal.classList.add("hidden");
   }
   setGameMode(gameMode);
-  if (gameMode === "slug") {
+  if (gameMode === "dojo") {
+    showOverlay(
+      "NOVA CYBER DOJO 128-BIT // BEST OF 3",
+      "Ken Masters vs Shadow Ken : Hadouken [L], Shoryuken [U], Tatsumaki [I], Super [Espace] & Garde [Q/←]",
+      "ENTRER DANS L'ARÈNE"
+    );
+  } else if (gameMode === "slug") {
     showOverlay(
       "MISSION 1 // NOVA IRON COMMANDO",
       "Metal Slug 1 Remake : Jungle Fluviale, Otages P.O.W., Tank SV-001 & Boss Tetsuyuki",
@@ -8402,7 +8422,7 @@ document.querySelectorAll("[data-launch-game]").forEach((el) => {
   const handler = (e) => {
     e.stopPropagation();
     const mode = el.getAttribute("data-launch-game");
-    if (mode === "space" || mode === "tank" || mode === "slug") {
+    if (mode === "space" || mode === "tank" || mode === "slug" || mode === "dojo") {
       launchGameFromPortal(mode);
     }
   };
@@ -8786,3 +8806,950 @@ function initSidebarPreference() {
   );
   syncUi();
 })();
+
+/* ==========================================================================
+   JEU #4 : NOVA CYBER DOJO 128-BIT // STANDALONE VERSUS FIGHTING (BEST OF 3)
+   Moteur de combat 2D rétro Arcade (Capcom / SNK Spirit) : Ken Masters vs Shadow Ken
+   ========================================================================== */
+
+const dojoGame = {
+  active: false,
+  round: 1,
+  maxRounds: 3,
+  p1Rounds: 0,
+  cpuRounds: 0,
+  roundState: "intro", // "intro", "fight", "ko", "round_over", "match_over"
+  stateTimer: 2.8,
+  timer: 99.0,
+  slowmo: 0,
+  screenShake: 0,
+  superCinematic: 0,
+  superUser: null,
+  groundY: 0,
+  p1: {
+    name: "KEN MASTERS",
+    x: 200, y: 0, groundY: 0,
+    vx: 0, vy: 0, speed: 230,
+    facing: 1,
+    hp: 1000, maxHp: 1000, delayedHp: 1000,
+    ki: 0, maxKi: 100,
+    state: "idle", // "idle", "walk", "jump", "crouch", "punch", "kick", "hadouken", "shoryuken", "tatsumaki", "super", "block", "hit", "knockdown", "win"
+    stateTimer: 0,
+    isGrounded: true,
+    isBlocking: false,
+    invulTimer: 0,
+    hitFlash: 0
+  },
+  cpu: {
+    name: "SHADOW KEN",
+    x: 650, y: 0, groundY: 0,
+    vx: 0, vy: 0, speed: 215,
+    facing: -1,
+    hp: 1000, maxHp: 1000, delayedHp: 1000,
+    ki: 0, maxKi: 100,
+    state: "idle",
+    stateTimer: 0,
+    isGrounded: true,
+    isBlocking: false,
+    invulTimer: 0,
+    hitFlash: 0,
+    aiTimer: 0.6,
+    aiAction: "idle"
+  },
+  projectiles: [],
+  particles: [],
+  sakura: []
+};
+
+function initCyberDojoMatch() {
+  state.paused = false;
+  state.running = true;
+  state.score = 0;
+  state.shots = [];
+  state.enemyShots = [];
+  state.powerups = [];
+
+  const gy = canvas.height - 75;
+  dojoGame.groundY = gy;
+  dojoGame.active = true;
+  dojoGame.round = 1;
+  dojoGame.p1Rounds = 0;
+  dojoGame.cpuRounds = 0;
+
+  // Préchargement garanti des assets 128-bit
+  if (!state.images.dojo_bg) {
+    state.images.dojo_bg = new Image();
+    state.images.dojo_bg.src = "cyber_dojo_bg.jpg?v=56";
+  }
+  if (!state.images.dojo_ken) {
+    state.images.dojo_ken = new Image();
+    state.images.dojo_ken.src = "dojo_sprite_ken.png?v=56";
+  }
+  if (!state.images.dojo_shadow) {
+    state.images.dojo_shadow = new Image();
+    state.images.dojo_shadow.src = "dojo_sprite_shadow_ken.png?v=56";
+  }
+
+  // Initialisation des pétales de sakura flottants
+  dojoGame.sakura = [];
+  for (let s = 0; s < 35; s++) {
+    dojoGame.sakura.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: 20 + Math.random() * 35,
+      vy: 15 + Math.random() * 30,
+      size: 4 + Math.random() * 5,
+      angle: Math.random() * Math.PI * 2,
+      spin: (Math.random() - 0.5) * 2
+    });
+  }
+
+  resetDojoRound();
+
+  // Contrôles tactiles mobile
+  const bindTouch = (id, action) => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    const trigger = (e) => { e.preventDefault(); triggerDojoAction(dojoGame.p1, action); };
+    btn.onclick = trigger;
+    btn.ontouchstart = trigger;
+  };
+
+  bindTouch("btnDojoPunch", "punch");
+  bindTouch("btnDojoKick", "kick");
+  bindTouch("btnDojoHadouken", "hadouken");
+  bindTouch("btnDojoShoryu", "shoryuken");
+  bindTouch("btnDojoSuper", "super");
+
+  syncUi();
+}
+
+function resetDojoRound() {
+  const gy = dojoGame.groundY || (canvas.height - 75);
+  const w = canvas.width;
+
+  dojoGame.roundState = "intro";
+  dojoGame.stateTimer = 2.4;
+  dojoGame.timer = 99.0;
+  dojoGame.projectiles = [];
+  dojoGame.particles = [];
+  dojoGame.slowmo = 0;
+  dojoGame.superCinematic = 0;
+
+  // Réinitialisation P1
+  const p1 = dojoGame.p1;
+  p1.x = Math.max(120, w * 0.22);
+  p1.y = gy;
+  p1.groundY = gy;
+  p1.vx = 0;
+  p1.vy = 0;
+  p1.facing = 1;
+  p1.hp = 1000;
+  p1.delayedHp = 1000;
+  p1.state = "idle";
+  p1.stateTimer = 0;
+  p1.isGrounded = true;
+  p1.isBlocking = false;
+  p1.invulTimer = 0.5;
+
+  // Réinitialisation CPU
+  const cpu = dojoGame.cpu;
+  cpu.x = Math.min(w - 120, w * 0.78);
+  cpu.y = gy;
+  cpu.groundY = gy;
+  cpu.vx = 0;
+  cpu.vy = 0;
+  cpu.facing = -1;
+  cpu.hp = 1000;
+  cpu.delayedHp = 1000;
+  cpu.state = "idle";
+  cpu.stateTimer = 0;
+  cpu.isGrounded = true;
+  cpu.isBlocking = false;
+  cpu.invulTimer = 0.5;
+  cpu.aiTimer = 0.5;
+
+  playDojoVoice(`ROUND ${dojoGame.round}... FIGHT !`);
+}
+
+function playDojoVoice(text) {
+  try {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 1.05;
+      u.pitch = 0.85;
+      u.volume = 0.9;
+      window.speechSynthesis.speak(u);
+    }
+  } catch (e) {
+    // Silence si désactivé par le navigateur
+  }
+}
+
+function updateCyberDojo(dt) {
+  if (dojoGame.slowmo > 0) {
+    dojoGame.slowmo -= dt;
+    dt *= 0.3; // Ralenti spectaculaire
+  }
+
+  if (dojoGame.screenShake > 0) {
+    dojoGame.screenShake = Math.max(0, dojoGame.screenShake - dt * 25);
+  }
+
+  // Animation des pétales de sakura
+  dojoGame.sakura.forEach(p => {
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.angle += p.spin * dt;
+    if (p.x > canvas.width + 20) p.x = -20;
+    if (p.y > canvas.height + 20) p.y = -20;
+  });
+
+  // Décompte de l'intro ("ROUND X ... FIGHT!")
+  if (dojoGame.roundState === "intro") {
+    dojoGame.stateTimer -= dt;
+    if (dojoGame.stateTimer <= 0) {
+      dojoGame.roundState = "fight";
+    }
+    return;
+  }
+
+  // Phase de K.O. & Climax
+  if (dojoGame.roundState === "ko") {
+    dojoGame.stateTimer -= dt;
+    updateDojoFighterPhysics(dojoGame.p1, dt);
+    updateDojoFighterPhysics(dojoGame.cpu, dt);
+    updateDojoProjectiles(dt);
+    updateDojoParticles(dt);
+
+    if (dojoGame.stateTimer <= 0) {
+      // Décompte des manches gagnantes
+      if (dojoGame.p1.hp > 0) dojoGame.p1Rounds++;
+      else if (dojoGame.cpu.hp > 0) dojoGame.cpuRounds++;
+
+      if (dojoGame.p1Rounds >= 2 || dojoGame.cpuRounds >= 2) {
+        dojoGame.roundState = "match_over";
+        const winner = dojoGame.p1Rounds >= 2 ? "KEN MASTERS" : "SHADOW KEN";
+        playDojoVoice(winner === "KEN MASTERS" ? "YOU WIN !" : "YOU LOSE !");
+        if (winner === "KEN MASTERS") {
+          state.score += 50000;
+          createFloatingText("★ MATCH VICTORY ! +50 000 PTS ★", canvas.width / 2, canvas.height * 0.35, "#22c55e");
+        }
+      } else {
+        dojoGame.round++;
+        resetDojoRound();
+      }
+    }
+    return;
+  }
+
+  if (dojoGame.roundState === "match_over") {
+    updateDojoFighterPhysics(dojoGame.p1, dt);
+    updateDojoFighterPhysics(dojoGame.cpu, dt);
+    updateDojoParticles(dt);
+    return;
+  }
+
+  // Match en cours (FIGHT)
+  if (dojoGame.roundState === "fight") {
+    dojoGame.timer = Math.max(0, dojoGame.timer - dt);
+
+    // Freeze cinématique du Super Combo
+    if (dojoGame.superCinematic > 0) {
+      dojoGame.superCinematic -= dt;
+      return;
+    }
+
+    // Gestion du Time Out
+    if (dojoGame.timer <= 0) {
+      triggerDojoKO(dojoGame.p1.hp < dojoGame.cpu.hp ? dojoGame.p1 : dojoGame.cpu);
+      return;
+    }
+
+    // Mise à jour de P1 (Contrôles clavier)
+    handleDojoPlayerInputs(dojoGame.p1, dojoGame.cpu, dt);
+    updateDojoFighterPhysics(dojoGame.p1, dt);
+
+    // Mise à jour de l'IA (Shadow Ken)
+    updateDojoAI(dojoGame.cpu, dojoGame.p1, dt);
+    updateDojoFighterPhysics(dojoGame.cpu, dt);
+
+    // Auto-Facing dynamique
+    if (dojoGame.p1.isGrounded && dojoGame.cpu.isGrounded) {
+      dojoGame.p1.facing = dojoGame.p1.x < dojoGame.cpu.x ? 1 : -1;
+      dojoGame.cpu.facing = -dojoGame.p1.facing;
+    }
+
+    // Mise à jour des projectiles & particules
+    updateDojoProjectiles(dt);
+    updateDojoParticles(dt);
+
+    // Catch-up doux de la barre de vie retardée (style SF Alpha)
+    [dojoGame.p1, dojoGame.cpu].forEach(f => {
+      if (f.delayedHp > f.hp) {
+        f.delayedHp = Math.max(f.hp, f.delayedHp - dt * 280);
+      }
+    });
+
+    // Détection de K.O.
+    if (dojoGame.p1.hp <= 0) {
+      triggerDojoKO(dojoGame.p1);
+    } else if (dojoGame.cpu.hp <= 0) {
+      triggerDojoKO(dojoGame.cpu);
+    }
+  }
+}
+
+function triggerDojoKO(loser) {
+  dojoGame.roundState = "ko";
+  dojoGame.stateTimer = 2.6;
+  dojoGame.slowmo = 0.45;
+  dojoGame.screenShake = 18;
+  loser.state = "knockdown";
+  loser.stateTimer = 3.0;
+  loser.vy = -320;
+  loser.vx = -loser.facing * 180;
+  loser.isGrounded = false;
+
+  const winner = loser === dojoGame.p1 ? dojoGame.cpu : dojoGame.p1;
+  winner.state = "win";
+  winner.stateTimer = 4.0;
+  winner.vx = 0;
+
+  playSound("explosion");
+  playDojoVoice("K. O. !");
+}
+
+function handleDojoPlayerInputs(p1, opponent, dt) {
+  if (p1.state === "hit" || p1.state === "knockdown" || p1.state === "win") return;
+
+  // Actions de combat prioritaires
+  if (p1.stateTimer > 0) {
+    p1.stateTimer -= dt;
+    if (p1.stateTimer <= 0) {
+      p1.state = "idle";
+      p1.isBlocking = false;
+    }
+    return;
+  }
+
+  const k = state.keys;
+  const isLeft = k["q"] || k["Q"] || k["ArrowLeft"];
+  const isRight = k["d"] || k["D"] || k["ArrowRight"];
+  const isUp = k["z"] || k["Z"] || k["ArrowUp"];
+  const isDown = k["s"] || k["S"] || k["ArrowDown"];
+
+  // Saut
+  if (isUp && p1.isGrounded) {
+    p1.vy = -480;
+    p1.isGrounded = false;
+    p1.state = "jump";
+    playSound("shoot");
+    return;
+  }
+
+  // Accroupi
+  if (isDown && p1.isGrounded) {
+    p1.state = "crouch";
+    p1.vx = 0;
+    return;
+  }
+
+  // Déplacement & Garde active
+  if (p1.isGrounded) {
+    if (isRight) {
+      p1.vx = p1.speed;
+      p1.state = "walk";
+      // Si recul par rapport à l'adversaire -> Garde active
+      p1.isBlocking = (p1.facing === -1);
+    } else if (isLeft) {
+      p1.vx = -p1.speed;
+      p1.state = "walk";
+      p1.isBlocking = (p1.facing === 1);
+    } else {
+      p1.vx = 0;
+      p1.state = "idle";
+      p1.isBlocking = false;
+    }
+  }
+}
+
+function updateDojoAI(cpu, opponent, dt) {
+  if (cpu.state === "hit" || cpu.state === "knockdown" || cpu.state === "win") return;
+
+  if (cpu.stateTimer > 0) {
+    cpu.stateTimer -= dt;
+    if (cpu.stateTimer <= 0) {
+      cpu.state = "idle";
+      cpu.isBlocking = false;
+    }
+    return;
+  }
+
+  cpu.aiTimer -= dt;
+  const dist = Math.abs(cpu.x - opponent.x);
+
+  if (cpu.aiTimer <= 0) {
+    cpu.aiTimer = 0.25 + Math.random() * 0.45;
+
+    // Décision IA selon la distance
+    if (dist > 300) {
+      // Distance lointaine : 45% avance, 35% Dark Hadouken, 20% saut
+      const roll = Math.random();
+      if (roll < 0.45) {
+        cpu.vx = cpu.facing * cpu.speed;
+        cpu.state = "walk";
+      } else if (roll < 0.8) {
+        triggerDojoAction(cpu, "hadouken");
+      } else {
+        cpu.vy = -460;
+        cpu.isGrounded = false;
+        cpu.state = "jump";
+      }
+    } else if (dist > 140) {
+      // Mi-distance : Avance, Tatsumaki ou Hadouken
+      const roll = Math.random();
+      if (roll < 0.5) {
+        cpu.vx = cpu.facing * cpu.speed;
+        cpu.state = "walk";
+      } else if (roll < 0.8) {
+        triggerDojoAction(cpu, "tatsumaki");
+      } else {
+        triggerDojoAction(cpu, "hadouken");
+      }
+    } else {
+      // Corps-à-corps : Si le joueur attaque, 50% de garde ou punition Shoryuken !
+      const isPlayerAttacking = ["punch", "kick", "shoryuken", "tatsumaki"].includes(opponent.state);
+      if (isPlayerAttacking && Math.random() < 0.5) {
+        cpu.isBlocking = true;
+        cpu.vx = -cpu.facing * (cpu.speed * 0.7);
+        cpu.state = "walk";
+      } else {
+        const roll = Math.random();
+        if (cpu.ki >= 100 && Math.random() < 0.7) {
+          triggerDojoAction(cpu, "super");
+        } else if (roll < 0.35) {
+          triggerDojoAction(cpu, "shoryuken");
+        } else if (roll < 0.65) {
+          triggerDojoAction(cpu, "punch");
+        } else {
+          triggerDojoAction(cpu, "kick");
+        }
+      }
+    }
+  }
+}
+
+function triggerDojoAction(f, action) {
+  if (dojoGame.roundState !== "fight") return;
+  if (f.state === "hit" || f.state === "knockdown" || f.state === "win") return;
+  if (f.stateTimer > 0 && f.state !== "walk" && f.state !== "idle" && f.state !== "crouch") return;
+
+  const opponent = f === dojoGame.p1 ? dojoGame.cpu : dojoGame.p1;
+  const isP1 = f === dojoGame.p1;
+
+  if (action === "punch") {
+    f.state = "punch";
+    f.stateTimer = 0.22;
+    f.vx = 0;
+    playSound("hit");
+    checkDojoHit(f, opponent, { dmg: 48, range: 82, kiGain: 8, sparkColor: "#facc15" });
+  } else if (action === "kick") {
+    f.state = "kick";
+    f.stateTimer = 0.28;
+    f.vx = 0;
+    playSound("hit");
+    checkDojoHit(f, opponent, { dmg: 72, range: 92, kiGain: 12, sparkColor: "#f97316" });
+  } else if (action === "hadouken") {
+    f.state = "hadouken";
+    f.stateTimer = 0.38;
+    f.vx = 0;
+    playSound("shoot");
+    f.ki = Math.min(f.maxKi, f.ki + 6);
+
+    // Tir du Hadouken
+    dojoGame.projectiles.push({
+      x: f.x + f.facing * 52,
+      y: f.y - 75,
+      vx: f.facing * 520,
+      owner: f,
+      type: "hadouken",
+      color: isP1 ? "#38bdf8" : "#a855f7",
+      glowColor: isP1 ? "#0284c7" : "#6b21a8",
+      radius: 18,
+      dmg: 95
+    });
+  } else if (action === "shoryuken") {
+    f.state = "shoryuken";
+    f.stateTimer = 0.52;
+    f.vy = -470;
+    f.vx = f.facing * 120;
+    f.isGrounded = false;
+    f.invulTimer = 0.25;
+    playSound("explosion");
+    f.ki = Math.min(f.maxKi, f.ki + 15);
+    checkDojoHit(f, opponent, { dmg: 135, range: 95, kiGain: 15, sparkColor: isP1 ? "#ef4444" : "#9333ea" });
+  } else if (action === "tatsumaki") {
+    f.state = "tatsumaki";
+    f.stateTimer = 0.48;
+    f.vx = f.facing * 280;
+    f.vy = -180;
+    f.isGrounded = false;
+    playSound("deflect");
+    f.ki = Math.min(f.maxKi, f.ki + 14);
+    checkDojoHit(f, opponent, { dmg: 105, range: 88, kiGain: 12, sparkColor: "#fbbf24" });
+  } else if (action === "super") {
+    if (f.ki < 100) {
+      if (isP1) createFloatingText("KI INSUFFISANT (100% REQUIS)", f.x, f.y - 110, "#ef4444");
+      return;
+    }
+
+    f.ki = 0;
+    f.state = "super";
+    f.stateTimer = 0.85;
+    f.invulTimer = 0.6;
+    f.vx = f.facing * 140;
+    f.vy = -520;
+    f.isGrounded = false;
+
+    // Freeze cinématique & Flash
+    dojoGame.superCinematic = 0.32;
+    dojoGame.superUser = f;
+    dojoGame.screenShake = 22;
+    playSound("powerup");
+    playSound("explosion");
+    playDojoVoice(isP1 ? "SHINRYUKEN !" : "SHADOW DRAGON !");
+
+    // Dégâts massifs multi-hits
+    checkDojoHit(f, opponent, { dmg: 380, range: 140, kiGain: 0, sparkColor: isP1 ? "#facc15" : "#c084fc", isSuper: true });
+  }
+}
+
+function checkDojoHit(attacker, defender, hitData) {
+  const dist = Math.abs(attacker.x - defender.x);
+  if (dist > hitData.range) return;
+  if (defender.invulTimer > 0) return;
+
+  // Détection de Garde (Block)
+  const isBlocked = defender.isBlocking;
+  const dmg = isBlocked ? Math.floor(hitData.dmg * 0.18) : hitData.dmg;
+
+  defender.hp = Math.max(0, defender.hp - dmg);
+  defender.hitFlash = 0.15;
+  defender.ki = Math.min(defender.maxKi, defender.ki + (isBlocked ? 4 : 10));
+  attacker.ki = Math.min(attacker.maxKi, attacker.ki + hitData.kiGain);
+
+  if (isBlocked) {
+    playSound("deflect");
+    createFloatingText("GUARD!", defender.x, defender.y - 85, "#38bdf8");
+    for (let sp = 0; sp < 6; sp++) {
+      dojoGame.particles.push({
+        x: defender.x - defender.facing * 20,
+        y: defender.y - 65,
+        vx: (Math.random() - 0.5) * 140,
+        vy: (Math.random() - 0.5) * 140,
+        size: 3, color: "#38bdf8", life: 0.25
+      });
+    }
+  } else {
+    playSound("hit");
+    defender.state = "hit";
+    defender.stateTimer = hitData.isSuper ? 0.6 : 0.24;
+    defender.vx = -defender.facing * (hitData.isSuper ? 240 : 120);
+
+    createFloatingText(`-${dmg}`, defender.x, defender.y - 95, hitData.isSuper ? "#facc15" : "#ef4444");
+    for (let sp = 0; sp < 14; sp++) {
+      dojoGame.particles.push({
+        x: defender.x, y: defender.y - 60,
+        vx: (Math.random() - 0.5) * 220,
+        vy: -Math.random() * 200,
+        size: 4 + Math.random() * 4,
+        color: hitData.sparkColor,
+        life: 0.4
+      });
+    }
+  }
+}
+
+function updateDojoFighterPhysics(f, dt) {
+  const gy = dojoGame.groundY || (canvas.height - 75);
+
+  if (f.invulTimer > 0) f.invulTimer -= dt;
+  if (f.hitFlash > 0) f.hitFlash -= dt;
+
+  // Gravité
+  if (!f.isGrounded) {
+    f.vy += 850 * dt;
+    f.x += f.vx * dt;
+    f.y += f.vy * dt;
+
+    if (f.y >= gy) {
+      f.y = gy;
+      f.vy = 0;
+      f.vx = 0;
+      f.isGrounded = true;
+      if (f.state === "jump" || f.state === "shoryuken" || f.state === "tatsumaki" || f.state === "super") {
+        f.state = "idle";
+      }
+    }
+  } else {
+    f.x += f.vx * dt;
+  }
+
+  // Limites de l'arène de combat
+  f.x = Math.max(70, Math.min(canvas.width - 70, f.x));
+}
+
+function updateDojoProjectiles(dt) {
+  dojoGame.projectiles.forEach(p => {
+    p.x += p.vx * dt;
+
+    const opponent = p.owner === dojoGame.p1 ? dojoGame.cpu : dojoGame.p1;
+    if (Math.abs(p.x - opponent.x) < p.radius + 35 && Math.abs(p.y - (opponent.y - 65)) < 45) {
+      p.dead = true;
+      checkDojoHit(p.owner, opponent, { dmg: p.dmg, range: 999, kiGain: 10, sparkColor: p.color });
+    }
+  });
+
+  dojoGame.projectiles = dojoGame.projectiles.filter(p => !p.dead && p.x > -50 && p.x < canvas.width + 50);
+}
+
+function updateDojoParticles(dt) {
+  dojoGame.particles.forEach(pt => {
+    pt.x += pt.vx * dt;
+    pt.y += pt.vy * dt;
+    pt.life -= dt;
+  });
+  dojoGame.particles = dojoGame.particles.filter(pt => pt.life > 0);
+}
+
+function handleDojoKeyDown(e) {
+  if (!dojoGame.active || !state.running || state.paused) return;
+  const p = dojoGame.p1;
+
+  if (e.key === "j" || e.key === "J") {
+    triggerDojoAction(p, "punch");
+  } else if (e.key === "k" || e.key === "K") {
+    triggerDojoAction(p, "kick");
+  } else if (e.key === "l" || e.key === "L") {
+    triggerDojoAction(p, "hadouken");
+  } else if (e.key === "u" || e.key === "U") {
+    triggerDojoAction(p, "shoryuken");
+  } else if (e.key === "i" || e.key === "I") {
+    triggerDojoAction(p, "tatsumaki");
+  } else if (e.key === " " || e.key === "Spacebar") {
+    triggerDojoAction(p, "super");
+  }
+}
+
+function drawCyberDojo(w, h, now) {
+  const gy = dojoGame.groundY || (h - 75);
+
+  ctx.save();
+
+  // Screen shake d'impact
+  if (dojoGame.screenShake > 0) {
+    const sx = (Math.random() - 0.5) * dojoGame.screenShake;
+    const sy = (Math.random() - 0.5) * dojoGame.screenShake;
+    ctx.translate(sx, sy);
+  }
+
+  // 1. DÉCOR DE L'ARÈNE CYBER DOJO (128-bit Widescreen)
+  const bg = state.images.dojo_bg;
+  if (bg && bg.complete && bg.naturalWidth > 0) {
+    ctx.drawImage(bg, 0, 0, w, h);
+  } else {
+    // Dégradé de repli
+    const dojoGrad = ctx.createLinearGradient(0, 0, 0, h);
+    dojoGrad.addColorStop(0, "#090d16");
+    dojoGrad.addColorStop(0.6, "#1e1b4b");
+    dojoGrad.addColorStop(1, "#311042");
+    ctx.fillStyle = dojoGrad;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  // 2. REFLET AU SOL SUR LE TATAMI LAQUÉ
+  ctx.fillStyle = "rgba(15, 23, 42, 0.45)";
+  ctx.fillRect(0, gy, w, h - gy);
+
+  // 3. PÉTALES DE SAKURA FLOTTANTS
+  ctx.fillStyle = "rgba(244, 114, 182, 0.75)";
+  dojoGame.sakura.forEach(p => {
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.angle);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, p.size, p.size * 0.55, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+
+  // 4. RENDU DES COMBATTANTS (KEN & SHADOW KEN - Sprites Unitaires 128-bit)
+  drawDojoFighter(dojoGame.p1, state.images.dojo_ken, false, now);
+  drawDojoFighter(dojoGame.cpu, state.images.dojo_shadow, true, now);
+
+  // 5. PROJECTILES (HADOUKEN PLASMA)
+  dojoGame.projectiles.forEach(p => {
+    ctx.save();
+    ctx.translate(p.x, p.y);
+
+    const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, p.radius * 1.8);
+    glow.addColorStop(0, "#ffffff");
+    glow.addColorStop(0.4, p.color);
+    glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(0, 0, p.radius * 1.8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cœur d'énergie incandescente
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(0, 0, p.radius * 0.65, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  });
+
+  // 6. PARTICULES D'IMPACTS & ÉTINCELLES
+  dojoGame.particles.forEach(pt => {
+    ctx.fillStyle = pt.color;
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // 7. INVERSION CINÉMATIQUE SUPER SHINRYUKEN
+  if (dojoGame.superCinematic > 0) {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = "#fbbf24";
+    ctx.font = "900 48px 'Impact', system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("★ SUPER SHINRYUKEN ! ★", w / 2, h * 0.38);
+  }
+
+  // 8. HUD ARCADE OFFICIEL BEST OF 3
+  drawDojoHUD(w, h, now);
+
+  ctx.restore();
+}
+
+function drawDojoFighter(f, sprite, isCpu, now) {
+  ctx.save();
+  ctx.translate(f.x, f.y);
+  ctx.scale(f.facing, 1);
+
+  // Ombre portée au sol
+  ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+  ctx.beginPath();
+  ctx.ellipse(0, 4, 34, 9, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Flash d'impact au coup reçu
+  if (f.hitFlash > 0) {
+    ctx.filter = "brightness(2.4) saturate(0.2)";
+  }
+
+  // Rendu du sprite 128-bit plein corps natif
+  const fw = 118;
+  const fh = 175;
+  const bob = f.state === "walk" ? Math.sin(now * 0.02) * 5 : 0;
+  const renderH = f.state === "crouch" ? fh * 0.76 : fh;
+
+  if (sprite && sprite.complete && sprite.naturalWidth > 0) {
+    ctx.drawImage(sprite, -fw / 2, -renderH + bob, fw, renderH);
+  } else {
+    // Fallback vectoriel si chargement différé
+    ctx.fillStyle = isCpu ? "#581c87" : "#dc2626";
+    ctx.fillRect(-25, -renderH + bob, 50, renderH);
+  }
+
+  // Effet visuel Shoryuken (Pilier de flammes tourbillonnantes)
+  if (f.state === "shoryuken" || f.state === "super") {
+    ctx.fillStyle = isCpu ? "rgba(168, 85, 247, 0.85)" : "rgba(249, 115, 22, 0.85)";
+    ctx.beginPath();
+    ctx.ellipse(0, -renderH * 0.6, 45, 110, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.ellipse(0, -renderH * 0.6, 20, 70, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Bouclier énergétique lors de la Garde active
+  if (f.isBlocking) {
+    ctx.strokeStyle = "#38bdf8";
+    ctx.lineWidth = 3;
+    ctx.fillStyle = "rgba(56, 189, 248, 0.25)";
+    ctx.beginPath();
+    ctx.arc(fw * 0.4, -renderH * 0.5, 42, -Math.PI * 0.4, Math.PI * 0.4);
+    ctx.stroke();
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+function drawDojoHUD(w, h, now) {
+  ctx.save();
+
+  const barW = Math.min(320, w * 0.38);
+  const barH = 22;
+  const barY = 32;
+
+  // --- JOUEUR 1 (KEN MASTERS - GAUCHE) ---
+  const p1 = dojoGame.p1;
+  const p1HpRatio = Math.max(0, p1.hp / p1.maxHp);
+  const p1DelayedRatio = Math.max(0, p1.delayedHp / p1.maxHp);
+
+  // Fond de barre P1
+  ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+  ctx.fillRect(36, barY, barW, barH);
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(36, barY, barW, barH);
+
+  // Barre de retardement jaune
+  ctx.fillStyle = "#facc15";
+  ctx.fillRect(36, barY, barW * p1DelayedRatio, barH);
+
+  // Barre de vie verte
+  const p1Grad = ctx.createLinearGradient(36, barY, 36 + barW, barY);
+  p1Grad.addColorStop(0, "#22c55e");
+  p1Grad.addColorStop(1, "#86efac");
+  ctx.fillStyle = p1Grad;
+  ctx.fillRect(36, barY, barW * p1HpRatio, barH);
+
+  // Nom & Étoiles de rounds gagnés P1
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 15px 'Impact', system-ui, sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText("KEN MASTERS", 38, barY - 8);
+
+  for (let r = 0; r < 2; r++) {
+    ctx.fillStyle = r < dojoGame.p1Rounds ? "#fbbf24" : "rgba(255, 255, 255, 0.25)";
+    ctx.font = "900 16px system-ui, sans-serif";
+    ctx.fillText("★", 160 + r * 18, barY - 7);
+  }
+
+  // --- JOUEUR 2 (SHADOW KEN - DROITE) ---
+  const cpu = dojoGame.cpu;
+  const cpuHpRatio = Math.max(0, cpu.hp / cpu.maxHp);
+  const cpuDelayedRatio = Math.max(0, cpu.delayedHp / cpu.maxHp);
+  const cpuBarX = w - 36 - barW;
+
+  // Fond de barre CPU
+  ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+  ctx.fillRect(cpuBarX, barY, barW, barH);
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(cpuBarX, barY, barW, barH);
+
+  // Barre de retardement jaune (inversée)
+  ctx.fillStyle = "#facc15";
+  ctx.fillRect(cpuBarX + barW * (1 - cpuDelayedRatio), barY, barW * cpuDelayedRatio, barH);
+
+  // Barre de vie verte CPU
+  const cpuGrad = ctx.createLinearGradient(cpuBarX, barY, cpuBarX + barW, barY);
+  cpuGrad.addColorStop(0, "#a855f7");
+  cpuGrad.addColorStop(1, "#c084fc");
+  ctx.fillStyle = cpuGrad;
+  ctx.fillRect(cpuBarX + barW * (1 - cpuHpRatio), barY, barW * cpuHpRatio, barH);
+
+  // Nom & Étoiles de rounds gagnés CPU
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 15px 'Impact', system-ui, sans-serif";
+  ctx.textAlign = "right";
+  ctx.fillText("SHADOW KEN", w - 38, barY - 8);
+
+  for (let r = 0; r < 2; r++) {
+    ctx.fillStyle = r < dojoGame.cpuRounds ? "#fbbf24" : "rgba(255, 255, 255, 0.25)";
+    ctx.font = "900 16px system-ui, sans-serif";
+    ctx.fillText("★", w - 160 - r * 18, barY - 7);
+  }
+
+  // --- TIMER CENTRAL 99s ---
+  const timerSec = Math.ceil(dojoGame.timer);
+  ctx.fillStyle = timerSec <= 10 && Math.floor(now / 200) % 2 === 0 ? "#ef4444" : "#fbbf24";
+  ctx.font = "900 32px 'Impact', system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(String(timerSec), w / 2, barY + barH - 1);
+
+  // --- SUPER KI GAUGES (INFÉRIEURES) ---
+  const kiBarW = Math.min(220, w * 0.28);
+  const kiBarY = h - 22;
+
+  // Ki P1 (Bas Gauche)
+  ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+  ctx.fillRect(36, kiBarY, kiBarW, 12);
+  ctx.strokeStyle = p1.ki >= 100 ? "#facc15" : "#38bdf8";
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(36, kiBarY, kiBarW, 12);
+
+  const p1KiRatio = p1.ki / p1.maxKi;
+  const p1KiGrad = ctx.createLinearGradient(36, kiBarY, 36 + kiBarW, kiBarY);
+  p1KiGrad.addColorStop(0, "#0284c7");
+  p1KiGrad.addColorStop(0.5, "#38bdf8");
+  p1KiGrad.addColorStop(1, p1.ki >= 100 ? "#fbbf24" : "#ffffff");
+  ctx.fillStyle = p1KiGrad;
+  ctx.fillRect(36, kiBarY, kiBarW * p1KiRatio, 12);
+
+  ctx.fillStyle = p1.ki >= 100 ? "#fbbf24" : "#94a3b8";
+  ctx.font = "900 11px system-ui, sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText(p1.ki >= 100 ? "★ SUPER READY [ESPACE] ★" : `KI: ${Math.floor(p1.ki)}%`, 38, kiBarY - 5);
+
+  // Ki CPU (Bas Droite)
+  const cpuKiX = w - 36 - kiBarW;
+  ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+  ctx.fillRect(cpuKiX, kiBarY, kiBarW, 12);
+  ctx.strokeStyle = cpu.ki >= 100 ? "#facc15" : "#a855f7";
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(cpuKiX, kiBarY, kiBarW, 12);
+
+  const cpuKiRatio = cpu.ki / cpu.maxKi;
+  ctx.fillStyle = "#9333ea";
+  ctx.fillRect(cpuKiX + kiBarW * (1 - cpuKiRatio), kiBarY, kiBarW * cpuKiRatio, 12);
+
+  ctx.fillStyle = cpu.ki >= 100 ? "#fbbf24" : "#94a3b8";
+  ctx.font = "900 11px system-ui, sans-serif";
+  ctx.textAlign = "right";
+  ctx.fillText(cpu.ki >= 100 ? "★ SHADOW SUPER ★" : `KI: ${Math.floor(cpu.ki)}%`, w - 38, kiBarY - 5);
+
+  // --- ANNONCEUR D'INTRO / K.O. / MATCH OVER ---
+  if (dojoGame.roundState === "intro") {
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "900 48px 'Impact', system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(`ROUND ${dojoGame.round}`, w / 2, h * 0.42);
+    ctx.fillStyle = "#fbbf24";
+    ctx.font = "900 36px 'Impact', system-ui, sans-serif";
+    ctx.fillText("FIGHT !", w / 2, h * 0.52);
+  } else if (dojoGame.roundState === "ko") {
+    ctx.fillStyle = "#ef4444";
+    ctx.font = "900 64px 'Impact', system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("K. O. !", w / 2, h * 0.45);
+  } else if (dojoGame.roundState === "match_over") {
+    const isP1Winner = dojoGame.p1Rounds >= 2;
+    ctx.fillStyle = "rgba(15, 23, 42, 0.88)";
+    ctx.fillRect(0, h * 0.28, w, 180);
+
+    ctx.fillStyle = isP1Winner ? "#22c55e" : "#ef4444";
+    ctx.font = "900 44px 'Impact', system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(isP1Winner ? "★ YOU WIN ! ★" : "YOU LOSE !", w / 2, h * 0.4);
+
+    ctx.fillStyle = "#fbbf24";
+    ctx.font = "900 20px system-ui, sans-serif";
+    ctx.fillText(isP1Winner ? "VICTOIRE DU MATCH : KEN MASTERS (+50 000 PTS)" : "VICTOIRE DU MATCH : SHADOW KEN", w / 2, h * 0.48);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 15px system-ui, sans-serif";
+    ctx.fillText("APPUYEZ SUR [ESPACE] OU CHOISISSEZ UN AUTRE JEU DANS LE PORTAIL !", w / 2, h * 0.55);
+  }
+
+  ctx.restore();
+}

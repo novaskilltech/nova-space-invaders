@@ -3255,3 +3255,48 @@ canvas {
   transform: scale(0.92);
 }
 
+
+/* =========================================================
+   JEU #4 : NOVA CYBER DOJO 128-BIT // BEST OF 3 STYLES
+   ========================================================= */
+.bento-dojo {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: radial-gradient(circle at 80% 20%, rgba(185, 28, 28, 0.35) 0%, rgba(15, 23, 42, 0.95) 75%);
+}
+
+.bento-dojo:hover {
+  border-color: #ef4444;
+  box-shadow: 0 16px 40px rgba(239, 68, 68, 0.35);
+}
+
+.bento-pill-dojo {
+  background: rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.55);
+}
+
+.bento-status-dojo {
+  background: rgba(168, 85, 247, 0.25);
+  color: #d8b4fe;
+  border-color: rgba(168, 85, 247, 0.5);
+}
+
+.bento-play-dojo {
+  background: linear-gradient(135deg, #b91c1c, #991b1b);
+  color: #ffffff;
+  border: 1px solid #f87171;
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+.bento-play-dojo:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  box-shadow: 0 8px 24px rgba(248, 113, 113, 0.6);
+}
+
+.dojo-mobile-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
