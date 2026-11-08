@@ -7104,94 +7104,196 @@ function drawMarcoRossi(p, now) {
   ctx.translate(p.x, p.y);
   ctx.scale(p.facing, 1);
 
-  // Ombre portée
-  ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
+  const isTarma = typeof selectedSlugCommando !== "undefined" && selectedSlugCommando === "tarma";
+
+  // Ombre portée 64-bit avec dégradé radial doux
+  const shadowGrad = ctx.createRadialGradient(0, 3, 2, 0, 3, 18);
+  shadowGrad.addColorStop(0, "rgba(0, 0, 0, 0.65)");
+  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+  ctx.fillStyle = shadowGrad;
   ctx.beginPath();
-  ctx.ellipse(0, 2, 16, 5, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 3, 18, 6, 0, 0, Math.PI * 2);
   ctx.fill();
 
   const isCrouch = p.state === "crouch";
   const isJump = p.state === "jump";
   const isKnife = p.state === "knife";
-  const runCycle = Math.sin(now * 0.015) * 6;
+  const runCycle = Math.sin(now * 0.016) * 7;
 
-  // Jambes (Pantalon treillis marron clair)
-  ctx.fillStyle = "#78350f";
+  // Jambes (Pantalon treillis 64-bit avec plis et poches cargo)
+  const pantGrad = ctx.createLinearGradient(0, -20, 0, 0);
+  pantGrad.addColorStop(0, isTarma ? "#854d0e" : "#78350f");
+  pantGrad.addColorStop(0.5, isTarma ? "#a16207" : "#92400e");
+  pantGrad.addColorStop(1, isTarma ? "#713f12" : "#451a03");
+  ctx.fillStyle = pantGrad;
+
   if (isCrouch) {
-    ctx.fillRect(-10, -10, 20, 10);
+    ctx.beginPath();
+    ctx.roundRect(-12, -12, 24, 12, 3);
+    ctx.fill();
+    ctx.fillStyle = "#1e293b"; // Bottes repliées
+    ctx.fillRect(-13, -5, 12, 5);
+    ctx.fillRect(1, -5, 12, 5);
   } else if (isJump) {
-    ctx.fillRect(-12, -18, 10, 12);
-    ctx.fillRect(2, -22, 10, 12);
+    ctx.fillRect(-13, -20, 11, 14);
+    ctx.fillRect(2, -24, 11, 14);
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(-14, -7, 12, 6);
+    ctx.fillRect(1, -11, 12, 6);
   } else {
-    // Jambes en course
-    ctx.fillRect(-8 + runCycle, -16, 7, 16);
-    ctx.fillRect(1 - runCycle, -16, 7, 16);
+    // Jambes articulées en course
+    ctx.fillRect(-9 + runCycle, -18, 8, 18);
+    ctx.fillRect(1 - runCycle, -18, 8, 18);
+    // Bottes de combat avec boucles et semelles crantées
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(-10 + runCycle, -5, 10, 6);
+    ctx.fillRect(0 - runCycle, -5, 10, 6);
+    ctx.fillStyle = "#94a3b8"; // Boucle en métal
+    ctx.fillRect(-7 + runCycle, -4, 3, 2);
+    ctx.fillRect(3 - runCycle, -4, 3, 2);
   }
 
-  // Bottes de combat militaires noires
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(-9 + (isCrouch ? 0 : runCycle), -4, 9, 5);
-  ctx.fillRect(0 - (isCrouch ? 0 : runCycle), -4, 9, 5);
+  // Torse 64-bit : T-shirt blanc & Gilet tactique avec poches et cartouches
+  const torsoY = isCrouch ? -22 : -34;
+  // T-shirt blanc
+  ctx.fillStyle = "#f8fafc";
+  ctx.fillRect(-8, torsoY, 16, 17);
 
-  // Torse : T-shirt blanc et Veste tactique rouge sans manches
-  const torsoY = isCrouch ? -20 : -32;
-  ctx.fillStyle = "#f8fafc"; // T-shirt blanc
-  ctx.fillRect(-7, torsoY, 14, 16);
-  ctx.fillStyle = "#dc2626"; // Gilet rouge culte de Marco
-  ctx.fillRect(-9, torsoY, 5, 15);
-  ctx.fillRect(4, torsoY, 5, 15);
+  // Gilet tactique : Rouge vermillon pour Marco, Jaune moutarde pour Tarma
+  const vestGrad = ctx.createLinearGradient(-10, torsoY, 10, torsoY);
+  if (isTarma) {
+    vestGrad.addColorStop(0, "#ca8a04");
+    vestGrad.addColorStop(0.5, "#eab308");
+    vestGrad.addColorStop(1, "#a16207");
+  } else {
+    vestGrad.addColorStop(0, "#991b1b");
+    vestGrad.addColorStop(0.5, "#dc2626");
+    vestGrad.addColorStop(1, "#b91c1c");
+  }
+  ctx.fillStyle = vestGrad;
+  ctx.fillRect(-10, torsoY, 6, 16);
+  ctx.fillRect(4, torsoY, 6, 16);
 
-  // Cartouchières & Équipement
-  ctx.fillStyle = "#ca8a04";
-  ctx.fillRect(-4, torsoY + 8, 8, 3);
+  // Cartouchières dorées sur le torse
+  ctx.fillStyle = "#facc15";
+  ctx.fillRect(-3, torsoY + 6, 2, 4);
+  ctx.fillRect(1, torsoY + 6, 2, 4);
 
-  // Tête & Bandana blanc
-  const headY = torsoY - 11;
-  ctx.fillStyle = "#fed7aa"; // Peau
+  // Ceinture de combat avec boucle acier
+  ctx.fillStyle = "#1e293b";
+  ctx.fillRect(-8, torsoY + 14, 16, 3);
+  ctx.fillStyle = "#e2e8f0";
+  ctx.fillRect(-2, torsoY + 13.5, 4, 4);
+
+  // Tête 64-bit & Cheveux / Bandana ou Lunettes de soleil
+  const headY = torsoY - 12;
+  const skinGrad = ctx.createRadialGradient(0, headY, 1, 0, headY, 7);
+  skinGrad.addColorStop(0, "#ffedd5");
+  skinGrad.addColorStop(0.8, "#fed7aa");
+  skinGrad.addColorStop(1, "#fb923c");
+  ctx.fillStyle = skinGrad;
   ctx.beginPath();
-  ctx.arc(0, headY, 6.5, 0, Math.PI * 2);
+  ctx.arc(0, headY, 7, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#d97706"; // Cheveux blonds/châtains
-  ctx.fillRect(-6, headY - 8, 12, 4);
-  ctx.fillStyle = "#f8fafc"; // Bandana frontal blanc
-  ctx.fillRect(-7, headY - 4, 14, 3);
-  ctx.fillRect(-10, headY - 2, 4, 6); // Nœud du bandana
 
-  // Bras & Armement
-  ctx.fillStyle = "#fed7aa";
-  if (isKnife) {
-    // Coup de couteau vif vers l'avant !
-    ctx.fillRect(2, torsoY + 3, 16, 4);
-    // Lame en acier étincelant
-    ctx.fillStyle = "#ffffff";
+  if (isTarma) {
+    // Tarma Roving : Coupe brune en banane + Lunettes noires d'aviateur
+    ctx.fillStyle = "#451a03";
     ctx.beginPath();
-    ctx.moveTo(18, torsoY + 2);
-    ctx.lineTo(34, torsoY + 5);
-    ctx.lineTo(18, torsoY + 8);
+    ctx.arc(-1, headY - 6, 7, Math.PI, 0);
+    ctx.fill();
+    ctx.fillRect(-6, headY - 8, 13, 4);
+    // Lunettes d'aviateur noires miroitantes
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(-1, headY - 3, 5, 4);
+    ctx.fillRect(5, headY - 3, 4, 4);
+    ctx.fillStyle = "#38bdf8"; // Reflet verre bleu
+    ctx.fillRect(1, headY - 2, 2, 2);
+  } else {
+    // Marco Rossi : Mèche blonde + Bandana blanc volant
+    ctx.fillStyle = "#f59e0b";
+    ctx.fillRect(-6, headY - 8, 12, 4);
+    ctx.fillStyle = "#f8fafc"; // Bandana
+    ctx.fillRect(-7, headY - 5, 14, 3.5);
+    // Pans de bandana qui flottent au vent derrière la tête
+    const bandWave = Math.sin(now * 0.015) * 3;
+    ctx.beginPath();
+    ctx.moveTo(-7, headY - 3);
+    ctx.lineTo(-14, headY - 1 + bandWave);
+    ctx.lineTo(-15, headY + 5 + bandWave);
+    ctx.lineTo(-7, headY);
     ctx.closePath();
     ctx.fill();
-    // Arc lumineux de frappe
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
-    ctx.lineWidth = 2;
+  }
+
+  // Bras musclés 64-bit & Armement
+  ctx.fillStyle = "#fed7aa";
+  if (isKnife) {
+    // Coup de poignard d'élite vers l'avant !
+    ctx.fillRect(2, torsoY + 2, 18, 5);
+    // Poing fermé
+    ctx.fillStyle = "#f97316";
     ctx.beginPath();
-    ctx.arc(12, torsoY + 5, 24, -0.4, 0.4);
+    ctx.arc(18, torsoY + 4, 4, 0, Math.PI * 2);
+    ctx.fill();
+    // Lame de poignard commando 64-bit avec rainure et éclat d'acier
+    const bladeGrad = ctx.createLinearGradient(20, torsoY, 36, torsoY);
+    bladeGrad.addColorStop(0, "#cbd5e1");
+    bladeGrad.addColorStop(0.5, "#ffffff");
+    bladeGrad.addColorStop(1, "#94a3b8");
+    ctx.fillStyle = bladeGrad;
+    ctx.beginPath();
+    ctx.moveTo(20, torsoY + 1);
+    ctx.lineTo(38, torsoY + 4.5);
+    ctx.lineTo(20, torsoY + 8);
+    ctx.closePath();
+    ctx.fill();
+    // Arc lumineux cinématique de découpe
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.95)";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(14, torsoY + 4, 26, -0.45, 0.45);
     ctx.stroke();
   } else {
-    // Arme pointée
-    ctx.fillRect(0, torsoY + 4, 12, 4);
-    ctx.fillStyle = "#1e293b";
+    // Bras tenant l'arme
+    ctx.fillRect(0, torsoY + 3, 14, 5);
+    // Arme en acier texturé 64-bit
+    const gunGrad = ctx.createLinearGradient(8, torsoY, 26, torsoY);
+    gunGrad.addColorStop(0, "#334155");
+    gunGrad.addColorStop(0.5, "#0f172a");
+    gunGrad.addColorStop(1, "#475569");
+    ctx.fillStyle = gunGrad;
+
     if (p.aimY === -1) {
       // Vise vers le haut
-      ctx.fillRect(-2, torsoY - 14, 5, 16);
+      ctx.fillRect(-3, torsoY - 18, 6, 20);
     } else if (p.aimY === 1) {
       // Vise vers le bas
-      ctx.fillRect(-2, torsoY + 6, 5, 16);
+      ctx.fillRect(-3, torsoY + 6, 6, 20);
     } else {
       // Vise droit devant
-      ctx.fillRect(8, torsoY + 2, 16, 5);
-      // Canon de l'arme
-      if (p.weapon === "hmg") ctx.fillRect(22, torsoY + 3, 10, 3);
-      else if (p.weapon === "shotgun") ctx.fillRect(20, torsoY + 1, 8, 7);
+      ctx.fillRect(8, torsoY + 1, 18, 6);
+      if (p.weapon === "hmg") {
+        // Heavy Machine Gun : Manchon perforé & bande de cartouches
+        ctx.fillStyle = "#1e293b";
+        ctx.fillRect(24, torsoY + 2, 14, 4);
+        ctx.fillStyle = "#facc15"; // Munitions dorées
+        ctx.fillRect(14, torsoY + 7, 5, 6);
+      } else if (p.weapon === "shotgun") {
+        // Shotgun lourd : double pompe
+        ctx.fillStyle = "#0f172a";
+        ctx.fillRect(22, torsoY, 12, 8);
+        ctx.fillStyle = "#78350f"; // Poignée en bois
+        ctx.fillRect(12, torsoY + 5, 8, 4);
+      } else if (p.weapon === "rocket") {
+        // Rocket Launcher
+        ctx.fillStyle = "#0284c7";
+        ctx.fillRect(16, torsoY - 2, 22, 10);
+      } else if (p.weapon === "flame") {
+        // Flame Shot
+        ctx.fillStyle = "#ea580c";
+        ctx.fillRect(18, torsoY, 16, 8);
+      }
     }
   }
 
@@ -7203,47 +7305,91 @@ function drawMetalSlugTank(t, occupied, now) {
   ctx.translate(t.x, t.y - (t.tankBounce || 0));
   if (occupied) ctx.scale(slugGame.player.facing, 1);
 
-  // Chenilles métalliques avec galets de roulement
-  ctx.fillStyle = "#0f172a";
+  // Chenilles de char 64-bit avec maillons articulés & suspension
+  ctx.fillStyle = "#090d16";
   ctx.beginPath();
-  ctx.roundRect(-30, -14, 60, 16, 6);
+  ctx.roundRect(-34, -16, 68, 18, 8);
   ctx.fill();
-  ctx.fillStyle = "#475569";
-  for (let r = -22; r <= 22; r += 11) {
+
+  // 5 Galets de roulement métalliques avec rivets
+  for (let r = -24; r <= 24; r += 12) {
+    const wheelGrad = ctx.createRadialGradient(r, -7, 1, r, -7, 5.5);
+    wheelGrad.addColorStop(0, "#94a3b8");
+    wheelGrad.addColorStop(0.6, "#475569");
+    wheelGrad.addColorStop(1, "#0f172a");
+    ctx.fillStyle = wheelGrad;
     ctx.beginPath();
-    ctx.arc(r, -6, 4, 0, Math.PI * 2);
+    ctx.arc(r, -7, 5.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#000000";
+    ctx.beginPath();
+    ctx.arc(r, -7, 1.8, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // Châssis arrondi bleu-gris caractéristique du SV-001
-  ctx.fillStyle = "#334155";
+  // Châssis arrondi bleu-gris acier 64-bit du SV-001
+  const hullGrad = ctx.createLinearGradient(-26, -38, 26, -14);
+  hullGrad.addColorStop(0, "#64748b");
+  hullGrad.addColorStop(0.35, "#475569");
+  hullGrad.addColorStop(0.7, "#334155");
+  hullGrad.addColorStop(1, "#1e293b");
+  ctx.fillStyle = hullGrad;
   ctx.beginPath();
-  ctx.roundRect(-24, -34, 48, 24, [8, 8, 4, 4]);
+  ctx.roundRect(-28, -38, 56, 26, [10, 10, 4, 4]);
   ctx.fill();
 
-  // Écusson & Numéro "001"
+  // Plaques d'armure rivetées et cordon de soudure
+  ctx.strokeStyle = "rgba(148, 163, 184, 0.4)";
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(-24, -34, 48, 18);
+
+  // Marquage militaire doré "SV-001"
   ctx.fillStyle = "#fbbf24";
-  ctx.font = "900 7px system-ui, sans-serif";
-  ctx.fillText("SV-001", -12, -22);
+  ctx.font = "900 8px 'Impact', system-ui, sans-serif";
+  ctx.fillText("SV-001", -14, -22);
 
-  // Tourelle & Double canon Gatling rotatif
-  ctx.fillStyle = "#1e293b";
+  // Tourelle sphérique & Double canon rotatif Gatling 360°
+  const turretGrad = ctx.createRadialGradient(0, -38, 2, 0, -38, 14);
+  turretGrad.addColorStop(0, "#475569");
+  turretGrad.addColorStop(0.7, "#1e293b");
+  turretGrad.addColorStop(1, "#0f172a");
+  ctx.fillStyle = turretGrad;
   ctx.beginPath();
-  ctx.arc(2, -34, 12, Math.PI, 0);
+  ctx.arc(2, -38, 13, Math.PI, 0);
   ctx.fill();
-  // Canons doubles
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(10, -37, 24, 3.5);
-  ctx.fillRect(10, -32, 24, 3.5);
 
-  // Pilote Marco sortant de la trappe si occupé
+  // Canons doubles Gatling avec manchons de refroidissement
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(12, -42, 26, 4);
+  ctx.fillRect(12, -36, 26, 4);
+  // Extrémités de canons chromées
+  ctx.fillStyle = "#94a3b8";
+  ctx.fillRect(36, -43, 3, 6);
+  ctx.fillRect(36, -37, 3, 6);
+
+  // Pot d'échappement arrière et volute de fumée diesel
+  ctx.fillStyle = "#78350f";
+  ctx.fillRect(-32, -32, 6, 10);
+  const smokePuff = Math.sin(now * 0.02) * 2;
+  ctx.fillStyle = "rgba(148, 163, 184, 0.35)";
+  ctx.beginPath();
+  ctx.arc(-36 + smokePuff, -36, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Pilote (Marco ou Tarma) sortant de la trappe supérieure
   if (occupied) {
     ctx.fillStyle = "#fed7aa";
     ctx.beginPath();
-    ctx.arc(0, -42, 5, 0, Math.PI * 2);
+    ctx.arc(0, -48, 5.5, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "#f8fafc";
-    ctx.fillRect(-5, -45, 10, 2.5); // Bandana
+    const isTarma = typeof selectedSlugCommando !== "undefined" && selectedSlugCommando === "tarma";
+    if (isTarma) {
+      ctx.fillStyle = "#0f172a"; // Lunettes noires
+      ctx.fillRect(1, -50, 4, 3);
+    } else {
+      ctx.fillStyle = "#f8fafc"; // Bandana blanc
+      ctx.fillRect(-5, -52, 10, 3);
+    }
   }
 
   ctx.restore();
