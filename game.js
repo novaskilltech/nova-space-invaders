@@ -1185,7 +1185,19 @@ function syncUi() {
     if (dojoMobile) dojoMobile.style.display = (selectedGameMode === "dojo" && state.running && !state.paused) ? "flex" : "none";
   }
 
-  if (selectedGameMode === "slug") {
+  const dojoMobile = document.getElementById("dojoMobileControls");
+  if (dojoMobile) {
+    dojoMobile.style.display = (selectedGameMode === "dojo" && state.running && !state.paused) ? "flex" : "none";
+  }
+
+  if (selectedGameMode === "dojo") {
+    if (biomeDisplay) biomeDisplay.textContent = "🥋 Cyber Dojo 128-bit";
+    if (waveLabel) waveLabel.textContent = "Manche";
+    if (sectorLabel) sectorLabel.textContent = "Arène";
+    if (airstrikeHudBox) airstrikeHudBox.style.display = "none";
+    if (tankMobileTurret) tankMobileTurret.style.display = "none";
+    ui.wave.textContent = typeof dojoGame !== "undefined" ? `${dojoGame.round}/3` : "1/3";
+  } else if (selectedGameMode === "slug") {
     if (biomeDisplay) biomeDisplay.textContent = "🌴 Jungle Fluviale";
     if (waveLabel) waveLabel.textContent = "Mission";
     if (sectorLabel) sectorLabel.textContent = "Opération";
@@ -1304,6 +1316,11 @@ function updateCommLinkBiome(customEnemyLine, customPilotLine) {
 
   document.body.setAttribute("data-biome", activeSource.id);
   document.body.setAttribute("data-game", selectedGameMode);
+
+  const commBox = document.getElementById("commLinkBox");
+  if (commBox) {
+    commBox.style.display = (selectedGameMode === "dojo" || selectedGameMode === "slug") ? "none" : "flex";
+  }
 
   const enemyAvatar = document.getElementById("commEnemyAvatar");
   const enemyName = document.getElementById("commEnemyName");
@@ -2693,6 +2710,11 @@ function update(delta, timestamp) {
     player.shieldActiveTime = Math.max(0, player.shieldActiveTime - dt);
   }
 
+  if (selectedGameMode === "dojo" && typeof dojoGame !== "undefined" && dojoGame.active) {
+    updateCyberDojo(dt);
+    return;
+  }
+
   if (selectedGameMode === "slug" && typeof slugGame !== "undefined" && slugGame.active) {
     updateSlugMission(dt, timestamp);
     return;
@@ -3889,6 +3911,11 @@ function drawBossHealth() {
 function draw() {
   const now = performance.now();
 
+  if (selectedGameMode === "dojo" && typeof dojoGame !== "undefined" && dojoGame.active) {
+    drawCyberDojo(canvas.width, canvas.height, now);
+    return;
+  }
+
   if (selectedGameMode === "slug" && typeof slugGame !== "undefined" && slugGame.active) {
     drawSlugMission(canvas.width, canvas.height, now);
     return;
@@ -4001,7 +4028,12 @@ function loop(timestamp) {
 function handleKeydown(event) {
   keys.add(event.key);
 
-  // Mode Metal Slug 1 Remake
+  // Mode Cyber Dojo 128-bit
+  if (selectedGameMode === "dojo" && typeof dojoGame !== "undefined" && dojoGame.active) {
+    handleDojoKeyDown(event);
+    return;
+  }
+
   if (selectedGameMode === "slug" && typeof slugGame !== "undefined" && slugGame.active) {
     if (event.key === " " || event.key === "j" || event.key === "J" || event.key === "f" || event.key === "F") {
       triggerSlugAction("fire");
