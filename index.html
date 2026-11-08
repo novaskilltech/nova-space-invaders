@@ -18,7 +18,7 @@
   <meta name="twitter:description" content="2 Jeux en 1 : Défendez l'espace dans NOVA Space Invaders 3D ou prenez les commandes d'un blindé à tourelle 360° dans NOVA Tank Assault !">
   <meta name="twitter:image" content="https://nova-space-invaders.vercel.app/og-image.png">
 
-  <link rel="stylesheet" href="styles.css?v=51">
+  <link rel="stylesheet" href="styles.css?v=52">
 </head>
 <body data-biome="campagne" data-game="space">
   <!-- =========================================================
@@ -37,6 +37,7 @@
           <a href="#bentoCatalog" class="portal-nav-link">Catalogue Bento</a>
           <a href="#descSpaceInvaders" class="portal-nav-link">Space Invaders 3D</a>
           <a href="#descTankAssault" class="portal-nav-link">Tank Assault 360°</a>
+          <a href="#descMetalSlug" class="portal-nav-link">🎖️ Metal Slug 1</a>
           <a href="#descNovaFighter" class="portal-nav-link">🥊 Duel Street Fighter</a>
           <a href="#descDefense" class="portal-nav-link">🛡️ Bouclier & Défense</a>
         </nav>
@@ -203,12 +204,29 @@
           <p>Appelle une escadrille de bombardiers lourds pour nettoyer la route et affronte un Boss géant à la fin de chaque niveau.</p>
         </div>
 
-        <!-- Bento Slot 5 : Prochain Jeu Nova Games -->
-        <div class="bento-card bento-small bento-upcoming">
-          <div class="bento-pill-soon">PROCHAINEMENT • JEU #3</div>
-          <h3>🏎️ NOVA MECHA RACER / CYBER STRIKE</h3>
-          <p>Le catalogue Nova Games s'agrandit régulièrement : de nouveaux jeux d'arcade viendront s'ajouter directement dans ce Bento.</p>
-        </div>
+        <!-- Carte Bento Principale 4 : JEU #3 - NOVA IRON COMMANDO // METAL SLUG 1 REMAKE -->
+        <article class="bento-card bento-featured bento-slug" data-launch-game="slug">
+          <img src="bg_tank_predator_4k.jpg" alt="Metal Slug 1 Remake" class="bento-bg" style="opacity: 0.55;">
+          <div class="bento-overlay"></div>
+          <div class="bento-content">
+            <div class="bento-top-row">
+              <span class="bento-pill bento-pill-slug">JEU #3 • RUN & GUN 2D ARCADE 60 FPS</span>
+              <span class="bento-status bento-status-slug">DISPONIBLE • MISSION 1</span>
+            </div>
+            <div class="bento-main-info">
+              <div class="bento-floating-sprites">
+                <img src="pilot_valentin.png" alt="Marco Rossi" class="bento-sprite" style="border-radius: 50%; border: 2px solid #22c55e;">
+                <img src="tank_vulcan.png" alt="Metal Slug SV-001" class="bento-sprite">
+              </div>
+              <h2>🎖️ NOVA IRON COMMANDO // METAL SLUG 1 REMAKE</h2>
+              <p>Reprogrammation intégrale de <strong>Metal Slug 1 (1996)</strong> : traverse la jungle fluviale de la Mission 1, libère les otages P.O.W. (<em>"Thank you!"</em>), tranche l'infanterie au couteau, ramasse le <strong>Heavy Machine Gun</strong>, pilote le mythique tank <strong>SV-001 Metal Slug</strong> et détruis le Boss géant <strong>Tetsuyuki</strong> !</p>
+              <div class="bento-actions">
+                <button class="bento-play-btn bento-play-slug" data-launch-game="slug">▶ JOUER À METAL SLUG (MISSION 1)</button>
+                <a href="#descMetalSlug" class="bento-info-link" onclick="event.stopPropagation();">Voir la fiche ↓</a>
+              </div>
+            </div>
+          </div>
+        </article>
       </div>
 
       <!-- SECTIONS DESCRIPTIVES DÉTAILLÉES PAR JEU EN BAS DE PAGE -->
@@ -266,6 +284,34 @@
               <li><strong>Duel au Corps-à-Corps Post-Boss</strong> : Dès que le Boss d'un niveau s'effondre, ton pilote descend du char en kimono rouge pour affronter le chef alien en duel 2D Street Fighter avec Hadoukens et +50 000 pts bonus !</li>
             </ul>
             <button class="bento-play-btn bento-play-amber" data-launch-game="tank">🛡️ LANCER NOVA TANK ASSAULT 360°</button>
+          </div>
+        </section>
+
+        <!-- Section Descriptive : JEU #3 - METAL SLUG 1 REMAKE -->
+        <section id="descMetalSlug" class="game-detail-section slug-detail-section" style="border: 2px solid rgba(34, 197, 94, 0.45); background: radial-gradient(circle at 10% 50%, rgba(22, 101, 52, 0.3) 0%, rgba(15, 23, 42, 0.95) 70%);">
+          <div class="detail-visual">
+            <img src="bg_tank_predator_4k.jpg" alt="Metal Slug 1 Remake Showcase" class="detail-bg-img" style="border: 2px solid rgba(74, 222, 128, 0.45); box-shadow: 0 12px 35px rgba(34, 197, 94, 0.35);">
+            <div class="detail-Visual-badges">
+              <span>🎖️ Metal Slug 1</span>
+              <span>💣 Heavy Machine Gun</span>
+              <span>🛡️ SV-001 Tank</span>
+              <span>🪓 Couteau Corps-à-Corps</span>
+            </div>
+          </div>
+          <div class="detail-text">
+            <div class="detail-tag detail-tag-green" style="background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.45);">JEU #3 • RUN & GUN 2D PUR ARCADE</div>
+            <h3>🎖️ NOVA IRON COMMANDO // Metal Slug 1 Remake</h3>
+            <p>La légende de l'arcade Neo-Geo de 1996 réécrite à neuf pour navigateur et PC ! Incarne <strong>Marco Rossi</strong> ou <strong>Tarma Roving</strong> dans une guerre d'action effrénée à 60 FPS.</p>
+            <ul class="detail-features">
+              <li><strong>Maniabilité Neo-Geo Authentique</strong> : Course, accroupissement pour esquiver les tirs, saut parabolique à hauteur réglable, visée 4-8 directions et attaque automatique au couteau à bout portant.</li>
+              <li><strong>Arsenal Dévastateur & Voix Off Mythique</strong> : Pistolet de service, grenades à rebond, et caisses de largage commentées par l'annonceur d'arcade (<em>"HEAVY MACHINE GUN !", "SHOTGUN !", "ROCKET LAUNCHER !"</em>).</li>
+              <li><strong>Le Tank SV-001 "Metal Slug"</strong> : Saute dans le blindé mythique parachuté en cours de mission pour écraser les tranchées rebelles avec sa double Gatling 360° et ses obus perforants !</li>
+              <li><strong>Sauvetage d'Otages P.O.W.</strong> : Libère les prisonniers de guerre barbus pour recevoir des munitions et des récompenses avec leur célèbre salut (<em>"Thank you!"</em>).</li>
+              <li><strong>Boss Géant Mission 1 — TETSUYUKI</strong> : Pulvérise la forteresse fluviale construite dans l'épave d'un bombardier géant quadrimoteur !</li>
+            </ul>
+            <div class="bento-actions">
+              <button class="bento-play-btn bento-play-slug" data-launch-game="slug">▶ DÉMARRER LA MISSION 1 METAL SLUG</button>
+            </div>
           </div>
         </section>
 
@@ -585,6 +631,39 @@
         </div>
       </div>
 
+      <!-- ====== OPTIONS JEU 3 : NOVA IRON COMMANDO // METAL SLUG 1 REMAKE ====== -->
+      <div id="slugConfigPanel" class="mode-config-panel" style="display: none;">
+        <!-- 1. SÉLECTEUR DE COMMANDO -->
+        <div id="slugCommandoSelection" class="biome-selection">
+          <h3 class="ship-sel-title">1. Choisis ton Commando d'Élite</h3>
+          <div class="slug-commando-grid">
+            <div class="slug-commando-card active" data-commando="marco">
+              <div class="biome-emoji">🎖️</div>
+              <div class="ship-name" style="color: #4ade80; font-weight: 800;">Marco Rossi</div>
+              <div class="ship-stats">Vétéran Peregrine Falcons • Tir Rapide</div>
+              <span class="slug-badge-tank">SV-001 METAL SLUG READY</span>
+            </div>
+            <div class="slug-commando-card" data-commando="tarma">
+              <div class="biome-emoji">🕶️</div>
+              <div class="ship-name" style="color: #facc15; font-weight: 800;">Tarma Roving</div>
+              <div class="ship-stats">Expert Mécanique • Blindage Accru</div>
+              <span class="slug-badge-tank">VULCAN CANNON BOOST</span>
+            </div>
+          </div>
+        </div>
+        <!-- 2. THÉÂTRE DE MISSION METAL SLUG -->
+        <div class="biome-selection" style="margin-top: 14px;">
+          <h3 class="ship-sel-title">2. Mission Active : Jungle Fluviale & Forteresse Tetsuyuki</h3>
+          <div class="biomes-container">
+            <div class="biome-card active" style="border-color: #22c55e;">
+              <div class="biome-emoji">🌴</div>
+              <div class="biome-title">Mission 1 : Fleuve de la Jungle</div>
+              <div class="biome-desc">Tranchées rebelles, Otages P.O.W. à libérer, largage du tank SV-001 & Boss Tetsuyuki</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- 3. SÉLECTEUR D'ARMEMENT INDÉPENDANT (COMMUN AUX 2 JEUX) -->
       <div id="weaponSelection" class="weapon-selection">
         <h3 class="ship-sel-title">3. Choisis ton Armement Principal</h3>
@@ -682,11 +761,18 @@
         <button id="btnDuelHadouken" class="duel-btn duel-hadouken">⚡ HADOUKEN</button>
         <button id="btnDuelJump" class="duel-btn duel-jump">⬆️ SAUT</button>
       </div>
+
+      <!-- Commandes Tactiles Dédiées : METAL SLUG 1 REMAKE -->
+      <div id="slugMobileControls" class="slug-mobile-controls" style="display: none;">
+        <button id="btnSlugKnife" class="ctrl-btn" style="background: #166534; border: 2px solid #4ade80; color: #ffffff;" title="Couteau Corps-à-Corps">🪓</button>
+        <button id="btnSlugJump" class="ctrl-btn" style="background: #1d4ed8; border: 2px solid #60a5fa; color: #ffffff;" title="Sauter / Entrer dans le Tank">⬆️ SAUT</button>
+        <button id="btnSlugBomb" class="ctrl-btn" style="background: #b45309; border: 2px solid #fbbf24; color: #ffffff;" title="Lancer Grenade / Obus">💣 BOMB</button>
+      </div>
       <div class="mobile-hint" id="mobileHintText">Glisse sur l'écran pour viser/tirer à 360°</div>
       <button id="btnFire" class="ctrl-btn fire-btn">FIRE</button>
     </div>
   </main>
 
-  <script src="game.js?v=51"></script>
+  <script src="game.js?v=52"></script>
 </body>
 </html>

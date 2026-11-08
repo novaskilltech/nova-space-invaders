@@ -185,10 +185,11 @@ const SHIPS = {
   phantom: { id: "phantom", color: "#c264ff", speed: 480, invul: 1400, width: 72, height: 72, weapon: "plasma" },
   orion: { id: "orion", color: "#7af2ff", speed: 380, invul: 1600, width: 84, height: 80, weapon: "triple" }
 };
-let selectedGameMode = "space"; // "space" (Nova Space Invaders 3D) ou "tank" (Nova Tank Assault 360°)
+let selectedGameMode = "space"; // "space" (Nova Space Invaders 3D), "tank" (Nova Tank Assault 360°), ou "slug" (Metal Slug 1 Remake)
 let selectedShipId = "nova";
 let selectedTankId = "grizzly";
 let selectedTankThemeId = "ww2";
+let selectedSlugCommando = "marco"; // "marco" ou "tarma"
 let selectedWeaponId = "normal";
 let selectedBiomeId = "campagne";
 let selectedDifficulty = 5; // Valeur de 1 à 10
@@ -1125,7 +1126,9 @@ function initGame() {
   player.weaponTime = 0;
   resetPlayer();
 
-  if (selectedGameMode === "tank") {
+  if (selectedGameMode === "slug") {
+    initSlugMission(1);
+  } else if (selectedGameMode === "tank") {
     initTankLevel(state.wave);
   } else if (state.wave % 5 === 0) {
     spawnBoss();
@@ -1150,9 +1153,24 @@ function syncUi() {
   const airstrikeCount = document.getElementById("airstrikeCount");
   const mobAirCount = document.getElementById("mobAirCount");
   const tankMobileTurret = document.getElementById("tankMobileTurretControls");
+  const slugMobile = document.getElementById("slugMobileControls");
   const switchGameMenuBtn = document.getElementById("switchGameMenuBtn");
 
-  if (selectedGameMode === "tank") {
+  if (slugMobile) {
+    slugMobile.style.display = (selectedGameMode === "slug" && state.running && !state.paused) ? "flex" : "none";
+  }
+
+  if (selectedGameMode === "slug") {
+    if (biomeDisplay) biomeDisplay.textContent = "🌴 Jungle Fluviale";
+    if (waveLabel) waveLabel.textContent = "Mission";
+    if (sectorLabel) sectorLabel.textContent = "Opération";
+    if (airstrikeHudBox) airstrikeHudBox.style.display = "none";
+    if (tankMobileTurret) tankMobileTurret.style.display = "none";
+    ui.wave.textContent = "1/6";
+    if (ui.score && typeof slugGame !== "undefined" && slugGame.active) {
+      ui.score.textContent = String(slugGame.player.score || 0);
+    }
+  } else if (selectedGameMode === "tank") {
     const tTheme = TANK_THEMES[selectedTankThemeId] || TANK_THEMES.ww2;
     if (biomeDisplay) biomeDisplay.textContent = tTheme.label;
     if (waveLabel) waveLabel.textContent = "Niveau";
@@ -2650,6 +2668,11 @@ function update(delta, timestamp) {
     player.shieldActiveTime = Math.max(0, player.shieldActiveTime - dt);
   }
 
+  if (selectedGameMode === "slug" && typeof slugGame !== "undefined" && slugGame.active) {
+    updateSlugMission(dt, timestamp);
+    return;
+  }
+
   if (typeof versusDuel !== "undefined" && versusDuel.active) {
     updateVersusDuel(delta, timestamp);
     return;
@@ -3841,6 +3864,11 @@ function drawBossHealth() {
 function draw() {
   const now = performance.now();
 
+  if (selectedGameMode === "slug" && typeof slugGame !== "undefined" && slugGame.active) {
+    drawSlugMission(canvas.width, canvas.height, now);
+    return;
+  }
+
   if (typeof versusDuel !== "undefined" && versusDuel.active) {
     drawVersusDuel();
     return;
@@ -3947,6 +3975,26 @@ function loop(timestamp) {
 
 function handleKeydown(event) {
   keys.add(event.key);
+
+  // Mode Metal Slug 1 Remake
+  if (selectedGameMode === "slug" && typeof slugGame !== "undefined" && slugGame.active) {
+    if (event.key === " " || event.key === "j" || event.key === "J" || event.key === "f" || event.key === "F") {
+      triggerSlugAction("fire");
+      return;
+    }
+    if (event.key === "k" || event.key === "K" || event.key === "ArrowUp" || event.key === "w" || event.key === "W") {
+      triggerSlugAction("jump");
+      return;
+    }
+    if (event.key === "l" || event.key === "L" || event.key === "g" || event.key === "G" || event.key === "b" || event.key === "B") {
+      triggerSlugAction("bomb");
+      return;
+    }
+    if (event.key === "x" || event.key === "X") {
+      triggerSlugAction("knife");
+      return;
+    }
+  }
 
   // Mode Duel Versus Street Fighter (Ken Masters)
   if (typeof versusDuel !== "undefined" && versusDuel.active) {
@@ -4168,20 +4216,38 @@ ui.pauseButton.addEventListener("click", () => {
 window.addEventListener("keydown", handleKeydown);
 window.addEventListener("keyup", handleKeyup);
 
-// 0. Sélecteur de Jeu (Hub 2-en-1 : Space Invaders 3D vs Tank Assault 360°)
+// 0. Sélecteur de Jeu (Trilogie Arcade : Space Invaders 3D vs Tank Assault 360° vs Metal Slug 1 Remake)
 const gameModeCards = document.querySelectorAll(".game-mode-card");
 const spaceConfigPanel = document.getElementById("spaceConfigPanel");
 const tankConfigPanel = document.getElementById("tankConfigPanel");
+const slugConfigPanel = document.getElementById("slugConfigPanel");
+const weaponSelectionPanel = document.getElementById("weaponSelection");
 
 function setGameMode(mode) {
-  selectedGameMode = mode === "tank" ? "tank" : "space";
+  if (mode === "slug") {
+    selectedGameMode = "slug";
+  } else if (mode === "tank") {
+    selectedGameMode = "tank";
+  } else {
+    selectedGameMode = "space";
+  }
+
   gameModeCards.forEach(c => c.classList.toggle("active", c.getAttribute("data-gamemode") === selectedGameMode));
   if (spaceConfigPanel) spaceConfigPanel.style.display = selectedGameMode === "space" ? "flex" : "none";
   if (tankConfigPanel) tankConfigPanel.style.display = selectedGameMode === "tank" ? "flex" : "none";
+  if (slugConfigPanel) slugConfigPanel.style.display = selectedGameMode === "slug" ? "flex" : "none";
+  if (weaponSelectionPanel) weaponSelectionPanel.style.display = selectedGameMode === "slug" ? "none" : "block";
 
   const waveInput = document.getElementById("startWaveInput");
   const waveInputLabel = document.getElementById("waveInputLabel");
-  if (selectedGameMode === "tank") {
+  if (selectedGameMode === "slug") {
+    if (waveInput) {
+      waveInput.max = "1";
+      waveInput.value = "1";
+    }
+    if (waveInputLabel) waveInputLabel.textContent = "Mission :";
+    if (ui.startButton && !state.running) ui.startButton.textContent = "DÉMARRER METAL SLUG (MISSION 1)";
+  } else if (selectedGameMode === "tank") {
     if (waveInput) {
       waveInput.max = "5";
       if (parseInt(waveInput.value, 10) > 5) waveInput.value = "1";
@@ -4199,6 +4265,23 @@ function setGameMode(mode) {
   syncUi();
   draw();
 }
+
+// Sélection du Commando d'Élite Metal Slug (Marco Rossi / Tarma Roving)
+const slugCommandoCards = document.querySelectorAll(".slug-commando-card");
+slugCommandoCards.forEach(card => {
+  const chooseCommando = () => {
+    slugCommandoCards.forEach(c => c.classList.remove("active"));
+    card.classList.add("active");
+    selectedSlugCommando = card.getAttribute("data-commando") || "marco";
+    syncUi();
+    draw();
+  };
+  card.addEventListener("click", chooseCommando);
+  card.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    chooseCommando();
+  });
+});
 
 gameModeCards.forEach(card => {
   const chooseMode = () => {
@@ -6127,9 +6210,1301 @@ function drawStreetFighterHUD(now) {
   ctx.restore();
 }
 
-// ==============================================================
-// GESTION DU PORTAIL "NOVA GAMES" (Landing Bento & Hub Multi-Jeux)
-// ==============================================================
+// ============================================================================
+// JEU #3 : NOVA IRON COMMANDO // METAL SLUG 1 REMAKE (Moteur 2D Natif 60 FPS)
+// ============================================================================
+
+function playSlugAnnouncer(text) {
+  try {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.rate = 1.15;
+      utter.pitch = 0.82;
+      utter.volume = 1.0;
+      utter.lang = 'en-US';
+      window.speechSynthesis.speak(utter);
+    }
+  } catch (e) {}
+  playSound("powerup");
+}
+
+const slugGame = {
+  active: false,
+  mission: 1,
+  scrollX: 0,
+  maxScrollX: 2800,
+  groundY: 0,
+  player: {
+    x: 60,
+    y: 0,
+    groundY: 0,
+    vx: 0,
+    vy: 0,
+    speed: 210,
+    facing: 1, // 1: droite, -1: gauche
+    aimY: 0, // -1: haut, 0: face, 1: bas (en saut)
+    state: "idle", // "idle", "run", "crouch", "jump", "shoot", "knife", "in_tank", "die"
+    stateTime: 0,
+    isGrounded: true,
+    weapon: "pistol", // "pistol", "hmg", "shotgun", "rocket", "flame"
+    ammo: 999,
+    grenades: 10,
+    lives: 3,
+    score: 0,
+    powRescued: 0,
+    shootCooldown: 0,
+    knifeCooldown: 0,
+    invulTimer: 0,
+    inTank: false,
+    tankHp: 3,
+    maxTankHp: 3,
+    tankBounce: 0
+  },
+  tank: {
+    x: 920,
+    y: 0,
+    width: 68,
+    height: 48,
+    occupied: false,
+    active: true
+  },
+  enemies: [],
+  pows: [],
+  pickups: [],
+  projectiles: [],
+  grenades: [],
+  particles: [],
+  boss: null,
+  introBannerTimer: 3.2,
+  missionComplete: false,
+  victoryTimer: 0
+};
+
+function initSlugMission(missionNum) {
+  state.paused = false;
+  state.running = true;
+  state.shots = [];
+  state.enemyShots = [];
+  state.powerups = [];
+
+  const gy = canvas.height - 85;
+  slugGame.active = true;
+  slugGame.mission = missionNum || 1;
+  slugGame.scrollX = 0;
+  slugGame.groundY = gy;
+  slugGame.maxScrollX = 2800;
+  slugGame.introBannerTimer = 3.2;
+  slugGame.missionComplete = false;
+  slugGame.victoryTimer = 0;
+  slugGame.projectiles = [];
+  slugGame.grenades = [];
+  slugGame.particles = [];
+  slugGame.pickups = [];
+
+  // Joueur
+  const p = slugGame.player;
+  p.x = 60;
+  p.y = gy;
+  p.groundY = gy;
+  p.vx = 0;
+  p.vy = 0;
+  p.facing = 1;
+  p.aimY = 0;
+  p.state = "idle";
+  p.stateTime = 0;
+  p.isGrounded = true;
+  p.weapon = "pistol";
+  p.ammo = 999;
+  p.grenades = 10;
+  p.lives = 3;
+  p.score = 0;
+  p.powRescued = 0;
+  p.shootCooldown = 0;
+  p.knifeCooldown = 0;
+  p.invulTimer = 1.5;
+  p.inTank = false;
+  p.tankHp = 3;
+  p.tankBounce = 0;
+
+  // Véhicule mythique SV-001 "Metal Slug" parachuté
+  slugGame.tank = {
+    x: 920,
+    y: gy,
+    groundY: gy,
+    width: 68,
+    height: 48,
+    occupied: false,
+    active: true
+  };
+
+  // 14 Soldats de l'Armée Rebelle répartis sur le niveau
+  slugGame.enemies = [];
+  const enemyXCoords = [240, 380, 530, 690, 840, 1080, 1220, 1420, 1580, 1750, 1920, 2080, 2240, 2390];
+  enemyXCoords.forEach((ex, idx) => {
+    slugGame.enemies.push({
+      id: "soldier_" + idx,
+      type: idx % 3 === 0 ? "grenadier" : (idx % 4 === 0 ? "shield" : "rifle"),
+      x: ex,
+      y: gy,
+      groundY: gy,
+      vx: 0,
+      facing: -1,
+      hp: idx % 4 === 0 ? 3 : 1,
+      state: "patrol", // "patrol", "aim", "shoot", "panic", "die"
+      stateTimer: Math.random() * 2,
+      shootTimer: 1.0 + Math.random() * 2.5,
+      dead: false
+    });
+  });
+
+  // 1 Blindé léger Rebelle "Girida-O"
+  slugGame.enemies.push({
+    id: "tank_girida",
+    type: "girida",
+    x: 1460,
+    y: gy - 8,
+    groundY: gy - 8,
+    vx: 0,
+    facing: -1,
+    hp: 12,
+    state: "patrol",
+    shootTimer: 2.2,
+    dead: false
+  });
+
+  // 1 Avion éclaireur "Flying Tara"
+  slugGame.enemies.push({
+    id: "flying_tara",
+    type: "plane",
+    x: 1950,
+    y: gy - 165,
+    groundY: gy - 165,
+    vx: -140,
+    facing: -1,
+    hp: 5,
+    state: "fly",
+    shootTimer: 1.8,
+    dead: false
+  });
+
+  // 4 Otages de Guerre (P.O.W. - Prisoners of War)
+  slugGame.pows = [
+    { id: "pow_1", x: 420, y: gy, drop: "hmg", rescued: false, saluting: false, stateTimer: 0 },
+    { id: "pow_2", x: 810, y: gy, drop: "bomb", rescued: false, saluting: false, stateTimer: 0 },
+    { id: "pow_3", x: 1340, y: gy, drop: "shotgun", rescued: false, saluting: false, stateTimer: 0 },
+    { id: "pow_4", x: 2120, y: gy, drop: "chicken", rescued: false, saluting: false, stateTimer: 0 }
+  ];
+
+  // Boss de Fin de Mission 1 : TETSUYUKI (Épave Forteresse Fluviale)
+  slugGame.boss = {
+    name: "TETSUYUKI",
+    x: 2520,
+    y: gy - 95,
+    width: 210,
+    height: 140,
+    hp: 75,
+    maxHp: 75,
+    turretAngle: -Math.PI * 0.75,
+    attackTimer: 2.5,
+    attackPattern: 0,
+    hitFlash: 0,
+    dead: false
+  };
+
+  playSlugAnnouncer("MISSION 1 START !");
+
+  // Liaison contrôles tactiles dédiés
+  const btnKnife = document.getElementById("btnSlugKnife");
+  const btnJump = document.getElementById("btnSlugJump");
+  const btnBomb = document.getElementById("btnSlugBomb");
+  if (btnKnife) {
+    btnKnife.onclick = (e) => { e.preventDefault(); triggerSlugAction("knife"); };
+    btnKnife.ontouchstart = (e) => { e.preventDefault(); triggerSlugAction("knife"); };
+  }
+  if (btnJump) {
+    btnJump.onclick = (e) => { e.preventDefault(); triggerSlugAction("jump"); };
+    btnJump.ontouchstart = (e) => { e.preventDefault(); triggerSlugAction("jump"); };
+  }
+  if (btnBomb) {
+    btnBomb.onclick = (e) => { e.preventDefault(); triggerSlugAction("bomb"); };
+    btnBomb.ontouchstart = (e) => { e.preventDefault(); triggerSlugAction("bomb"); };
+  }
+
+  syncUi();
+}
+
+function triggerSlugAction(action) {
+  if (!slugGame.active || !state.running || state.paused) return;
+  const p = slugGame.player;
+
+  if (action === "jump") {
+    // Si à proximité du char Metal Slug SV-001 (et pas encore dedans)
+    if (!p.inTank && slugGame.tank && slugGame.tank.active && !slugGame.tank.occupied) {
+      const distToTank = Math.abs(p.x - slugGame.tank.x);
+      if (distToTank < 55) {
+        p.inTank = true;
+        slugGame.tank.occupied = true;
+        p.tankHp = 3;
+        p.tankBounce = 16;
+        p.state = "in_tank";
+        playSound("powerup");
+        createFloatingText("★ METAL SLUG MOUNTED ! ★", p.x, p.y - 45, "#fbbf24");
+        return;
+      }
+    }
+
+    if (p.isGrounded) {
+      p.vy = p.inTank ? -380 : -420;
+      p.isGrounded = false;
+      p.state = "jump";
+      playSound("shoot");
+    }
+  } else if (action === "fire") {
+    if (p.inTank) {
+      // Tir double Gatling rotatif du Metal Slug
+      fireSlugTankGatling();
+      return;
+    }
+
+    // Si ennemi à moins de 32px à bout portant -> Attaque automatique au COUTEAU
+    const closeEnemy = slugGame.enemies.find(en => !en.dead && Math.abs(en.x - p.x) < 34 && Math.abs(en.y - p.y) < 26);
+    if (closeEnemy) {
+      triggerSlugAction("knife");
+      return;
+    }
+
+    // Tir d'arme à feu
+    fireSlugPlayerWeapon();
+  } else if (action === "knife") {
+    if (p.inTank) return;
+    p.state = "knife";
+    p.stateTime = 0.25;
+    playSound("hit");
+
+    // Détection d'impact de lame sur ennemi ou otage
+    slugGame.enemies.forEach(en => {
+      if (!en.dead && Math.abs(en.x - p.x) < 42 && Math.abs(en.y - p.y) < 30) {
+        en.hp = 0;
+        en.dead = true;
+        en.state = "die";
+        p.score += 200;
+        state.score += 200;
+        createFloatingText("SLASH! +200", en.x, en.y - 20, "#ef4444");
+        // Étincelles de couteau
+        for (let sp = 0; sp < 8; sp++) {
+          slugGame.particles.push({
+            x: en.x, y: en.y - 15,
+            vx: (Math.random() - 0.5) * 160,
+            vy: (Math.random() - 0.5) * 160,
+            size: 2.5, color: "#fef08a", life: 0.3
+          });
+        }
+      }
+    });
+
+    // Possibilité de libérer un otage au couteau
+    slugGame.pows.forEach(pow => {
+      if (!pow.rescued && Math.abs(pow.x - p.x) < 45) {
+        rescueSlugPOW(pow);
+      }
+    });
+  } else if (action === "bomb") {
+    if (p.inTank) {
+      // Obus de char 127mm
+      fireSlugTankCannon();
+      return;
+    }
+
+    if (p.grenades > 0) {
+      p.grenades--;
+      playSound("deflect");
+      slugGame.grenades.push({
+        x: p.x + p.facing * 12,
+        y: p.y - 22,
+        vx: p.facing * 280,
+        vy: -260,
+        radius: 7,
+        timer: 1.1,
+        bounces: 0
+      });
+      createFloatingText("BOMB!", p.x, p.y - 30, "#f59e0b");
+    }
+  }
+}
+
+function rescueSlugPOW(pow) {
+  pow.rescued = true;
+  pow.saluting = true;
+  pow.stateTimer = 1.2;
+  slugGame.player.powRescued++;
+  slugGame.player.score += 1000;
+  state.score += 1000;
+  playSound("powerup");
+  createFloatingText("THANK YOU! +1000", pow.x, pow.y - 30, "#22c55e");
+
+  // L'otage sort une caisse d'armement de son caleçon !
+  slugGame.pickups.push({
+    x: pow.x + 18,
+    y: slugGame.groundY - 8,
+    type: pow.drop,
+    active: true
+  });
+}
+
+function fireSlugPlayerWeapon() {
+  const p = slugGame.player;
+  if (p.shootCooldown > 0) return;
+
+  const facing = p.facing;
+  const aimY = p.aimY;
+  const startX = p.x + (aimY !== 0 ? 0 : facing * 18);
+  const startY = p.y - (aimY === -1 ? 38 : (aimY === 1 ? 8 : (p.state === "crouch" ? 14 : 24)));
+
+  if (p.weapon === "pistol") {
+    p.shootCooldown = 0.16;
+    playSound("shoot");
+    slugGame.projectiles.push({
+      x: startX, y: startY,
+      vx: aimY !== 0 ? 0 : facing * 540,
+      vy: aimY * 540,
+      radius: 3.5, damage: 1, type: "bullet", color: "#fef08a"
+    });
+  } else if (p.weapon === "hmg") {
+    p.shootCooldown = 0.08;
+    p.ammo--;
+    playSound("shoot");
+    // Dispersion en éventail
+    const spreadAngle = (Math.random() - 0.5) * 0.15;
+    slugGame.projectiles.push({
+      x: startX, y: startY,
+      vx: (aimY !== 0 ? 0 : facing * 600) + Math.sin(spreadAngle) * 60,
+      vy: (aimY * 600) + Math.cos(spreadAngle) * 30,
+      radius: 4, damage: 1.5, type: "hmg", color: "#f59e0b"
+    });
+    if (p.ammo <= 0) p.weapon = "pistol";
+  } else if (p.weapon === "shotgun") {
+    p.shootCooldown = 0.36;
+    p.ammo--;
+    playSound("explosion");
+    // 6 balles coniques dévastatrices
+    for (let s = -2; s <= 2; s++) {
+      slugGame.projectiles.push({
+        x: startX, y: startY,
+        vx: (aimY !== 0 ? 0 : facing * 480),
+        vy: (aimY * 480) + s * 45,
+        radius: 6, damage: 4, type: "shotgun", color: "#ef4444"
+      });
+    }
+    if (p.ammo <= 0) p.weapon = "pistol";
+  } else if (p.weapon === "rocket") {
+    p.shootCooldown = 0.28;
+    p.ammo--;
+    playSound("hadouken");
+    slugGame.projectiles.push({
+      x: startX, y: startY,
+      vx: aimY !== 0 ? 0 : facing * 320,
+      vy: aimY * 320,
+      radius: 6, damage: 6, type: "rocket", color: "#38bdf8"
+    });
+    if (p.ammo <= 0) p.weapon = "pistol";
+  } else if (p.weapon === "flame") {
+    p.shootCooldown = 0.25;
+    p.ammo--;
+    playSound("saber");
+    slugGame.projectiles.push({
+      x: startX, y: startY,
+      vx: aimY !== 0 ? 0 : facing * 280,
+      vy: aimY * 280,
+      radius: 14, damage: 5, type: "flame", color: "#ea580c"
+    });
+    if (p.ammo <= 0) p.weapon = "pistol";
+  }
+
+  // Éjection de douille en laiton
+  slugGame.particles.push({
+    x: p.x - facing * 8, y: p.y - 20,
+    vx: -facing * (60 + Math.random() * 40),
+    vy: -120 - Math.random() * 60,
+    size: 2, color: "#facc15", life: 0.45
+  });
+}
+
+function fireSlugTankGatling() {
+  const p = slugGame.player;
+  if (p.shootCooldown > 0) return;
+  p.shootCooldown = 0.07;
+  playSound("shoot");
+  const facing = p.facing;
+  const startX = p.x + facing * 34;
+  const startY = p.y - 28;
+
+  slugGame.projectiles.push({
+    x: startX, y: startY,
+    vx: facing * 620, vy: (Math.random() - 0.5) * 40,
+    radius: 4.5, damage: 2, type: "hmg", color: "#fbbf24"
+  });
+
+  p.tankBounce = 6;
+}
+
+function fireSlugTankCannon() {
+  const p = slugGame.player;
+  if (p.grenades <= 0) return;
+  p.grenades--;
+  playSound("ko");
+  const facing = p.facing;
+  const startX = p.x + facing * 38;
+  const startY = p.y - 26;
+
+  slugGame.projectiles.push({
+    x: startX, y: startY,
+    vx: facing * 460, vy: -40,
+    radius: 9, damage: 15, type: "cannon", color: "#ef4444"
+  });
+  p.tankBounce = 14;
+  createFloatingText("CANNON SHELL !", p.x, p.y - 45, "#ef4444");
+}
+
+function updateSlugMission(dt, timestamp) {
+  const p = slugGame.player;
+  const w = canvas.width;
+  const gy = slugGame.groundY;
+
+  if (slugGame.introBannerTimer > 0) {
+    slugGame.introBannerTimer -= dt;
+  }
+
+  // 1. Contrôles de déplacement Joueur (Clavier & Tactile)
+  let moveX = 0;
+  if (keys.has("ArrowLeft") || keys.has("q") || keys.has("Q") || keys.has("a") || keys.has("A")) moveX -= 1;
+  if (keys.has("ArrowRight") || keys.has("d") || keys.has("D")) moveX += 1;
+
+  // Visée verticale
+  p.aimY = 0;
+  if (keys.has("ArrowUp") || keys.has("z") || keys.has("Z") || keys.has("w") || keys.has("W")) p.aimY = -1;
+  if (keys.has("ArrowDown") || keys.has("s") || keys.has("S")) {
+    if (!p.isGrounded) p.aimY = 1; // Tir vers le bas en saut
+    else p.state = "crouch";
+  } else if (p.state === "crouch") {
+    p.state = "idle";
+  }
+
+  if (moveX !== 0) {
+    p.facing = moveX > 0 ? 1 : -1;
+    const speed = p.state === "crouch" ? p.speed * 0.5 : p.speed;
+    p.vx = moveX * speed;
+    if (p.isGrounded && p.state !== "crouch" && p.state !== "knife") p.state = "run";
+  } else {
+    p.vx = 0;
+    if (p.isGrounded && p.state !== "crouch" && p.state !== "knife") p.state = "idle";
+  }
+
+  // Physique de gravité
+  p.vy += 980 * dt;
+  p.x += p.vx * dt;
+  p.y += p.vy * dt;
+
+  if (p.y >= gy) {
+    p.y = gy;
+    p.vy = 0;
+    p.isGrounded = true;
+    if (p.state === "jump") p.state = "idle";
+  }
+
+  // Caméra à défilement horizontal (auto-avance avec interdiction de retour arrière)
+  slugGame.scrollX = Math.max(slugGame.scrollX, p.x - w * 0.32);
+  slugGame.scrollX = Math.min(slugGame.maxScrollX - w, slugGame.scrollX);
+  // Empêche le joueur de sortir à gauche de l'écran visible
+  p.x = Math.max(slugGame.scrollX + 16, Math.min(slugGame.maxScrollX, p.x));
+
+  // Cooldowns
+  if (p.shootCooldown > 0) p.shootCooldown -= dt;
+  if (p.knifeCooldown > 0) p.knifeCooldown -= dt;
+  if (p.invulTimer > 0) p.invulTimer -= dt;
+  if (p.tankBounce > 0) p.tankBounce = Math.max(0, p.tankBounce - dt * 30);
+
+  // Position du tank quand le joueur est dedans
+  if (p.inTank && slugGame.tank) {
+    slugGame.tank.x = p.x;
+    slugGame.tank.y = p.y;
+  }
+
+  // 2. Mise à jour des Projectiles
+  slugGame.projectiles.forEach(proj => {
+    proj.x += proj.vx * dt;
+    proj.y += proj.vy * dt;
+
+    // Collision projectile joueur -> Ennemis
+    slugGame.enemies.forEach(en => {
+      if (!en.dead && Math.abs(en.x - proj.x) < 24 && Math.abs((en.y - 18) - proj.y) < 22) {
+        en.hp -= proj.damage;
+        proj.dead = true;
+        p.score += 50;
+        state.score += 50;
+        playSound("hit");
+        if (en.hp <= 0) {
+          en.dead = true;
+          en.state = "die";
+          p.score += 150;
+          state.score += 150;
+          createFloatingText("+150", en.x, en.y - 25, "#fbbf24");
+        }
+      }
+    });
+
+    // Collision projectile -> Otages P.O.W. (libère au tir)
+    slugGame.pows.forEach(pow => {
+      if (!pow.rescued && Math.abs(pow.x - proj.x) < 20 && Math.abs((pow.y - 16) - proj.y) < 18) {
+        proj.dead = true;
+        rescueSlugPOW(pow);
+      }
+    });
+
+    // Collision projectile -> Boss TETSUYUKI
+    if (slugGame.boss && !slugGame.boss.dead) {
+      const b = slugGame.boss;
+      if (proj.x > b.x - 30 && proj.x < b.x + b.width && proj.y > b.y - 60 && proj.y < b.y + b.height) {
+        b.hp -= proj.damage;
+        b.hitFlash = 0.12;
+        proj.dead = true;
+        p.score += 80;
+        state.score += 80;
+        playSound("hit");
+        if (b.hp <= 0) {
+          b.dead = true;
+          slugGame.missionComplete = true;
+          slugGame.victoryTimer = 5.0;
+          p.score += 50000;
+          state.score += 50000;
+          playSlugAnnouncer("MISSION COMPLETE !");
+          createFloatingText("★ TETSUYUKI DESTROYED ! +50 000 PTS ★", b.x + 40, b.y - 30, "#22c55e");
+        }
+      }
+    }
+  });
+  slugGame.projectiles = slugGame.projectiles.filter(pr => !pr.dead && pr.x > slugGame.scrollX - 50 && pr.x < slugGame.scrollX + w + 50);
+
+  // 3. Mise à jour des Grenades paraboliques
+  slugGame.grenades.forEach(gr => {
+    gr.vy += 650 * dt;
+    gr.x += gr.vx * dt;
+    gr.y += gr.vy * dt;
+    gr.timer -= dt;
+
+    if (gr.y >= gy - 6) {
+      gr.y = gy - 6;
+      gr.vy = -gr.vy * 0.45;
+      gr.vx *= 0.75;
+      gr.bounces++;
+    }
+
+    if (gr.timer <= 0) {
+      gr.dead = true;
+      playSound("explosion");
+      // Dégâts de zone de déflagration
+      slugGame.enemies.forEach(en => {
+        if (!en.dead && Math.abs(en.x - gr.x) < 55) {
+          en.hp -= 10;
+          if (en.hp <= 0) {
+            en.dead = true;
+            en.state = "die";
+            p.score += 200;
+            state.score += 200;
+          }
+        }
+      });
+      // Dégâts au Boss
+      if (slugGame.boss && !slugGame.boss.dead && Math.abs((slugGame.boss.x + 50) - gr.x) < 90) {
+        slugGame.boss.hp -= 12;
+        slugGame.boss.hitFlash = 0.15;
+      }
+      // Particules d'explosion
+      for (let pz = 0; pz < 18; pz++) {
+        slugGame.particles.push({
+          x: gr.x, y: gr.y - 10,
+          vx: (Math.random() - 0.5) * 220,
+          vy: -Math.random() * 200,
+          size: 4 + Math.random() * 5,
+          color: Math.random() > 0.5 ? "#f59e0b" : "#ef4444",
+          life: 0.5
+        });
+      }
+    }
+  });
+  slugGame.grenades = slugGame.grenades.filter(g => !g.dead);
+
+  // 4. Mise à jour des Otages (P.O.W.)
+  slugGame.pows.forEach(pow => {
+    if (pow.saluting) {
+      pow.stateTimer -= dt;
+      if (pow.stateTimer <= 0) {
+        pow.x -= 120 * dt; // Fuite vers la gauche
+      }
+    }
+  });
+
+  // 5. Ramassage des Caisses d'Armes & Bonus
+  slugGame.pickups.forEach(pu => {
+    if (pu.active && Math.abs(pu.x - p.x) < 32 && Math.abs(pu.y - p.y) < 35) {
+      pu.active = false;
+      if (pu.type === "hmg") {
+        p.weapon = "hmg";
+        p.ammo = 200;
+        playSlugAnnouncer("HEAVY MACHINE GUN !");
+        createFloatingText("HEAVY MACHINE GUN ! +200", p.x, p.y - 35, "#f59e0b");
+      } else if (pu.type === "shotgun") {
+        p.weapon = "shotgun";
+        p.ammo = 30;
+        playSlugAnnouncer("SHOTGUN !");
+        createFloatingText("SHOTGUN ! +30", p.x, p.y - 35, "#ef4444");
+      } else if (pu.type === "bomb") {
+        p.grenades += 10;
+        playSlugAnnouncer("OK !");
+        createFloatingText("BOMBS +10", p.x, p.y - 35, "#fbbf24");
+      } else if (pu.type === "chicken") {
+        p.score += 1000;
+        state.score += 1000;
+        playSound("powerup");
+        createFloatingText("ROAST CHICKEN ! +1000", p.x, p.y - 35, "#22c55e");
+      }
+    }
+  });
+  slugGame.pickups = slugGame.pickups.filter(pu => pu.active);
+
+  // 6. IA des Ennemis Rebelles
+  slugGame.enemies.forEach(en => {
+    if (en.dead) return;
+    const distToPlayer = p.x - en.x;
+
+    // Panique si le joueur arrive dans le Metal Slug !
+    if (p.inTank && Math.abs(distToPlayer) < 180) {
+      en.state = "panic";
+      en.facing = distToPlayer > 0 ? -1 : 1;
+      en.x += en.facing * 85 * dt;
+      return;
+    }
+
+    if (en.type === "plane") {
+      en.x += en.vx * dt;
+      en.shootTimer -= dt;
+      if (en.shootTimer <= 0) {
+        en.shootTimer = 2.2;
+        // Largue une bombe vers le bas
+        slugGame.projectiles.push({
+          x: en.x, y: en.y + 12,
+          vx: -40, vy: 180,
+          radius: 5, damage: 1, type: "enemyBomb", color: "#f87171"
+        });
+      }
+      return;
+    }
+
+    // Fusiliers & Grenadiers au sol
+    en.shootTimer -= dt;
+    if (en.shootTimer <= 0 && Math.abs(distToPlayer) < 380) {
+      en.shootTimer = 2.0 + Math.random() * 2;
+      en.facing = distToPlayer > 0 ? 1 : -1;
+      playSound("enemyShoot");
+      slugGame.projectiles.push({
+        x: en.x + en.facing * 14, y: en.y - 20,
+        vx: en.facing * 280, vy: 0,
+        radius: 3.5, damage: 1, type: "enemyBullet", color: "#ef4444"
+      });
+    }
+  });
+
+  // 7. IA du Boss TETSUYUKI
+  if (slugGame.boss && !slugGame.boss.dead) {
+    const b = slugGame.boss;
+    if (b.hitFlash > 0) b.hitFlash -= dt;
+    b.attackTimer -= dt;
+    if (b.attackTimer <= 0) {
+      b.attackTimer = 2.4;
+      b.attackPattern = (b.attackPattern + 1) % 2;
+      playSound("explosion");
+      if (b.attackPattern === 0) {
+        // Tirs d'artillerie lourde
+        for (let t = 0; t < 2; t++) {
+          slugGame.projectiles.push({
+            x: b.x - 10, y: b.y + 15 + t * 24,
+            vx: -340 - t * 40, vy: (t - 0.5) * 50,
+            radius: 8, damage: 1, type: "enemyShell", color: "#f97316"
+          });
+        }
+      } else {
+        // Salve de mortier parabolique
+        slugGame.grenades.push({
+          x: b.x - 20, y: b.y - 30,
+          vx: -240, vy: -380,
+          radius: 9, timer: 1.8, bounces: 0
+        });
+      }
+    }
+  }
+
+  // 8. Particules
+  slugGame.particles.forEach(pt => {
+    pt.x += pt.vx * dt;
+    pt.y += pt.vy * dt;
+    pt.life -= dt;
+  });
+  slugGame.particles = slugGame.particles.filter(pt => pt.life > 0);
+
+  // Victoire : temporisation avant retour au hub
+  if (slugGame.missionComplete) {
+    slugGame.victoryTimer -= dt;
+  }
+}
+
+function drawSlugMission(w, h, now) {
+  const p = slugGame.player;
+  const gy = slugGame.groundY;
+  const sx = slugGame.scrollX;
+
+  ctx.save();
+
+  // 1. PARALLAX COUCHE 0 : Ciel Crépusculaire Tropical & Montagnes Lointaines
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, gy);
+  skyGrad.addColorStop(0, "#082f49");
+  skyGrad.addColorStop(0.4, "#0c4a6e");
+  skyGrad.addColorStop(0.75, "#14532d");
+  skyGrad.addColorStop(1, "#1e3a5f");
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, w, h);
+
+  // Montagnes escarpées brumeuses (Parallaxe 0.12x)
+  ctx.fillStyle = "rgba(12, 74, 110, 0.45)";
+  ctx.beginPath();
+  ctx.moveTo(0, gy - 120);
+  for (let mx = 0; mx <= w; mx += 80) {
+    const mHeight = 120 + Math.sin((mx + sx * 0.12) * 0.008) * 45;
+    ctx.lineTo(mx, gy - mHeight);
+  }
+  ctx.lineTo(w, gy);
+  ctx.lineTo(0, gy);
+  ctx.closePath();
+  ctx.fill();
+
+  // 2. PARALLAX COUCHE 1 : Jungle Tropicale & Cascades Fluviales (Parallaxe 0.35x)
+  ctx.fillStyle = "#14532d";
+  for (let jx = -60; jx < w + 80; jx += 95) {
+    const worldJX = jx - (sx * 0.35) % 95;
+    // Arbre géant de jungle
+    ctx.beginPath();
+    ctx.arc(worldJX + 45, gy - 85, 42, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#166534";
+    ctx.fillRect(worldJX + 38, gy - 75, 14, 75);
+    ctx.fillStyle = "#14532d";
+  }
+
+  // 3. PARALLAX COUCHE 2 : Sol Fluvial, Pontons en Bois, Tranchées & Sable (1.0x)
+  const riverGrad = ctx.createLinearGradient(0, gy, 0, h);
+  riverGrad.addColorStop(0, "#365314");
+  riverGrad.addColorStop(0.2, "#1c1917");
+  riverGrad.addColorStop(0.6, "#0f172a");
+  riverGrad.addColorStop(1, "#020617");
+  ctx.fillStyle = riverGrad;
+  ctx.fillRect(0, gy, w, h - gy);
+
+  // Pontons en bois et traverses
+  ctx.fillStyle = "#78350f";
+  ctx.fillRect(0, gy, w, 12);
+  ctx.fillStyle = "#451a03";
+  for (let bx = -40; bx < w + 40; bx += 32) {
+    const plankX = bx - (sx % 32);
+    ctx.fillRect(plankX, gy, 2.5, 12);
+  }
+
+  // 4. ENTITÉS DU JEU (Rendu avec décalage de caméra -sx)
+  ctx.save();
+  ctx.translate(-sx, 0);
+
+  // A. Véhicule Metal Slug SV-001 (s'il n'est pas conduit par le joueur)
+  if (slugGame.tank && slugGame.tank.active && !p.inTank) {
+    drawMetalSlugTank(slugGame.tank, false, now);
+    // Flèche néon clignotante "IN" au-dessus du char
+    if (Math.floor(now / 250) % 2 === 0) {
+      ctx.fillStyle = "#22c55e";
+      ctx.font = "900 13px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("▼ ENTER SLUG ▼", slugGame.tank.x, slugGame.tank.y - 56);
+    }
+  }
+
+  // B. Otages P.O.W.
+  slugGame.pows.forEach(pow => drawSlugPOW(pow, now));
+
+  // C. Caisses de Pickups
+  slugGame.pickups.forEach(pu => drawSlugPickup(pu, now));
+
+  // D. Ennemis
+  slugGame.enemies.forEach(en => {
+    if (!en.dead) {
+      if (en.type === "girida") drawGiridaTank(en, now);
+      else if (en.type === "plane") drawFlyingTara(en, now);
+      else drawRebelInfantry(en, now);
+    }
+  });
+
+  // E. Boss TETSUYUKI
+  if (slugGame.boss) drawBossTetsuyuki(slugGame.boss, now);
+
+  // F. Joueur (Marco Rossi ou dans le Tank Metal Slug)
+  if (p.inTank) {
+    drawMetalSlugTank(p, true, now);
+  } else {
+    drawMarcoRossi(p, now);
+  }
+
+  // G. Projectiles & Grenades
+  slugGame.projectiles.forEach(proj => {
+    ctx.fillStyle = proj.color || "#fbbf24";
+    ctx.beginPath();
+    ctx.arc(proj.x, proj.y, proj.radius, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  slugGame.grenades.forEach(gr => {
+    // Grenade Ananas
+    ctx.fillStyle = "#15803d";
+    ctx.beginPath();
+    ctx.arc(gr.x, gr.y, gr.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#ca8a04";
+    ctx.fillRect(gr.x - 2, gr.y - gr.radius - 3, 4, 3);
+  });
+
+  // H. Particules
+  slugGame.particles.forEach(pt => {
+    ctx.fillStyle = pt.color;
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  ctx.restore();
+
+  // 5. PARALLAX COUCHE 3 : Lianes d'Avant-Plan (1.4x)
+  ctx.fillStyle = "rgba(22, 101, 52, 0.4)";
+  for (let vx = -20; vx < w + 80; vx += 140) {
+    const lianeX = vx - (sx * 1.4) % 140;
+    ctx.fillRect(lianeX, 0, 4, 65 + Math.sin(lianeX * 0.05) * 20);
+  }
+
+  // 6. HUD RETRO METAL SLUG
+  drawSlugHUD(now);
+
+  ctx.restore();
+}
+
+function drawMarcoRossi(p, now) {
+  ctx.save();
+  ctx.translate(p.x, p.y);
+  ctx.scale(p.facing, 1);
+
+  // Ombre portée
+  ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
+  ctx.beginPath();
+  ctx.ellipse(0, 2, 16, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const isCrouch = p.state === "crouch";
+  const isJump = p.state === "jump";
+  const isKnife = p.state === "knife";
+  const runCycle = Math.sin(now * 0.015) * 6;
+
+  // Jambes (Pantalon treillis marron clair)
+  ctx.fillStyle = "#78350f";
+  if (isCrouch) {
+    ctx.fillRect(-10, -10, 20, 10);
+  } else if (isJump) {
+    ctx.fillRect(-12, -18, 10, 12);
+    ctx.fillRect(2, -22, 10, 12);
+  } else {
+    // Jambes en course
+    ctx.fillRect(-8 + runCycle, -16, 7, 16);
+    ctx.fillRect(1 - runCycle, -16, 7, 16);
+  }
+
+  // Bottes de combat militaires noires
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(-9 + (isCrouch ? 0 : runCycle), -4, 9, 5);
+  ctx.fillRect(0 - (isCrouch ? 0 : runCycle), -4, 9, 5);
+
+  // Torse : T-shirt blanc et Veste tactique rouge sans manches
+  const torsoY = isCrouch ? -20 : -32;
+  ctx.fillStyle = "#f8fafc"; // T-shirt blanc
+  ctx.fillRect(-7, torsoY, 14, 16);
+  ctx.fillStyle = "#dc2626"; // Gilet rouge culte de Marco
+  ctx.fillRect(-9, torsoY, 5, 15);
+  ctx.fillRect(4, torsoY, 5, 15);
+
+  // Cartouchières & Équipement
+  ctx.fillStyle = "#ca8a04";
+  ctx.fillRect(-4, torsoY + 8, 8, 3);
+
+  // Tête & Bandana blanc
+  const headY = torsoY - 11;
+  ctx.fillStyle = "#fed7aa"; // Peau
+  ctx.beginPath();
+  ctx.arc(0, headY, 6.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#d97706"; // Cheveux blonds/châtains
+  ctx.fillRect(-6, headY - 8, 12, 4);
+  ctx.fillStyle = "#f8fafc"; // Bandana frontal blanc
+  ctx.fillRect(-7, headY - 4, 14, 3);
+  ctx.fillRect(-10, headY - 2, 4, 6); // Nœud du bandana
+
+  // Bras & Armement
+  ctx.fillStyle = "#fed7aa";
+  if (isKnife) {
+    // Coup de couteau vif vers l'avant !
+    ctx.fillRect(2, torsoY + 3, 16, 4);
+    // Lame en acier étincelant
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.moveTo(18, torsoY + 2);
+    ctx.lineTo(34, torsoY + 5);
+    ctx.lineTo(18, torsoY + 8);
+    ctx.closePath();
+    ctx.fill();
+    // Arc lumineux de frappe
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(12, torsoY + 5, 24, -0.4, 0.4);
+    ctx.stroke();
+  } else {
+    // Arme pointée
+    ctx.fillRect(0, torsoY + 4, 12, 4);
+    ctx.fillStyle = "#1e293b";
+    if (p.aimY === -1) {
+      // Vise vers le haut
+      ctx.fillRect(-2, torsoY - 14, 5, 16);
+    } else if (p.aimY === 1) {
+      // Vise vers le bas
+      ctx.fillRect(-2, torsoY + 6, 5, 16);
+    } else {
+      // Vise droit devant
+      ctx.fillRect(8, torsoY + 2, 16, 5);
+      // Canon de l'arme
+      if (p.weapon === "hmg") ctx.fillRect(22, torsoY + 3, 10, 3);
+      else if (p.weapon === "shotgun") ctx.fillRect(20, torsoY + 1, 8, 7);
+    }
+  }
+
+  ctx.restore();
+}
+
+function drawMetalSlugTank(t, occupied, now) {
+  ctx.save();
+  ctx.translate(t.x, t.y - (t.tankBounce || 0));
+  if (occupied) ctx.scale(slugGame.player.facing, 1);
+
+  // Chenilles métalliques avec galets de roulement
+  ctx.fillStyle = "#0f172a";
+  ctx.beginPath();
+  ctx.roundRect(-30, -14, 60, 16, 6);
+  ctx.fill();
+  ctx.fillStyle = "#475569";
+  for (let r = -22; r <= 22; r += 11) {
+    ctx.beginPath();
+    ctx.arc(r, -6, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Châssis arrondi bleu-gris caractéristique du SV-001
+  ctx.fillStyle = "#334155";
+  ctx.beginPath();
+  ctx.roundRect(-24, -34, 48, 24, [8, 8, 4, 4]);
+  ctx.fill();
+
+  // Écusson & Numéro "001"
+  ctx.fillStyle = "#fbbf24";
+  ctx.font = "900 7px system-ui, sans-serif";
+  ctx.fillText("SV-001", -12, -22);
+
+  // Tourelle & Double canon Gatling rotatif
+  ctx.fillStyle = "#1e293b";
+  ctx.beginPath();
+  ctx.arc(2, -34, 12, Math.PI, 0);
+  ctx.fill();
+  // Canons doubles
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(10, -37, 24, 3.5);
+  ctx.fillRect(10, -32, 24, 3.5);
+
+  // Pilote Marco sortant de la trappe si occupé
+  if (occupied) {
+    ctx.fillStyle = "#fed7aa";
+    ctx.beginPath();
+    ctx.arc(0, -42, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#f8fafc";
+    ctx.fillRect(-5, -45, 10, 2.5); // Bandana
+  }
+
+  ctx.restore();
+}
+
+function drawRebelInfantry(en, now) {
+  ctx.save();
+  ctx.translate(en.x, en.y);
+  ctx.scale(en.facing, 1);
+
+  // Corps uniforme vert armée
+  ctx.fillStyle = "#166534";
+  ctx.fillRect(-6, -22, 12, 14);
+  // Casque militaire en acier
+  ctx.fillStyle = "#14532d";
+  ctx.beginPath();
+  ctx.arc(0, -26, 6.5, Math.PI, 0);
+  ctx.fill();
+  ctx.fillRect(-7, -26, 14, 2.5);
+  // Visage
+  ctx.fillStyle = "#fed7aa";
+  ctx.fillRect(-4, -24, 8, 4);
+
+  // Fusil de combat
+  ctx.fillStyle = "#1e293b";
+  ctx.fillRect(0, -18, 16, 4);
+
+  // Jambes
+  ctx.fillStyle = "#166534";
+  ctx.fillRect(-5, -8, 4, 8);
+  ctx.fillRect(1, -8, 4, 8);
+
+  ctx.restore();
+}
+
+function drawGiridaTank(t, now) {
+  ctx.save();
+  ctx.translate(t.x, t.y);
+  ctx.scale(t.facing, 1);
+
+  // Chenilles
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(-32, -12, 64, 12);
+  // Châssis marron militaire
+  ctx.fillStyle = "#78350f";
+  ctx.beginPath();
+  ctx.roundRect(-26, -28, 52, 18, 4);
+  ctx.fill();
+  // Tourelle & Canon
+  ctx.fillStyle = "#451a03";
+  ctx.beginPath();
+  ctx.arc(-2, -32, 10, Math.PI, 0);
+  ctx.fill();
+  ctx.fillRect(4, -35, 26, 6);
+
+  ctx.restore();
+}
+
+function drawFlyingTara(pl, now) {
+  ctx.save();
+  ctx.translate(pl.x, pl.y);
+  // Fuselage avion rebelle
+  ctx.fillStyle = "#15803d";
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 24, 7, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Aile
+  ctx.fillStyle = "#166534";
+  ctx.fillRect(-8, -12, 16, 24);
+  // Hélice avant
+  ctx.fillStyle = "#facc15";
+  ctx.fillRect(-26, -10 + Math.sin(now * 0.05) * 4, 2, 20);
+  ctx.restore();
+}
+
+function drawSlugPOW(pow, now) {
+  ctx.save();
+  ctx.translate(pow.x, pow.y);
+
+  if (pow.saluting) {
+    // Otage debout faisant le salut militaire !
+    ctx.fillStyle = "#1e3a5f"; // Pantalon bleu usé
+    ctx.fillRect(-5, -12, 10, 12);
+    // Torse nu
+    ctx.fillStyle = "#fed7aa";
+    ctx.fillRect(-6, -24, 12, 12);
+    // Longue barbe blanche
+    ctx.fillStyle = "#f1f5f9";
+    ctx.beginPath();
+    ctx.arc(0, -22, 6, 0, Math.PI);
+    ctx.fill();
+    // Tête & Cheveux longs
+    ctx.fillStyle = "#fed7aa";
+    ctx.beginPath();
+    ctx.arc(0, -28, 5.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#f1f5f9";
+    ctx.fillRect(-6, -33, 12, 4);
+    // Bras en salut militaire
+    ctx.fillStyle = "#fed7aa";
+    ctx.fillRect(4, -28, 7, 3);
+  } else {
+    // Otage ligoté à genoux
+    ctx.fillStyle = "#1e3a5f";
+    ctx.fillRect(-6, -8, 12, 8);
+    // Torse ligoté par cordes
+    ctx.fillStyle = "#fed7aa";
+    ctx.fillRect(-5, -18, 10, 10);
+    ctx.strokeStyle = "#ca8a04"; // Cordes
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(-5, -16, 10, 6);
+    // Tête baissée
+    ctx.beginPath();
+    ctx.arc(0, -22, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#f1f5f9";
+    ctx.fillRect(-5, -24, 10, 5); // Barbe
+  }
+
+  ctx.restore();
+}
+
+function drawSlugPickup(pu, now) {
+  ctx.save();
+  ctx.translate(pu.x, pu.y);
+  // Boîte métallique
+  ctx.fillStyle = "#ca8a04";
+  ctx.fillRect(-10, -10, 20, 14);
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(-10, -10, 20, 14);
+  // Lettre de l'arme
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 10px system-ui, sans-serif";
+  ctx.textAlign = "center";
+  const label = pu.type === "hmg" ? "H" : (pu.type === "shotgun" ? "S" : (pu.type === "bomb" ? "B" : "🍗"));
+  ctx.fillText(label, 0, 1);
+  ctx.restore();
+}
+
+function drawBossTetsuyuki(b, now) {
+  ctx.save();
+  ctx.translate(b.x, b.y);
+
+  if (b.hitFlash > 0) {
+    ctx.filter = "brightness(2.0)";
+  }
+
+  // Épave de bombardier quadrimoteur transformée en forteresse
+  ctx.fillStyle = "#334155";
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(b.width * 0.8, -40);
+  ctx.lineTo(b.width, 20);
+  ctx.lineTo(b.width * 0.9, b.height);
+  ctx.lineTo(10, b.height);
+  ctx.closePath();
+  ctx.fill();
+
+  // Plaques d'acier rouillé & rivets
+  ctx.fillStyle = "#78350f";
+  ctx.fillRect(15, 20, 70, 35);
+  ctx.fillRect(95, 10, 65, 45);
+
+  // Réacteur d'aile brisé avec fumée
+  ctx.fillStyle = "#0f172a";
+  ctx.beginPath();
+  ctx.arc(50, 65, 22, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Tourelle de canon principale rotative
+  ctx.fillStyle = "#1e293b";
+  ctx.beginPath();
+  ctx.arc(110, -10, 26, 0, Math.PI * 2);
+  ctx.fill();
+  // Fût de canon pointé vers la gauche
+  ctx.fillRect(45, -16, 65, 12);
+  ctx.fillRect(40, -19, 8, 18);
+
+  // Barre de Vie du Boss TETSUYUKI
+  ctx.restore();
+  ctx.save();
+  const barW = Math.min(320, canvas.width * 0.45);
+  const barX = canvas.width / 2 - barW / 2;
+  const barY = 48;
+  ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+  ctx.fillRect(barX, barY, barW, 14);
+  ctx.strokeStyle = "#ef4444";
+  ctx.strokeRect(barX, barY, barW, 14);
+  const hpRatio = Math.max(0, b.hp / b.maxHp);
+  ctx.fillStyle = "#ef4444";
+  ctx.fillRect(barX, barY, barW * hpRatio, 14);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 11px system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("BOSS : TETSUYUKI // FORTERESSE FLUVIALE", canvas.width / 2, barY - 4);
+  ctx.restore();
+}
+
+function drawSlugHUD(now) {
+  const p = slugGame.player;
+  const w = canvas.width;
+
+  ctx.save();
+  // Bandeau supérieur arcade
+  ctx.fillStyle = "#fbbf24";
+  ctx.font = "900 14px 'Impact', system-ui, sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText(`1UP  ${p.score}`, 22, 26);
+
+  // Arme & Munitions
+  const wpnName = p.weapon.toUpperCase();
+  ctx.fillStyle = "#4ade80";
+  ctx.fillText(`ARMS: ${wpnName} [${p.ammo === 999 ? "∞" : p.ammo}]`, 160, 26);
+
+  // Grenades & Otages sauvés
+  ctx.fillStyle = "#f59e0b";
+  ctx.fillText(`💣 x ${p.grenades}`, 340, 26);
+  ctx.fillStyle = "#38bdf8";
+  ctx.fillText(`P.O.W. 🎖️ x ${p.powRescued}`, 430, 26);
+
+  // Jauge de blindage du Metal Slug
+  if (p.inTank) {
+    ctx.fillStyle = "#22c55e";
+    ctx.fillText(`SLUG LIFE: [${"█".repeat(p.tankHp)}${"░".repeat(p.maxTankHp - p.tankHp)}]`, 560, 26);
+  }
+
+  // Bannière introductive "MISSION 1 START"
+  if (slugGame.introBannerTimer > 0) {
+    ctx.fillStyle = "rgba(15, 23, 42, 0.75)";
+    ctx.fillRect(0, canvas.height * 0.35, w, 75);
+    ctx.fillStyle = "#fbbf24";
+    ctx.font = "900 36px 'Impact', system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("★ MISSION 1 ★", w / 2, canvas.height * 0.42);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "900 24px system-ui, sans-serif";
+    ctx.fillText("START !", w / 2, canvas.height * 0.48);
+  }
+
+  // Écran de Victoire & Décompte de Mission
+  if (slugGame.missionComplete) {
+    ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+    ctx.fillRect(0, canvas.height * 0.25, w, 180);
+    ctx.fillStyle = "#22c55e";
+    ctx.font = "900 42px 'Impact', system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("MISSION COMPLETE !", w / 2, canvas.height * 0.35);
+
+    ctx.fillStyle = "#fbbf24";
+    ctx.font = "900 20px system-ui, sans-serif";
+    ctx.fillText(`OTAGES SAUVÉS : ${p.powRescued} × 10 000 PTS = +${p.powRescued * 10000} PTS`, w / 2, canvas.height * 0.42);
+    ctx.fillText(`BONUS DESTRUCTEUR TETSUYUKI : +50 000 PTS`, w / 2, canvas.height * 0.48);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 15px system-ui, sans-serif";
+    ctx.fillText("APPUYEZ SUR [ESPACE] OU RELANCEZ UNE MISSION DANS LE PORTAIL !", w / 2, canvas.height * 0.54);
+  }
+
+  ctx.restore();
+}
 const novaGamesPortal = document.getElementById("novaGamesPortal");
 
 function openNovaGamesPortal() {
@@ -6146,11 +7521,25 @@ function launchGameFromPortal(gameMode) {
     novaGamesPortal.classList.add("hidden");
   }
   setGameMode(gameMode);
-  showOverlay(
-    gameMode === "tank" ? "MISSION BLINDÉE // NOVA TANK ASSAULT" : "CHAMP DE TIR 3D // MISSION NOVA",
-    gameMode === "tank" ? "Choisis ton Théâtre d'Opérations, ton Blindé et ton Armement !" : "Choisis ton Biome 3D, ton Vaisseau et ton Armement !",
-    gameMode === "tank" ? "LANCER L'ASSAUT BLINDÉ" : "DÉMARRER LA MISSION 3D"
-  );
+  if (gameMode === "slug") {
+    showOverlay(
+      "MISSION 1 // NOVA IRON COMMANDO",
+      "Metal Slug 1 Remake : Jungle Fluviale, Otages P.O.W., Tank SV-001 & Boss Tetsuyuki",
+      "DÉMARRER LA MISSION 1"
+    );
+  } else if (gameMode === "tank") {
+    showOverlay(
+      "MISSION BLINDÉE // NOVA TANK ASSAULT",
+      "Choisis ton Théâtre d'Opérations, ton Blindé et ton Armement !",
+      "LANCER L'ASSAUT BLINDÉ"
+    );
+  } else {
+    showOverlay(
+      "CHAMP DE TIR 3D // MISSION NOVA",
+      "Choisis ton Biome 3D, ton Vaisseau et ton Armement !",
+      "DÉMARRER LA MISSION 3D"
+    );
+  }
   syncUi();
   draw();
 }
@@ -6159,7 +7548,7 @@ document.querySelectorAll("[data-launch-game]").forEach((el) => {
   const handler = (e) => {
     e.stopPropagation();
     const mode = el.getAttribute("data-launch-game");
-    if (mode === "space" || mode === "tank") {
+    if (mode === "space" || mode === "tank" || mode === "slug") {
       launchGameFromPortal(mode);
     }
   };
