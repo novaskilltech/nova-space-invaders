@@ -704,6 +704,19 @@ async function bootstrapAssets() {
   state.images.slug_vehicles = await loadImage("slug_vehicules_64bit.jpg" + v);
   state.images.slug_characters = await loadImage("slug_personnages_64bit.jpg" + v);
   state.images.slug_weapons = await loadImage("slug_armes_64bit.jpg" + v);
+
+  // Sprites détourés transparents haute résolution 64-bit
+  state.images.slug_tank_sv001 = await loadImage("slug_sprite_tank_sv001.png" + v);
+  state.images.slug_tank_girida = await loadImage("slug_sprite_tank_girida.png" + v);
+  state.images.slug_plane_flyingtara = await loadImage("slug_sprite_plane_flyingtara.png" + v);
+  state.images.slug_char_marco = await loadImage("slug_sprite_marco.png" + v);
+  state.images.slug_char_tarma = await loadImage("slug_sprite_tarma.png" + v);
+  state.images.slug_char_rebel = await loadImage("slug_sprite_rebel.png" + v);
+  state.images.slug_char_pow = await loadImage("slug_sprite_pow.png" + v);
+  state.images.slug_crate_h = await loadImage("slug_crate_h.png" + v);
+  state.images.slug_crate_s = await loadImage("slug_crate_s.png" + v);
+  state.images.slug_crate_bomb = await loadImage("slug_crate_bomb.png" + v);
+  state.images.slug_item_chicken = await loadImage("slug_item_chicken.png" + v);
   draw();
 }
 
@@ -6317,6 +6330,27 @@ function initSlugMission(missionNum) {
     state.images.slug_weapons.src = "slug_armes_64bit.jpg?v=54";
   }
 
+  // Préchargement garanti des sprites transparents 64-bit
+  const spriteMap = {
+    slug_tank_sv001: "slug_sprite_tank_sv001.png",
+    slug_tank_girida: "slug_sprite_tank_girida.png",
+    slug_plane_flyingtara: "slug_sprite_plane_flyingtara.png",
+    slug_char_marco: "slug_sprite_marco.png",
+    slug_char_tarma: "slug_sprite_tarma.png",
+    slug_char_rebel: "slug_sprite_rebel.png",
+    slug_char_pow: "slug_sprite_pow.png",
+    slug_crate_h: "slug_crate_h.png",
+    slug_crate_s: "slug_crate_s.png",
+    slug_crate_bomb: "slug_crate_bomb.png",
+    slug_item_chicken: "slug_item_chicken.png"
+  };
+  for (const [key, src] of Object.entries(spriteMap)) {
+    if (!state.images[key]) {
+      state.images[key] = new Image();
+      state.images[key].src = src + "?v=54";
+    }
+  }
+
   slugGame.mission = missionNum || 1;
   slugGame.scrollX = 0;
   slugGame.groundY = gy;
@@ -6991,19 +7025,19 @@ function drawSlugMission(w, h, now) {
 
   ctx.save();
 
-  // 1. DÉCOR 64-BIT RETRO AUTHENTIQUE : Planche 4 (Ciel Crépusculaire, Cascades, Jungle tropicale & Huttes sur pilotis)
+  // 1. DÉCOR 64-BIT RETRO AUTHENTIQUE : Planche 4 (Jungle Fluviale & Forteresse Tetsuyuki au Boss)
   const bgImg = state.images.slug_bg;
   if (bgImg && bgImg.complete && bgImg.naturalWidth > 0) {
-    // Parallaxe 0.38x fluide sur le paysage peint 64-bit Neo-Geo
-    const scale = Math.max(h / bgImg.height, w / bgImg.width);
+    // Échelle panoramique adaptée à la hauteur de l'écran avec réserve de largeur
+    const scale = Math.max(h / bgImg.height, (w + 1200) / bgImg.width);
     const renderW = bgImg.width * scale;
     const renderH = bgImg.height * scale;
-    const offX = (sx * 0.38) % renderW;
+    // Progression fluide du niveau : 0.0 (Départ jungle) jusqu'à 1.0 (Arrivée Boss Forteresse Tetsuyuki)
+    const progress = Math.min(1.0, Math.max(0, sx / Math.max(1, slugGame.maxScrollX - w)));
+    const maxOffset = Math.max(0, renderW - w);
+    const offX = progress * maxOffset;
 
     ctx.drawImage(bgImg, -offX, 0, renderW, renderH);
-    if (-offX + renderW < w) {
-      ctx.drawImage(bgImg, -offX + renderW, 0, renderW, renderH);
-    }
   } else {
     // PARALLAX COUCHE 0 : Ciel Crépusculaire Tropical & Montagnes Lointaines (Fallback)
     const skyGrad = ctx.createLinearGradient(0, 0, 0, gy);
@@ -7150,8 +7184,37 @@ function drawMarcoRossi(p, now) {
   ctx.scale(p.facing, 1);
 
   const isTarma = typeof selectedSlugCommando !== "undefined" && selectedSlugCommando === "tarma";
+  const sprite = isTarma ? state.images.slug_char_tarma : state.images.slug_char_marco;
 
-  // Ombre portée 64-bit avec dégradé radial doux
+  if (sprite && sprite.complete && sprite.naturalWidth > 0) {
+    const pw = isTarma ? 52 : 48;
+    const ph = 54;
+
+    // Ombre portée douce au sol
+    ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+    ctx.beginPath();
+    ctx.ellipse(0, 3, 16, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Rebondissement de course ou posture accroupie
+    const bob = p.state === "run" ? Math.sin(now * 0.018) * 3 : (p.state === "crouch" ? 8 : 0);
+    const renderH = p.state === "crouch" ? ph * 0.78 : ph;
+
+    ctx.drawImage(sprite, -pw / 2, -renderH + bob, pw, renderH);
+
+    // Coup de poignard commando : arc lumineux de découpe ultra-stylisé
+    if (p.state === "knife") {
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.95)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(14, -renderH * 0.5, 30, -0.45, 0.45);
+      ctx.stroke();
+    }
+    ctx.restore();
+    return;
+  }
+
+  // Ombre portée 64-bit avec dégradé radial doux (Fallback)
   const shadowGrad = ctx.createRadialGradient(0, 3, 2, 0, 3, 18);
   shadowGrad.addColorStop(0, "rgba(0, 0, 0, 0.65)");
   shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
@@ -7200,7 +7263,6 @@ function drawMarcoRossi(p, now) {
 
   // Torse 64-bit : T-shirt blanc & Gilet tactique avec poches et cartouches
   const torsoY = isCrouch ? -22 : -34;
-  // T-shirt blanc
   ctx.fillStyle = "#f8fafc";
   ctx.fillRect(-8, torsoY, 16, 17);
 
@@ -7242,25 +7304,21 @@ function drawMarcoRossi(p, now) {
   ctx.fill();
 
   if (isTarma) {
-    // Tarma Roving : Coupe brune en banane + Lunettes noires d'aviateur
     ctx.fillStyle = "#451a03";
     ctx.beginPath();
     ctx.arc(-1, headY - 6, 7, Math.PI, 0);
     ctx.fill();
     ctx.fillRect(-6, headY - 8, 13, 4);
-    // Lunettes d'aviateur noires miroitantes
     ctx.fillStyle = "#0f172a";
     ctx.fillRect(-1, headY - 3, 5, 4);
     ctx.fillRect(5, headY - 3, 4, 4);
-    ctx.fillStyle = "#38bdf8"; // Reflet verre bleu
+    ctx.fillStyle = "#38bdf8";
     ctx.fillRect(1, headY - 2, 2, 2);
   } else {
-    // Marco Rossi : Mèche blonde + Bandana blanc volant
     ctx.fillStyle = "#f59e0b";
     ctx.fillRect(-6, headY - 8, 12, 4);
-    ctx.fillStyle = "#f8fafc"; // Bandana
+    ctx.fillStyle = "#f8fafc";
     ctx.fillRect(-7, headY - 5, 14, 3.5);
-    // Pans de bandana qui flottent au vent derrière la tête
     const bandWave = Math.sin(now * 0.015) * 3;
     ctx.beginPath();
     ctx.moveTo(-7, headY - 3);
@@ -7274,14 +7332,11 @@ function drawMarcoRossi(p, now) {
   // Bras musclés 64-bit & Armement
   ctx.fillStyle = "#fed7aa";
   if (isKnife) {
-    // Coup de poignard d'élite vers l'avant !
     ctx.fillRect(2, torsoY + 2, 18, 5);
-    // Poing fermé
     ctx.fillStyle = "#f97316";
     ctx.beginPath();
     ctx.arc(18, torsoY + 4, 4, 0, Math.PI * 2);
     ctx.fill();
-    // Lame de poignard commando 64-bit avec rainure et éclat d'acier
     const bladeGrad = ctx.createLinearGradient(20, torsoY, 36, torsoY);
     bladeGrad.addColorStop(0, "#cbd5e1");
     bladeGrad.addColorStop(0.5, "#ffffff");
@@ -7293,16 +7348,8 @@ function drawMarcoRossi(p, now) {
     ctx.lineTo(20, torsoY + 8);
     ctx.closePath();
     ctx.fill();
-    // Arc lumineux cinématique de découpe
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.95)";
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.arc(14, torsoY + 4, 26, -0.45, 0.45);
-    ctx.stroke();
   } else {
-    // Bras tenant l'arme
     ctx.fillRect(0, torsoY + 3, 14, 5);
-    // Arme en acier texturé 64-bit
     const gunGrad = ctx.createLinearGradient(8, torsoY, 26, torsoY);
     gunGrad.addColorStop(0, "#334155");
     gunGrad.addColorStop(0.5, "#0f172a");
@@ -7310,32 +7357,25 @@ function drawMarcoRossi(p, now) {
     ctx.fillStyle = gunGrad;
 
     if (p.aimY === -1) {
-      // Vise vers le haut
       ctx.fillRect(-3, torsoY - 18, 6, 20);
     } else if (p.aimY === 1) {
-      // Vise vers le bas
       ctx.fillRect(-3, torsoY + 6, 6, 20);
     } else {
-      // Vise droit devant
       ctx.fillRect(8, torsoY + 1, 18, 6);
       if (p.weapon === "hmg") {
-        // Heavy Machine Gun : Manchon perforé & bande de cartouches
         ctx.fillStyle = "#1e293b";
         ctx.fillRect(24, torsoY + 2, 14, 4);
-        ctx.fillStyle = "#facc15"; // Munitions dorées
+        ctx.fillStyle = "#facc15";
         ctx.fillRect(14, torsoY + 7, 5, 6);
       } else if (p.weapon === "shotgun") {
-        // Shotgun lourd : double pompe
         ctx.fillStyle = "#0f172a";
         ctx.fillRect(22, torsoY, 12, 8);
-        ctx.fillStyle = "#78350f"; // Poignée en bois
+        ctx.fillStyle = "#78350f";
         ctx.fillRect(12, torsoY + 5, 8, 4);
       } else if (p.weapon === "rocket") {
-        // Rocket Launcher
         ctx.fillStyle = "#0284c7";
         ctx.fillRect(16, torsoY - 2, 22, 10);
       } else if (p.weapon === "flame") {
-        // Flame Shot
         ctx.fillStyle = "#ea580c";
         ctx.fillRect(18, torsoY, 16, 8);
       }
@@ -7349,6 +7389,38 @@ function drawMetalSlugTank(t, occupied, now) {
   ctx.save();
   ctx.translate(t.x, t.y - (t.tankBounce || 0));
   if (occupied) ctx.scale(slugGame.player.facing, 1);
+
+  if (state.images.slug_tank_sv001 && state.images.slug_tank_sv001.complete && state.images.slug_tank_sv001.naturalWidth > 0) {
+    const tw = 108;
+    const th = 58;
+
+    // Ombre portée douce au sol
+    ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
+    ctx.beginPath();
+    ctx.ellipse(0, 4, tw * 0.45, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Rendu du véritable sprite 64-bit Neo-Geo du char Metal Slug SV-001
+    ctx.drawImage(state.images.slug_tank_sv001, -tw / 2, -th + 4, tw, th);
+
+    // Flèche néon clignotante "IN" si inoccupé
+    if (!occupied && Math.floor(now / 250) % 2 === 0) {
+      ctx.fillStyle = "#22c55e";
+      ctx.font = "900 13px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("▼ ENTER SLUG ▼", 0, -th - 14);
+    }
+
+    // Échappement de fumée diesel à l'arrière
+    const smokePuff = Math.sin(now * 0.02) * 2;
+    ctx.fillStyle = "rgba(148, 163, 184, 0.35)";
+    ctx.beginPath();
+    ctx.arc(-tw / 2 + 4 + smokePuff, -th * 0.45, 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+    return;
+  }
 
   // Chenilles de char 64-bit avec maillons articulés & suspension
   ctx.fillStyle = "#090d16";
@@ -7444,6 +7516,29 @@ function drawRebelInfantry(en, now) {
   ctx.save();
   ctx.translate(en.x, en.y);
   ctx.scale(en.facing, 1);
+
+  if (state.images.slug_char_rebel && state.images.slug_char_rebel.complete && state.images.slug_char_rebel.naturalWidth > 0) {
+    const rw = 52;
+    const rh = 48;
+    ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+    ctx.beginPath();
+    ctx.ellipse(0, 2, 16, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    const bob = Math.sin(now * 0.015 + (en.id ? en.id.charCodeAt(en.id.length - 1) : 0)) * 2;
+    ctx.drawImage(state.images.slug_char_rebel, -rw / 2, -rh + bob, rw, rh);
+    if (en.shootTimer < 0.25) {
+      ctx.fillStyle = "#fbbf24";
+      ctx.beginPath();
+      ctx.arc(rw * 0.45, -rh * 0.4, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(rw * 0.45, -rh * 0.4, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+    return;
+  }
 
   // Ombre portée au sol
   ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
@@ -7588,6 +7683,25 @@ function drawGiridaTank(t, now) {
   ctx.translate(t.x, t.y);
   ctx.scale(t.facing, 1);
 
+  if (state.images.slug_tank_girida && state.images.slug_tank_girida.complete && state.images.slug_tank_girida.naturalWidth > 0) {
+    const gw = 108;
+    const gh = 50;
+    ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
+    ctx.beginPath();
+    ctx.ellipse(0, 3, gw * 0.45, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.drawImage(state.images.slug_tank_girida, -gw / 2, -gh + 2, gw, gh);
+
+    const smoke = Math.sin(now * 0.02) * 2;
+    ctx.fillStyle = "rgba(100, 116, 139, 0.45)";
+    ctx.beginPath();
+    ctx.arc(-gw / 2 + 6 + smoke, -gh * 0.5, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    return;
+  }
+
   // Ombre portée lourde au sol
   ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
   ctx.beginPath();
@@ -7676,6 +7790,25 @@ function drawGiridaTank(t, now) {
 function drawFlyingTara(pl, now) {
   ctx.save();
   ctx.translate(pl.x, pl.y);
+
+  if (state.images.slug_plane_flyingtara && state.images.slug_plane_flyingtara.complete && state.images.slug_plane_flyingtara.naturalWidth > 0) {
+    const pw = 98;
+    const ph = 42;
+    const shadowY = slugGame.groundY - pl.y;
+    ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+    ctx.beginPath();
+    ctx.ellipse(0, shadowY, pw * 0.35, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.drawImage(state.images.slug_plane_flyingtara, -pw / 2, -ph / 2, pw, ph);
+
+    ctx.fillStyle = "rgba(250, 204, 21, 0.4)";
+    ctx.beginPath();
+    ctx.ellipse(-pw / 2 + 2, 0, 4, 18, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    return;
+  }
 
   // Ombre portée aérienne projetée sur le sol
   const shadowY = slugGame.groundY - pl.y;
@@ -7774,6 +7907,32 @@ function drawSlugPOW(pow, now) {
   ctx.beginPath();
   ctx.ellipse(0, 2, 12, 4.5, 0, 0, Math.PI * 2);
   ctx.fill();
+
+  // Sprite 64-bit HD P.O.W. authentique extrait de la planche
+  if (state.images.slug_char_pow && state.images.slug_char_pow.complete && state.images.slug_char_pow.naturalWidth > 0) {
+    const powW = 40;
+    const powH = 46;
+    const hopY = pow.saluting ? -Math.abs(Math.sin(now * 0.009) * 8) : Math.sin(now * 0.008) * 1.5;
+    ctx.drawImage(state.images.slug_char_pow, -powW / 2, -powH + hopY, powW, powH);
+
+    if (pow.saluting) {
+      if (Math.floor(now / 200) % 2 === 0) {
+        ctx.fillStyle = "#fbbf24";
+        ctx.font = "900 11px 'Impact', system-ui, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("THANK YOU!", 0, -powH - 8 + hopY);
+      }
+    } else {
+      if (Math.floor(now / 350) % 2 === 0) {
+        ctx.fillStyle = "#ef4444";
+        ctx.font = "900 11px 'Impact', system-ui, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("HELP!", 0, -powH - 6 + hopY);
+      }
+    }
+    ctx.restore();
+    return;
+  }
 
   if (pow.saluting) {
     // Otage P.O.W. libéré exécutant le salut militaire légendaire de Metal Slug !
@@ -7895,7 +8054,20 @@ function drawSlugPickup(pu, now) {
   ctx.translate(0, bobY);
 
   if (pu.type === "chicken") {
-    // Poulet rôti doré succulent sur plat d'argent 64-bit
+    // Sprite 64-bit authentique du Poulet Rôti succulent sur plat
+    if (state.images.slug_item_chicken && state.images.slug_item_chicken.complete && state.images.slug_item_chicken.naturalWidth > 0) {
+      const cw = 34;
+      const ch = 26;
+      ctx.drawImage(state.images.slug_item_chicken, -cw / 2, -ch / 2, cw, ch);
+      ctx.fillStyle = "#facc15";
+      ctx.font = "900 9px 'Impact', system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("1000 PTS", 0, -ch / 2 - 4);
+      ctx.restore();
+      return;
+    }
+
+    // Poulet rôti doré succulent sur plat d'argent 64-bit (Fallback)
     ctx.fillStyle = "#cbd5e1"; // Plat d'argent
     ctx.beginPath();
     ctx.ellipse(0, 4, 14, 5, 0, 0, Math.PI * 2);
@@ -7920,7 +8092,20 @@ function drawSlugPickup(pu, now) {
     ctx.textAlign = "center";
     ctx.fillText("1000 PTS", 0, -11);
   } else {
-    // Caisse de munitions en bois renforcé 64-bit avec coins d'acier rivetés
+    // Sprite 64-bit authentique des Caisses d'Armes [H], [S], [BOMB] extraites de la Planche 3
+    let spriteCrate = state.images.slug_crate_h;
+    if (pu.type === "shotgun") spriteCrate = state.images.slug_crate_s;
+    else if (pu.type === "bomb") spriteCrate = state.images.slug_crate_bomb;
+
+    if (spriteCrate && spriteCrate.complete && spriteCrate.naturalWidth > 0) {
+      const crw = 32;
+      const crh = 24;
+      ctx.drawImage(spriteCrate, -crw / 2, -crh / 2, crw, crh);
+      ctx.restore();
+      return;
+    }
+
+    // Caisse de munitions en bois renforcé 64-bit avec coins d'acier rivetés (Fallback)
     const crateGrad = ctx.createLinearGradient(-13, -13, 13, 13);
     crateGrad.addColorStop(0, "#92400e");
     crateGrad.addColorStop(0.5, "#78350f");
@@ -7976,112 +8161,104 @@ function drawBossTetsuyuki(b, now) {
   ctx.save();
   ctx.translate(b.x, b.y);
 
+  // 1. EFFETS CINÉMATIQUES INTÉGRÉS SUR LA FORTERESSE TETSUYUKI (Le décor 64-bit affiche le bombardier)
+  // Flash d'impact lumineux quand les tirs du joueur touchent la carcasse
   if (b.hitFlash > 0) {
-    ctx.filter = "brightness(2.2) saturate(0.4)";
+    ctx.save();
+    ctx.fillStyle = "rgba(239, 68, 68, 0.4)";
+    ctx.fillRect(-20, -60, b.width + 40, b.height + 60);
+    ctx.fillStyle = "rgba(254, 240, 138, 0.5)";
+    ctx.fillRect(0, -30, b.width * 0.8, b.height * 0.7);
+    ctx.restore();
   }
 
-  // 1. ÉPAVE DE BOMBARDIER QUADRIMOTEUR TETSUYUKI (Planche 4)
-  // Fuselage d'acier écrasé dans la berge boueuse avec dégradé d'armure lourde
-  const hullGrad = ctx.createLinearGradient(0, 0, b.width, b.height);
-  hullGrad.addColorStop(0, "#475569");
-  hullGrad.addColorStop(0.3, "#334155");
-  hullGrad.addColorStop(0.7, "#1e293b");
-  hullGrad.addColorStop(1, "#090d16");
-  ctx.fillStyle = hullGrad;
-
-  // Profil géant du bombardier écrasé
+  // 2. RÉACTEURS EN FEU & DÉGÂTS PYROTECHNIQUES ANIMÉS
+  // Turbine 1 : Flammes incandescentes vacillantes
+  const flame1 = Math.sin(now * 0.02) * 5;
+  const flameGrad1 = ctx.createRadialGradient(45, 20, 3, 45, 20, 26 + flame1);
+  flameGrad1.addColorStop(0, "rgba(254, 240, 138, 0.95)");
+  flameGrad1.addColorStop(0.35, "rgba(249, 115, 22, 0.85)");
+  flameGrad1.addColorStop(0.7, "rgba(220, 38, 38, 0.5)");
+  flameGrad1.addColorStop(1, "rgba(220, 38, 38, 0)");
+  ctx.fillStyle = flameGrad1;
   ctx.beginPath();
-  ctx.moveTo(0, 35);
-  ctx.lineTo(b.width * 0.25, -25);
-  ctx.lineTo(b.width * 0.7, -45);
-  ctx.lineTo(b.width * 0.95, 10);
-  ctx.lineTo(b.width, b.height);
-  ctx.lineTo(0, b.height);
-  ctx.closePath();
+  ctx.arc(45, 20, 28 + flame1, 0, Math.PI * 2);
   ctx.fill();
 
-  // Plaques d'armure renforcée rivetées et coulures de rouille orange
-  ctx.fillStyle = "#92400e";
-  ctx.fillRect(20, 25, 75, 40);
-  ctx.fillRect(110, 15, 80, 50);
-  ctx.strokeStyle = "#ca8a04";
-  ctx.lineWidth = 1.2;
-  ctx.strokeRect(20, 25, 75, 40);
-  ctx.strokeRect(110, 15, 80, 50);
-
-  // Rivets d'acier tout le long des longerons
-  ctx.fillStyle = "#94a3b8";
-  for (let rx = 24; rx < b.width * 0.9; rx += 16) {
-    ctx.fillRect(rx, 28, 2, 2);
-    ctx.fillRect(rx, 62, 2, 2);
-  }
-
-  // 2. RÉACTEURS D'AILES BRISÉS & MOTEURS EN FEU
-  // Réacteur gauche fumant
-  ctx.fillStyle = "#0f172a";
+  // Turbine 2 : Incendie lourd et étincelles de court-circuit
+  const flame2 = Math.cos(now * 0.025) * 6;
+  const flameGrad2 = ctx.createRadialGradient(140, -10, 4, 140, -10, 32 + flame2);
+  flameGrad2.addColorStop(0, "rgba(255, 255, 255, 0.9)");
+  flameGrad2.addColorStop(0.3, "rgba(245, 158, 11, 0.85)");
+  flameGrad2.addColorStop(0.75, "rgba(185, 28, 28, 0.55)");
+  flameGrad2.addColorStop(1, "rgba(185, 28, 28, 0)");
+  ctx.fillStyle = flameGrad2;
   ctx.beginPath();
-  ctx.arc(60, 80, 26, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#f97316"; // Lueur incandescente interne
-  ctx.beginPath();
-  ctx.arc(60, 80, 14, 0, Math.PI * 2);
+  ctx.arc(140, -10, 34 + flame2, 0, Math.PI * 2);
   ctx.fill();
 
-  // Volutes de fumée noire épaisse & gerbes d'étincelles
-  const smokeOsc = Math.sin(now * 0.015) * 8;
-  ctx.fillStyle = "rgba(30, 41, 59, 0.75)";
+  // Volutes de fumée noire épaisse s'élevant vers le ciel
+  const smokeOsc = Math.sin(now * 0.012) * 12;
+  ctx.fillStyle = "rgba(15, 23, 42, 0.65)";
   ctx.beginPath();
-  ctx.arc(55 + smokeOsc, 40, 18, 0, Math.PI * 2);
-  ctx.arc(45 + smokeOsc * 1.5, 10, 24, 0, Math.PI * 2);
+  ctx.arc(40 + smokeOsc * 0.5, -15, 20, 0, Math.PI * 2);
+  ctx.arc(32 + smokeOsc, -45, 28, 0, Math.PI * 2);
+  ctx.arc(135 + smokeOsc * 0.7, -40, 24, 0, Math.PI * 2);
+  ctx.arc(125 + smokeOsc * 1.3, -75, 34, 0, Math.PI * 2);
   ctx.fill();
-  // Étincelles
-  if (Math.floor(now / 120) % 2 === 0) {
+
+  // Gerbes d'étincelles électriques et débris incandescents
+  if (Math.floor(now / 100) % 2 === 0) {
     ctx.fillStyle = "#facc15";
-    ctx.fillRect(68 + Math.random() * 8, 70 - Math.random() * 12, 3, 3);
+    ctx.fillRect(38 + Math.random() * 20, 15 - Math.random() * 25, 3.5, 3.5);
+    ctx.fillRect(130 + Math.random() * 25, -15 - Math.random() * 30, 3.5, 3.5);
   }
 
-  // 3. TOURELLE DE CANON GÉANTE TETSUYUKI (Rotative, articulée, visant le joueur)
-  const turretCenterX = 135;
-  const turretCenterY = -12;
+  // 3. TOURELLE DE CANON LOURD ARTICULÉE ORIENTÉE VERS LE JOUEUR
+  const turretX = 65;
+  const turretY = -8;
   const tAngle = b.turretAngle || -Math.PI * 0.75;
 
   ctx.save();
-  ctx.translate(turretCenterX, turretCenterY);
+  ctx.translate(turretX, turretY);
 
-  // Dôme blindé hémisphérique de la tourelle
-  const domeGrad = ctx.createRadialGradient(0, 0, 3, 0, 0, 32);
-  domeGrad.addColorStop(0, "#64748b");
-  domeGrad.addColorStop(0.6, "#334155");
+  // Dôme blindé de tourelle d'acier riveté
+  const domeGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, 16);
+  domeGrad.addColorStop(0, "#94a3b8");
+  domeGrad.addColorStop(0.5, "#475569");
   domeGrad.addColorStop(1, "#0f172a");
   ctx.fillStyle = domeGrad;
   ctx.beginPath();
-  ctx.arc(0, 0, 30, 0, Math.PI * 2);
+  ctx.arc(0, 0, 15, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = "#94a3b8";
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = "#cbd5e1";
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Fût de canon lourd géant 203mm orienté vers le joueur
+  // Fût de canon double orienté vers le joueur
   ctx.rotate(tAngle);
-  const barrelGrad = ctx.createLinearGradient(0, -10, 85, 10);
-  barrelGrad.addColorStop(0, "#1e293b");
-  barrelGrad.addColorStop(0.5, "#475569");
+  const barrelGrad = ctx.createLinearGradient(0, -6, 42, 6);
+  barrelGrad.addColorStop(0, "#334155");
+  barrelGrad.addColorStop(0.5, "#64748b");
   barrelGrad.addColorStop(1, "#0f172a");
   ctx.fillStyle = barrelGrad;
-  ctx.fillRect(15, -9, 78, 18);
-  // Manchon de renfort et bouche crénelée
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(80, -12, 16, 24);
+  ctx.fillRect(6, -5, 36, 10);
   ctx.fillStyle = "#f59e0b";
-  ctx.fillRect(94, -10, 4, 20);
+  ctx.fillRect(40, -6, 3, 12); // Bouche de canon
+
+  // Flash de tir de canon
+  if (b.attackTimer < 0.25) {
+    ctx.fillStyle = "#facc15";
+    ctx.beginPath();
+    ctx.arc(46, 0, 14, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(46, 0, 7, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   ctx.restore();
-
-  // Poste de DCA secondaire sur l'avant
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(15, -8, 22, 14);
-  ctx.fillRect(-5, -6, 22, 5);
-
   ctx.restore();
 
   // 4. BARRE DE VIE ÉPIQUE RETRO DU BOSS TETSUYUKI (HUD supérieur)
