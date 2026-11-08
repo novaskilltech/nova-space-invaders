@@ -8422,11 +8422,9 @@ function launchGameFromPortal(gameMode) {
   }
   setGameMode(gameMode);
   if (gameMode === "dojo") {
-    showOverlay(
-      "NOVA CYBER DOJO 128-BIT // BEST OF 3",
-      "Ken Masters vs Shadow Ken : Hadouken [L], Shoryuken [U], Tatsumaki [I], Super [Espace] & Garde [Q/←]",
-      "ENTRER DANS L'ARÈNE"
-    );
+    hideOverlay();
+    startGame();
+    return;
   } else if (gameMode === "slug") {
     showOverlay(
       "MISSION 1 // NOVA IRON COMMANDO",
@@ -9041,6 +9039,8 @@ function updateCyberDojo(dt) {
   // Décompte de l'intro ("ROUND X ... FIGHT!")
   if (dojoGame.roundState === "intro") {
     dojoGame.stateTimer -= dt;
+    updateDojoFighterPhysics(dojoGame.p1, dt);
+    updateDojoFighterPhysics(dojoGame.cpu, dt);
     if (dojoGame.stateTimer <= 0) {
       dojoGame.roundState = "fight";
     }
@@ -9166,11 +9166,10 @@ function handleDojoPlayerInputs(p1, opponent, dt) {
     return;
   }
 
-  const k = state.keys;
-  const isLeft = k["q"] || k["Q"] || k["ArrowLeft"];
-  const isRight = k["d"] || k["D"] || k["ArrowRight"];
-  const isUp = k["z"] || k["Z"] || k["ArrowUp"];
-  const isDown = k["s"] || k["S"] || k["ArrowDown"];
+  const isLeft = keys.has("q") || keys.has("Q") || keys.has("ArrowLeft") || keys.has("a") || keys.has("A");
+  const isRight = keys.has("d") || keys.has("D") || keys.has("ArrowRight");
+  const isUp = keys.has("z") || keys.has("Z") || keys.has("ArrowUp") || keys.has("w") || keys.has("W");
+  const isDown = keys.has("s") || keys.has("S") || keys.has("ArrowDown");
 
   // Saut
   if (isUp && p1.isGrounded) {
@@ -9460,17 +9459,28 @@ function handleDojoKeyDown(e) {
   if (!dojoGame.active || !state.running || state.paused) return;
   const p = dojoGame.p1;
 
-  if (e.key === "j" || e.key === "J") {
+  // Punch
+  if (e.key === "j" || e.key === "J" || e.key === "f" || e.key === "F" || e.key === "1") {
     triggerDojoAction(p, "punch");
-  } else if (e.key === "k" || e.key === "K") {
+  }
+  // Kick
+  else if (e.key === "k" || e.key === "K" || e.key === "g" || e.key === "G" || e.key === "2") {
     triggerDojoAction(p, "kick");
-  } else if (e.key === "l" || e.key === "L") {
+  }
+  // Hadouken
+  else if (e.key === "l" || e.key === "L" || e.key === "h" || e.key === "H" || e.key === "3") {
     triggerDojoAction(p, "hadouken");
-  } else if (e.key === "u" || e.key === "U") {
+  }
+  // Shoryuken
+  else if (e.key === "u" || e.key === "U" || e.key === "r" || e.key === "R" || e.key === "4") {
     triggerDojoAction(p, "shoryuken");
-  } else if (e.key === "i" || e.key === "I") {
+  }
+  // Tatsumaki
+  else if (e.key === "i" || e.key === "I" || e.key === "t" || e.key === "T" || e.key === "5") {
     triggerDojoAction(p, "tatsumaki");
-  } else if (e.key === " " || e.key === "Spacebar") {
+  }
+  // Super Shinryuken
+  else if (e.key === " " || e.key === "Spacebar" || e.key === "Enter") {
     triggerDojoAction(p, "super");
   }
 }
