@@ -717,6 +717,24 @@ async function bootstrapAssets() {
   state.images.slug_crate_s = await loadImage("slug_crate_s.png" + v);
   state.images.slug_crate_bomb = await loadImage("slug_crate_bomb.png" + v);
   state.images.slug_item_chicken = await loadImage("slug_item_chicken.png" + v);
+
+  // ======================================================
+  // ASSETS 128-BIT VERSUS FIGHTING — NOVA CYBER DOJO (SF2 TURBO)
+  // ======================================================
+  state.images.dojo_bg = await loadImage("cyber_dojo_bg.jpg?v=60");
+  state.images.dojo_ken = await loadImage("dojo_sprite_ken.png?v=60");
+  state.images.dojo_shadow = await loadImage("dojo_sprite_shadow_ken.png?v=60");
+  state.images.dojo_ken_punch = await loadImage("dojo_ken_punch.png?v=60");
+  state.images.dojo_shadow_punch = await loadImage("dojo_shadow_punch.png?v=60");
+  state.images.dojo_ken_kick = await loadImage("dojo_ken_kick.png?v=60");
+  state.images.dojo_shadow_kick = await loadImage("dojo_shadow_kick.png?v=60");
+  state.images.dojo_ken_hadouken = await loadImage("dojo_ken_hadouken.png?v=60");
+  state.images.dojo_shadow_hadouken = await loadImage("dojo_shadow_hadouken.png?v=60");
+  state.images.dojo_ken_shoryuken = await loadImage("dojo_ken_shoryuken.png?v=60");
+  state.images.dojo_shadow_shoryuken = await loadImage("dojo_shadow_shoryuken.png?v=60");
+  state.images.dojo_ken_hit = await loadImage("dojo_ken_hit.png?v=60");
+  state.images.dojo_shadow_hit = await loadImage("dojo_shadow_hit.png?v=60");
+
   draw();
 }
 
@@ -8950,19 +8968,28 @@ function initCyberDojoMatch() {
   dojoGame.comboDamage = 0;
   dojoGame.inputHistory = [];
 
-  // Préchargement garanti des assets 128-bit
-  if (!state.images.dojo_bg) {
-    state.images.dojo_bg = new Image();
-    state.images.dojo_bg.src = "cyber_dojo_bg.jpg?v=58";
-  }
-  if (!state.images.dojo_ken) {
-    state.images.dojo_ken = new Image();
-    state.images.dojo_ken.src = "dojo_sprite_ken.png?v=58";
-  }
-  if (!state.images.dojo_shadow) {
-    state.images.dojo_shadow = new Image();
-    state.images.dojo_shadow.src = "dojo_sprite_shadow_ken.png?v=58";
-  }
+  // Préchargement garanti des 13 assets 128-bit de combat
+  const dojoAssetList = [
+    ["dojo_bg", "cyber_dojo_bg.jpg?v=60"],
+    ["dojo_ken", "dojo_sprite_ken.png?v=60"],
+    ["dojo_shadow", "dojo_sprite_shadow_ken.png?v=60"],
+    ["dojo_ken_punch", "dojo_ken_punch.png?v=60"],
+    ["dojo_shadow_punch", "dojo_shadow_punch.png?v=60"],
+    ["dojo_ken_kick", "dojo_ken_kick.png?v=60"],
+    ["dojo_shadow_kick", "dojo_shadow_kick.png?v=60"],
+    ["dojo_ken_hadouken", "dojo_ken_hadouken.png?v=60"],
+    ["dojo_shadow_hadouken", "dojo_shadow_hadouken.png?v=60"],
+    ["dojo_ken_shoryuken", "dojo_ken_shoryuken.png?v=60"],
+    ["dojo_shadow_shoryuken", "dojo_shadow_shoryuken.png?v=60"],
+    ["dojo_ken_hit", "dojo_ken_hit.png?v=60"],
+    ["dojo_shadow_hit", "dojo_shadow_hit.png?v=60"],
+  ];
+  dojoAssetList.forEach(([key, file]) => {
+    if (!state.images[key]) {
+      state.images[key] = new Image();
+      state.images[key].src = file;
+    }
+  });
 
   // Initialisation des pétales de sakura flottants
   dojoGame.sakura = [];
@@ -9871,9 +9898,9 @@ function drawCyberDojo(w, h, now) {
     ctx.restore();
   });
 
-  // 4. RENDU DES COMBATTANTS 128-BIT
-  drawDojoFighter(dojoGame.p1, state.images.dojo_ken, false, now);
-  drawDojoFighter(dojoGame.cpu, state.images.dojo_shadow, true, now);
+  // 4. RENDU DYNAMIQUE DES COMBATTANTS 128-BIT AVEC POSES D'ATTAQUE
+  drawDojoFighter(dojoGame.p1, false, now);
+  drawDojoFighter(dojoGame.cpu, true, now);
 
   // 5. HADOUKENS PLASMA
   dojoGame.projectiles.forEach(p => {
@@ -9926,7 +9953,50 @@ function drawCyberDojo(w, h, now) {
   ctx.restore();
 }
 
-function drawDojoFighter(f, sprite, isCpu, now) {
+function getDojoFighterSprite(f, isCpu) {
+  const prefix = isCpu ? "dojo_shadow" : "dojo_ken";
+
+  // 1. Réactions de coups reçus / KO / Vertige
+  if (f.state === "hitstun" || f.state === "knockdown" || f.isDizzy) {
+    return state.images[`${prefix}_hit`] || state.images[prefix];
+  }
+
+  // 2. Coups Spéciaux & Super
+  if (f.state === "special") {
+    if (f.subState === "hadouken") {
+      return state.images[`${prefix}_hadouken`] || state.images[prefix];
+    }
+    if (f.subState === "shoryuken") {
+      return state.images[`${prefix}_shoryuken`] || state.images[prefix];
+    }
+    if (f.subState === "tatsumaki") {
+      return state.images[`${prefix}_kick`] || state.images[prefix];
+    }
+  }
+  if (f.state === "super") {
+    return state.images[`${prefix}_shoryuken`] || state.images[prefix];
+  }
+
+  // 3. Coups Normaux (Poings vs Pieds)
+  if (f.state === "attack") {
+    const punchMoves = ["lp", "mp", "hp", "jump_hp"];
+    const kickMoves = ["lk", "mk", "hk", "jump_hk"];
+    if (punchMoves.includes(f.subState)) {
+      return state.images[`${prefix}_punch`] || state.images[prefix];
+    }
+    if (kickMoves.includes(f.subState)) {
+      return state.images[`${prefix}_kick`] || state.images[prefix];
+    }
+    return state.images[`${prefix}_punch`] || state.images[prefix];
+  }
+
+  // 4. Posture par défaut (Garde, Marche, Neutre)
+  return state.images[prefix];
+}
+
+function drawDojoFighter(f, isCpu, now) {
+  const sprite = getDojoFighterSprite(f, isCpu);
+
   ctx.save();
   ctx.translate(f.x, f.y);
   ctx.scale(f.facing, 1);
@@ -9938,22 +10008,150 @@ function drawDojoFighter(f, sprite, isCpu, now) {
   ctx.fill();
 
   if (f.hitFlash > 0) {
-    ctx.filter = "brightness(2.4) saturate(0.2)";
+    ctx.filter = "brightness(2.6) saturate(0.2)";
   }
 
-  const fw = 118;
-  const fh = 175;
-  const bob = f.state === "walk" ? Math.sin(now * 0.02) * 5 : 0;
-  const renderH = f.state === "crouch" ? fh * 0.76 : fh;
+  const baseH = 175;
+  let renderH = baseH;
+  if (f.state === "crouch") {
+    renderH = baseH * 0.76;
+  } else if (f.subState === "shoryuken" || f.subState === "shinryuken") {
+    renderH = baseH * 1.35;
+  } else if (f.subState === "kick" || ["lk", "mk", "hk", "jump_hk", "tatsumaki"].includes(f.subState)) {
+    renderH = baseH * 1.05;
+  }
+
+  const bob = f.state === "walk" ? Math.sin(now * 0.02) * 5 : (f.state === "idle" ? Math.sin(now * 0.005) * 2 : 0);
+
+  let renderW = 118;
+  let xOffset = -renderW / 2;
 
   if (sprite && sprite.complete && sprite.naturalWidth > 0) {
-    ctx.drawImage(sprite, -fw / 2, -renderH + bob, fw, renderH);
+    const aspect = sprite.naturalWidth / sprite.naturalHeight;
+    renderW = renderH * aspect;
+
+    // Alignement de pivot physique (le corps reste ancré au sol, la frappe s'étend vers l'avant)
+    if (f.state === "attack") {
+      const punchMoves = ["lp", "mp", "hp", "jump_hp"];
+      const kickMoves = ["lk", "mk", "hk", "jump_hk"];
+      if (punchMoves.includes(f.subState)) {
+        xOffset = -renderW * 0.32;
+      } else if (kickMoves.includes(f.subState)) {
+        xOffset = -renderW * 0.38;
+      } else {
+        xOffset = -renderW * 0.35;
+      }
+    } else if (f.subState === "hadouken") {
+      xOffset = -renderW * 0.36;
+    } else if (f.subState === "shoryuken" || f.subState === "shinryuken") {
+      xOffset = -renderW * 0.48;
+    } else if (f.subState === "tatsumaki") {
+      xOffset = -renderW * 0.40;
+    } else if (f.state === "hitstun" || f.state === "knockdown") {
+      xOffset = -renderW * 0.58; // Projette le corps en arrière
+    } else {
+      xOffset = -renderW / 2;
+    }
+
+    ctx.drawImage(sprite, xOffset, -renderH + bob, renderW, renderH);
   } else {
     ctx.fillStyle = isCpu ? "#581c87" : "#dc2626";
     ctx.fillRect(-25, -renderH + bob, 50, renderH);
   }
 
-  // ÉTOILES TOURNANTES DE L'ÉTAT DIZZY (VERTIGE)
+  // --- EFFETS VISUELS D'ATTAQUE ARCADE DYNAMIQUES ---
+
+  // 1. Éclair de frappe / Tranchant au point d'impact
+  if (f.state === "attack" && f.attackPhase === "active") {
+    ctx.save();
+    const punchMoves = ["lp", "mp", "hp", "jump_hp"];
+    const isPunch = punchMoves.includes(f.subState);
+    const fxX = isPunch ? renderW * 0.46 : renderW * 0.42;
+    const fxY = isPunch ? -renderH * 0.62 : -renderH * 0.68;
+
+    // Flash d'impact lumineux
+    const flare = ctx.createRadialGradient(fxX, fxY, 2, fxX, fxY, 28);
+    flare.addColorStop(0, "#ffffff");
+    flare.addColorStop(0.4, isCpu ? "#c084fc" : "#fbbf24");
+    flare.addColorStop(1, "rgba(255, 255, 255, 0)");
+    ctx.fillStyle = flare;
+    ctx.beginPath();
+    ctx.arc(fxX, fxY, 28, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Lignes de vitesse / Sillage de coup de pied
+    if (!isPunch) {
+      ctx.strokeStyle = isCpu ? "#d8b4fe" : "#fef08a";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(0, -renderH * 0.55, renderW * 0.5, -Math.PI * 0.35, Math.PI * 0.15);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // 2. Orbe de concentration Hadouken au niveau des paumes
+  if (f.subState === "hadouken") {
+    ctx.save();
+    const chargeX = renderW * 0.36;
+    const chargeY = -renderH * 0.50;
+    const pulse = 18 + Math.sin(now * 0.05) * 6;
+    const orbGlow = ctx.createRadialGradient(chargeX, chargeY, 3, chargeX, chargeY, pulse);
+    orbGlow.addColorStop(0, "#ffffff");
+    orbGlow.addColorStop(0.5, isCpu ? "#a855f7" : "#38bdf8");
+    orbGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = orbGlow;
+    ctx.beginPath();
+    ctx.arc(chargeX, chargeY, pulse, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // 3. Tourbillon cyclonique Tatsumaki Senpuukyaku
+  if (f.subState === "tatsumaki") {
+    ctx.save();
+    ctx.strokeStyle = isCpu ? "rgba(192, 132, 252, 0.75)" : "rgba(255, 255, 255, 0.75)";
+    ctx.lineWidth = 4;
+    const spinOffset = (now * 0.04) % (Math.PI * 2);
+    for (let r = 0; r < 3; r++) {
+      ctx.beginPath();
+      ctx.ellipse(0, -renderH * (0.35 + r * 0.18), renderW * 0.65, 14, spinOffset + r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // 4. Pilier de flammes Shoryuken / Shinryuken
+  if (f.subState === "shoryuken" || f.subState === "shinryuken") {
+    ctx.save();
+    const flameColor = isCpu ? "rgba(168, 85, 247, 0.88)" : "rgba(249, 115, 22, 0.88)";
+    const flameW = f.subState === "shinryuken" ? 65 : 45;
+    const flameH = f.subState === "shinryuken" ? 140 : 115;
+    ctx.fillStyle = flameColor;
+    ctx.beginPath();
+    ctx.ellipse(0, -renderH * 0.55, flameW, flameH, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.ellipse(0, -renderH * 0.55, flameW * 0.45, flameH * 0.65, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // 5. Bouclier énergétique lors de la Garde active
+  if (f.isBlocking) {
+    ctx.strokeStyle = isCpu ? "#c084fc" : "#38bdf8";
+    ctx.lineWidth = 3;
+    ctx.fillStyle = isCpu ? "rgba(192, 132, 252, 0.25)" : "rgba(56, 189, 248, 0.25)";
+    ctx.beginPath();
+    const guardY = f.blockType === "low" ? -renderH * 0.35 : -renderH * 0.55;
+    ctx.arc(renderW * 0.35, guardY, 38, -Math.PI * 0.4, Math.PI * 0.4);
+    ctx.stroke();
+    ctx.fill();
+  }
+
+  // 6. Étoiles tournantes de l'état Dizzy
   if (f.isDizzy) {
     const starCount = 4;
     const radius = 28;
@@ -9965,30 +10163,6 @@ function drawDojoFighter(f, sprite, isCpu, now) {
       ctx.font = "900 16px system-ui, sans-serif";
       ctx.fillText("★", sx, sy);
     }
-  }
-
-  // Pilier de flammes Shoryuken
-  if (f.subState === "shoryuken" || f.subState === "shinryuken") {
-    ctx.fillStyle = isCpu ? "rgba(168, 85, 247, 0.85)" : "rgba(249, 115, 22, 0.85)";
-    ctx.beginPath();
-    ctx.ellipse(0, -renderH * 0.6, 45, 110, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#ffffff";
-    ctx.beginPath();
-    ctx.ellipse(0, -renderH * 0.6, 20, 70, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // Bouclier énergétique lors de la Garde active
-  if (f.isBlocking) {
-    ctx.strokeStyle = "#38bdf8";
-    ctx.lineWidth = 3;
-    ctx.fillStyle = "rgba(56, 189, 248, 0.25)";
-    ctx.beginPath();
-    const guardY = f.blockType === "low" ? -renderH * 0.35 : -renderH * 0.55;
-    ctx.arc(fw * 0.4, guardY, 38, -Math.PI * 0.4, Math.PI * 0.4);
-    ctx.stroke();
-    ctx.fill();
   }
 
   ctx.restore();
